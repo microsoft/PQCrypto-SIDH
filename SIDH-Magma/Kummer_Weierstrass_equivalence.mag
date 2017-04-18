@@ -1,0 +1,1329 @@
+////////////////////////////////////////////////////////////////////////////////
+//                                                                                                                   
+// This is an auxiliary script that serves two purposes:
+//
+// Firstly, most of the "two-operand" functions from the main SIDH script
+// are given here in a more readable form, i.e., as the full formula. 
+//
+// Secondly, and more importantly, the purpose of this script is to illustrate a 
+// Remark made in the paper about the equivalence of our fast, projective
+// strategy that works solely on the Kummer variety, and the traditional isogeny
+// computation strategy, i.e., Velu's formulas in affine Weierstrass form.
+// As such, we give two versions of the main key exchange functions: the first 
+// version calls our explicit formulas for point and isogeny computations, the
+// second calls Magma's "IsogenyFromKernel" function which works in affine
+// Weierstrass coordinates. 
+// 
+// The scripts show that these two strategies produce the same result.
+//                                                                                                                   
+// (c) 2016 Microsoft Corporation. All rights reserved.                            
+//                                    
+////////////////////////////////////////////////////////////////////////////////
+// 
+// Reference:
+//                                                              
+// Efficient algorithms for supersingular isogeny Diffie-Hellman 
+// Craig Costello, Patrick Longa, Michael Naehrig, CRYPTO 2016.        
+//                                                                                              
+////////////////////////////////////////////////////////////////////////////////
+
+clear;
+
+////////////////////////////////////////////////////////////////////////////////
+//////////////////////////// Public parameters /////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+// Paramters defining the prime p = f*lA^eA*lB^eB - 1
+f:=1;
+lA:=2;
+lB:=3;
+eA:=372;
+eB:=239;
+
+// Define the prime p 
+p:=f*lA^eA*lB^eB-1;
+assert IsPrime(p: Proof:=false); 
+
+// Prime field of order p
+Fp:=GF(p); 
+// The quadratic extension via x^2 + 1 since p = 3 mod 4 
+Fp2<i>:=ExtensionField<Fp,x|x^2+1>;  
+
+// Bitlengths of group orders lA^eA and lB^eB, needed during the ladder
+// functions 
+eAbits:=eA;		
+eBbits:=379;
+
+// E0 is the starting curve E0/Fp2: y^2=x^3+x (the A=0 Montgomery curve)
+E0:=EllipticCurve([Fp2|1,0]);
+assert IsSupersingular(E0);
+
+// The orders of the points on each side
+oA:=lA^eA; 
+oB:=lB^eB;
+
+// Identifyers for Alice and Bob
+Alice:=0;
+Bob:=1;
+
+// Generator PA for the base field subgroup of order lA^eA
+PA:=3^239*E0![11,Sqrt(Fp!11^3+11)];
+// Generator PB for the base field subgroup of order lB^eB
+PB:=2^372*E0![6,Sqrt(Fp!6^3+6)];
+
+XPA:=PA[1]; YPA:=PA[2];
+XPB:=PB[1]; YPB:=PB[2];
+
+////////////////////////////////////////////////////////////////////////////////
+/////////////////// Strategies for traversing isogeny trees ////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+/*
+   These are optimal strategies with respect to the cost ratios of 
+   scalar multiplication by 4 and 4-isogeny evaluation of 
+                     pA/qA = 2*12.1/21.6,
+   and of point tripling and 3-isogeny evaluation of 
+                     pB/qB = 24.3/16.0. 
+
+   See the file optimalstrategies.txt for how they are computed.
+*/
+
+splits_Alice := [
+0, 1, 1, 2, 2, 2, 3, 4, 4, 4, 4, 5, 5, 6, 7, 8, 8, 9, 9, 9, 9, 9, 9, 9, 12, 11,
+12, 12, 13, 14, 15, 16, 16, 16, 16, 16, 16, 17, 17, 18, 18, 17, 21, 17, 18, 21,
+20, 21, 21, 21, 21, 21, 22, 25, 25, 25, 26, 27, 28, 28, 29, 30, 31, 32, 32, 32,
+32, 32, 32, 32, 33, 33, 33, 35, 36, 36, 33, 36, 35, 36, 36, 35, 36, 36, 37, 38,
+38, 39, 40, 41, 42, 38, 39, 40, 41, 42, 40, 46, 42, 43, 46, 46, 46, 46, 48, 48,
+48, 48, 49, 49, 48, 53, 54, 51, 52, 53, 54, 55, 56, 57, 58, 59, 59, 60, 62, 62,
+63, 64, 64, 64, 64, 64, 64, 64, 64, 65, 65, 65, 65, 65, 66, 67, 65, 66, 67, 66,
+69, 70, 66, 67, 66, 69, 70, 69, 70, 70, 71, 72, 71, 72, 72, 74, 74, 75, 72, 72,
+74, 74, 75, 72, 72, 74, 75, 75, 72, 72, 74, 75, 75, 77, 77, 79, 80, 80, 82 ];
+
+splits_Bob := [
+0, 1, 1, 2, 2, 2, 3, 3, 4, 4, 4, 5, 5, 5, 6, 7, 8, 8, 8, 8, 9, 9, 9, 9, 9, 10,
+12, 12, 12, 12, 12, 12, 13, 14, 14, 15, 16, 16, 16, 16, 16, 17, 16, 16, 17, 19,
+19, 20, 21, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 24, 24, 25, 27, 27, 28, 28,
+29, 28, 29, 28, 28, 28, 30, 28, 28, 28, 29, 30, 33, 33, 33, 33, 34, 35, 37, 37,
+37, 37, 38, 38, 37, 38, 38, 38, 38, 38, 39, 43, 38, 38, 38, 38, 43, 40, 41, 42,
+43, 48, 45, 46, 47, 47, 48, 49, 49, 49, 50, 51, 50, 49, 49, 49, 49, 51, 49, 53,
+50, 51, 50, 51, 51, 51, 52, 55, 55, 55, 56, 56, 56, 56, 56, 58, 58, 61, 61, 61,
+63, 63, 63, 64, 65, 65, 65, 65, 66, 66, 65, 65, 66, 66, 66, 66, 66, 66, 66, 71,
+66, 73, 66, 66, 71, 66, 73, 66, 66, 71, 66, 73, 68, 68, 71, 71, 73, 73, 73, 75,
+75, 78, 78, 78, 80, 80, 80, 81, 81, 82, 83, 84, 85, 86, 86, 86, 86, 86, 87, 86,
+88, 86, 86, 86, 86, 88, 86, 88, 86, 86, 86, 88, 88, 86, 86, 86, 93, 90, 90, 92,
+92, 92, 93, 93, 93, 93, 93, 97, 97, 97, 97, 97, 97 ];
+
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////// Arithmetic functions /////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+j_inv:=function(A,C); 
+
+	/*
+	Computes the j-invariant of a Montgomery curve with projective constant.
+
+	Input:  
+    - The projective curve constant (A:C) given by A,C in Fp2.
+
+	Output: 
+    - The j-invariant j=256*(A^2-3*C^2)^3/(C^4*(A^2-4*C^2)) of the Montgomery 
+      curve B*y^2=x^3+(A/C)*x^2+x or (equivalently) the j-invariant of 
+      B'*y^2=C*x^3+A*x^2+C*x.
+	*/
+
+	return 256*(A^2-3*C^2)^3/(C^4*(A^2-4*C^2));
+
+end function;
+
+////////////////////////////////////////////////////////////////////////////////
+
+xDBLADD:=function(XP,ZP,XQ,ZQ,xPQ,A24)
+
+	/*
+	Carries out a typical step in the Montgomery ladder: a simultaneous 
+    doubling and differential addition.
+	
+    Input: 
+    - The projective Montgomery x-coordinates of xP=XP/ZP and xQ=XQ/ZQ, 
+    - the affine difference x(P-Q) and 
+    - the Montgomery curve constant A24=(A+2)/4.
+
+	Output: 
+    - The projective Montgomery x-coordinates of x(2P)=X2P/Z2P and
+      x(Q+P)=XQP/ZQP.
+	*/
+        
+    X2P:=(XP+ZP)^2*(XP-ZP)^2;
+    Z2P:=4*XP*ZP*(4*A24*XP*ZP+XP^2-2*XP*ZP+ZP^2);
+    XQP:=4*(XP*XQ-ZP*ZQ)^2;
+    ZQP:=4*xPQ*(XP*ZQ-ZP*XQ)^2;
+    
+    return X2P,Z2P,XQP,ZQP;		//Total: 6M+4S+8a
+
+end function;
+
+////////////////////////////////////////////////////////////////////////////////
+
+xADD:=function(XP,ZP,XQ,ZQ,xPQ)
+
+	/*
+	Computes a standard Montgomery differential addition.
+ 
+	Input: 
+    - The projective Montgomery x-coordinates of xP=XP/ZP and xQ=XQ/ZQ, 
+    - and the affine difference x(P-Q).
+	
+    Output: 
+    - The projective Montgomery x-coordinates of x(Q+P)=XQP/ZQP.
+	*/
+
+    XQP:=(XP*XQ-ZP*ZQ)^2;
+    ZQP:=xPQ*(XP*ZQ-ZP*XQ)^2;
+
+    return XQP,ZQP;
+
+end function;
+
+////////////////////////////////////////////////////////////////////////////////
+
+xDBL:=function(X,Z,A24,C24)
+
+	/*
+	This is NOT the stereotypical Montgomery x-only doubling, since it assumes 
+    that the curve constant is projective.  
+
+	Input: 
+    - The projective Montgomery x-coordinates of xP=XP/ZP and 
+    - the Montgomery curve constant A24/C24 = (A/C+2)/4.
+	
+    Output: 
+    - The projective Montgomery x-coordinates of x(2P)=X2P/Z2P. 
+	*/
+
+    X2:=C24*(X-Z)^2*(X+Z)^2;
+    Z2:=4*(C24*X^2-2*C24*X*Z+C24*Z^2+4*A24*X*Z)*X*Z;
+
+	return X2,Z2;	
+
+end function;
+
+////////////////////////////////////////////////////////////////////////////////
+
+xDBLe:=function(XP,ZP,A,C,e)
+
+	/*
+	This just computes [2^e](X:Z) on the Montgomery curve with projective 
+    constant (A:C) via 2^e repeated doublings.
+  
+	Input: 
+    - The projective Montgomery x-coordinates of xP=XP/ZP and 
+    - the Montgomery curve constant A/C.
+	
+    Output: 
+    - The projective Montgomery x-coordinates of x(2^e*P)=XeP/ZeP. 
+	*/
+
+	A24num:=C+C;
+	A24den:=A24num+A24num;
+	A24num:=A24num+A;
+
+	XeP:=XP; ZeP:=ZP;
+
+	for i:=1 to e do
+		XeP,ZeP:=xDBL(XeP,ZeP,A24num,A24den);
+	end for;
+
+	return XeP,ZeP;   
+
+end function;
+
+////////////////////////////////////////////////////////////////////////////////
+
+xDBL_basefield:=function(X,Z,A24,C24)
+
+	/*
+	This is NOT the stereotypical Montgomery x-only doubling, since it assumes 
+    that the curve constant is projective. All computations are over the base 
+    field.
+
+	Input: 
+    - The projective Montgomery x-coordinates of xP=XP/ZP and 
+    - the Montgomery curve constant A24/C24:=(A/C+2)/4.
+
+	Output: 
+    - The projective Montgomery x-coordinates of x(2P)=X2P/Z2P.
+	*/
+    
+    // NOTE: this function assumes that A24=1, C24=2 are fixed.
+    assert A24 eq 1;
+    assert C24 eq 2;
+        
+    X2:=2*(X-Z)^2*(X+Z)^2;
+    Z2:=8*(X^2+Z^2)*X*Z;
+
+	return X2,Z2;  
+
+end function;
+
+////////////////////////////////////////////////////////////////////////////////
+
+xDBLADD_basefield:=function(XP,ZP,XQ,ZQ,xPQ,A24,C24)
+
+	/*
+	This function carries out a typical step in the Montgomery ladder: 
+    simultaneous doubling and differential addition. All computations are over 
+    the base field.
+
+	Input: 
+    - The projective Montgomery x-coordinates of xP=XP/ZP and xQ=XQ/ZQ, 
+    - the affine difference x(P-Q) and 
+    - the Montgomery curve constant A24=(A+2)/4.
+
+	Output: 
+    - The projective Montgomery x-coordinates of x(2P)=X2P/Z2P and
+      x(Q+P)=XQP/ZQP.
+	*/
+    
+    // NOTE: this function assumes that A24=1, C24=2 are fixed.
+    assert A24 eq 1;
+    assert C24 eq 2;
+          
+    X2P:=2*(XP+ZP)^2*(XP-ZP)^2;
+    Z2P:=8*(XP^2+ZP^2)*XP*ZP;
+    XQP:=4*(XP*XQ-ZP*ZQ)^2;
+    ZQP:=4*xPQ*(XP*ZQ-ZP*XQ)^2;
+    
+    return X2P,Z2P,XQP,ZQP; 
+
+end function;
+
+////////////////////////////////////////////////////////////////////////////////
+
+LADDER:=function(x,m,A24,C24,AliceOrBob)
+
+	/*
+	The legendary Montgomery ladder.
+
+	Input: 
+    - The affine x-coordinate of a point on E: B*y^2=x^3+A*x^2+x, 
+    - a scalar m, and 
+    - the curve constant (A+2)/4.
+
+    Output:
+    - The projective x-coordinates of x(mP)=X0/Z0 and x((m+1)P)=X1/Z1. 
+	*/
+
+	bits:=IntegerToSequence(m,2);
+    
+    // NOTE: this function assumes that A24=1, C24=2 are fixed.
+    A24:=1; C24:=2;
+	X0:=1; Z0:=0;      // Initializing with the point at infinity and (x,1)
+	X1:=x; Z1:=1;
+
+    if (AliceOrBob eq Alice) then 
+        nbits:=eAbits;
+    else 
+        nbits:=eBbits;
+    end if;
+
+    for i:=1 to (nbits-#bits) do
+            X0,Z0,X1,Z1:=xDBLADD_basefield(X0,Z0,X1,Z1,x,A24,C24);
+    end for;
+
+    for i:=#bits to 1 by -1 do
+        if bits[i] eq 0 then
+            X0,Z0,X1,Z1:=xDBLADD_basefield(X0,Z0,X1,Z1,x,A24,C24);
+        else
+            X1,Z1,X0,Z0:=xDBLADD_basefield(X1,Z1,X0,Z0,x,A24,C24);
+        end if;
+    end for;
+
+    return X0,Z0,X1,Z1;
+
+end function;
+
+////////////////////////////////////////////////////////////////////////////////
+
+secret_pt:=function(x,y,m,AliceOrBob)
+	
+	/*
+	Computes key generation ***entirely in the base field*** by exploiting a 
+    1-dimensional Montgomery ladder in the trace zero subgroup and recovering 
+    the y-coordinate for the addition. All operations below are in the base 
+    field Fp.
+
+	Input: 
+    - A point P=(x,y) on E in the base field subgroup,
+     the point Q=(-x,y*i) on E in the trace-zero subgroup.
+    - the scalar m.
+
+	Output: 
+    - Field elements RX0,RX1,RZ in Fp such that (RX0+RX1*i)/RZ is the 
+      x-coordinate of P+[m]Q. 
+	*/
+    
+    // NOTE: this function assumes that A24=1, C24=2 are fixed.
+    A24:=1; C24:=2;
+    X0,Z0,X1,Z1:=LADDER(-x,m,A24,C24,AliceOrBob);
+
+    RX0 := (2*y^2*Z0^2*Z1-(Z0-X0*x)*(X0-x*Z0)*Z1+(X0+x*Z0)^2*X1)
+          *(2*y^2*Z0^2*Z1+(Z0-X0*x)*(X0-x*Z0)*Z1-(X0+x*Z0)^2*X1)
+          -4*y^2*Z1^2*Z0*(X0+x*Z0)*(X0-x*Z0)^2;
+    RX1:=-4*y^2*Z0^2*Z1
+         *(-Z1*Z0*X0+Z1*x*Z0^2+Z1*X0^2*x-Z1*X0*x^2*Z0+X1*X0^2
+           +2*X1*X0*x*Z0+X1*x^2*Z0^2);
+    RZ:=4*y^2*Z1^2*Z0^2*(X0-x*Z0)^2;
+
+    return RX0,RX1,RZ;
+
+end function;
+
+////////////////////////////////////////////////////////////////////////////////
+
+LADDER_3_pt:=function(m,xP,xQ,xPQ,A,AliceOrBob)
+	
+	/*
+	This is Algorithm 1 of De Feo, Jao and Plut. It computes P+[m]Q via x-only 
+    arithmetic.
+	
+    Input: 
+    - The three affine points xP,xQ,xPQ (they are affine as they are compressed 
+      before transmission over the wire) and 
+    - the Montgomery constant A.
+	
+    Output: 
+    - The projective Montgomery x-coordinates of x(P+[m]Q)=WX/WZ. 
+	*/
+
+	bits:=IntegerToSequence(m,2);
+
+	A24num:=A+2;   //tailored for the special xDBL function
+	A24:=A24num/2;
+	A24:=A24/2; 
+    
+	UX:=1; UZ:=0;  // Initializing with point at infinity (1:0), 
+	VX:=xQ; VZ:=1; // (xQ:1) and
+	WX:=xP; WZ:=1; // (xP:1)
+
+    if (AliceOrBob eq Alice) then 
+        nbits:=eAbits;
+    else 
+        nbits:=eBbits;
+    end if;
+
+    for i:=1 to (nbits-#bits) do
+			WX,WZ:=xADD(UX,UZ,WX,WZ,xP);
+			UX,UZ,VX,VZ:=xDBLADD(UX,UZ,VX,VZ,xQ,A24);
+    end for;
+
+	for i:=#bits to 1 by -1 do
+
+		if bits[i] eq 0 then
+			WX,WZ:=xADD(UX,UZ,WX,WZ,xP);
+			UX,UZ,VX,VZ:=xDBLADD(UX,UZ,VX,VZ,xQ,A24);
+		else
+			UX,UZ:=xADD(UX,UZ,VX,VZ,xQ);
+			VX,VZ,WX,WZ:=xDBLADD(VX,VZ,WX,WZ,xPQ,A24);
+		end if;
+
+	end for;
+
+	return WX,WZ;
+
+end function;
+
+////////////////////////////////////////////////////////////////////////////////
+
+get_4_isog:=function(X4,Z4)
+	
+	/*
+	Given a projective point (X4:Z4) of order 4 on a Montgomery curve, this 
+    computes the corresponding 4-isogeny.
+
+	Input: 
+    - The projective point of order four (X4:Z4).
+
+	Output: 
+    - The 4-isogenous Montgomery curve with projective coefficient A/C and 
+      the 5 coefficients that are used to evaluate the isogeny at a point 
+      (see the next function).
+	*/
+
+    A:=4*X4^4-2*Z4^4;
+    C:=Z4^4;
+    coeff0:=2*X4*Z4;
+    coeff1:=X4^2+Z4^2;
+    coeff2:=X4^2-Z4^2;
+    coeff3:=X4^4;
+    coeff4:=Z4^4;
+
+	return A,C,[coeff0,coeff1,coeff2,coeff3,coeff4]; 
+
+end function;
+
+////////////////////////////////////////////////////////////////////////////////
+
+eval_4_isog:=function(coeff,X,Z)
+
+	/*
+	Given a 4-isogeny phi defined by the 5 coefficients in coeff (computed in 
+    the function get_4_isog), evaluates the isogeny at the point (X:Z) in the 
+    domain of the isogeny.
+
+	Input: 
+    - The coefficients defining the isogeny, and 
+    - the projective point P=(X:Z).
+
+	Output: 
+    - The projective point phi(P)=(X:Z) in the codomain. Variables are 
+      overwritten because they replace inputs in the routine.
+	*/
+
+    c:=coeff;
+
+    temp:=-(c[1]*X-c[2]*Z+c[3]*Z)^2
+          *(-c[5]*c[1]^2*X^2+2*c[5]*c[1]*X*c[2]*Z+2*c[5]*c[1]*X*c[3]*Z
+            -c[5]*c[2]^2*Z^2-2*c[5]*c[2]*Z^2*c[3]
+            -c[5]*c[3]^2*Z^2+c[4]*c[1]^2*X^2-2*c[4]*c[1]*X*c[2]*Z
+            +2*c[4]*c[1]*X*c[3]*Z+c[4]*c[2]^2*Z^2-2*c[4]*c[2]*Z^2*c[3]
+            +c[4]*c[3]^2*Z^2);              
+    Z:=4*c[5]*(c[1]*X-c[2]*Z-c[3]*Z)^2*(c[1]*X-c[2]*Z)*c[3]*Z;
+    X:=temp;
+
+	return X,Z;	
+	
+end function;
+
+////////////////////////////////////////////////////////////////////////////////
+
+first_4_isog:=function(X4,Z4,A)
+
+	/*
+	This is the very first 4-isogeny computed by Alice, which is different
+    from all subsequent 4-isogenies because the point (1,..) is already in the 
+    kernel, so it doesn't need composition with the preliminary isomorphism.
+    (See De Feo, Jao and Plut, Section 4.3).
+
+	Input: 
+    - The projective point (X4:Z4) and 
+    - the curve constant A (that is affine because it is passed over the wire 
+      or a fixed system parameter).
+  
+	Output: 
+    - The projective point (X4:Z4) in the codomain and
+    - the isogenous curve constant A/C. Variables are overwritten because they 
+      replace inputs in the routine.
+	*/
+
+    X:=(X4+Z4)^2*(A*X4*Z4+X4^2+Z4^2);
+    Z:=-X4*Z4*(A-2)*(X4-Z4)^2;
+    C:=A-2;
+    A:=2*A+12;
+
+	return X,Z,A,C;
+
+end function;
+
+////////////////////////////////////////////////////////////////////////////////
+
+xTPL:=function(X,Z,A,C)
+
+	/*
+	This is NOT the stereotypical Montgomery x-only tripling, since it assumes 
+    that the curve constant is projective.  
+
+	Input: 
+    - The projective Montgomery x-coordinates of xP=X/Z and 
+    - the Montgomery curve constant A4:=4*A.
+
+	Output: 
+    - The projective Montgomery x-coordinates of x(3P)=X3/Z3. 
+	*/
+
+    X3:=X^2*(-C*X^4+6*C*X^2*Z^2+3*C*Z^4+Z^3*4*A*X)^2;
+    Z3:=X*Z*(-C*Z^4+3*C*X^4+6*C*X^2*Z^2+X^3*4*A*Z)^2;
+
+    return X3,Z3;  
+	
+end function;
+
+////////////////////////////////////////////////////////////////////////////////
+
+xTPLe:=function(X,Z,A,C,e)
+
+	/*
+	This function just computes [3^e](X:Z) on a Montgomery curve with 
+    projective constant via 3^e repeated triplings.  
+
+	Input: 
+    - The projective Montgomery x-coordinates of xP=X/Z and 
+    - the Montgomery curve constant A/C.
+
+	Output: 
+    - The projective Montgomery x-coordinates of x(eP)=XeP/ZeP. 
+	*/
+	
+	XeP:=X; ZeP:=Z;
+
+	for i:=1 to e do
+		XeP,ZeP:=xTPL(XeP,ZeP,A,C);
+	end for;
+
+	return XeP,ZeP;
+
+end function;
+
+////////////////////////////////////////////////////////////////////////////////
+
+get_3_isog:=function(X3,Z3)
+
+	/*
+	Given a projective point (X3:Z3) of order 3 on a Montgomery curve, this 
+    computes the corresponding 3-isogenous curve.
+
+	Input: 
+    - The projective point of order three (X3:Z3).
+
+	Output: 
+    - The 3-isogenous Montgomery curve with projective coefficient A/C. 
+      No coefficients are computed for the evaluation phase as all operations 
+      in the evaluation depend on the input point to the isogeny.
+	*/
+
+    A:=Z3^4-27*X3^4+18*X3^2*Z3^2;
+    C:=4*Z3^3*X3;
+
+	return A,C;	
+
+end function;
+
+////////////////////////////////////////////////////////////////////////////////
+
+eval_3_isog:=function(X3,Z3,X,Z)
+
+	/*
+	Given a projective point (X3:Z3) of order 3 on a Montgomery curve and a 
+    projective point x(P)=(X:Z), this function evaluates the corresponding 
+    3-isogeny at x(P): phi(X:Z).
+
+    Input:
+    - The projective point (X3:Z3) of order three,
+    - the projective Montgomery x-coordinates of x(P)=X/Z.
+
+    Output: 
+    - The projective Montgomery x-coordinates of the evaluation of phi at
+      (X:Z).
+	*/
+
+    temp:=X*(X3*X-Z3*Z)^2;
+    Z:=Z*(Z3*X-Z*X3)^2;
+    X:=temp;
+
+	return X,Z;	
+	
+end function;
+
+////////////////////////////////////////////////////////////////////////////////
+
+inv_4_way:=function(z1,z2,z3,z4)
+
+	/*
+    This function computes inverses of four elements by sharing the inversions
+    via Montgomery's simultaneous inversion trick.
+
+	Input: 
+    - The four values to be inverted: z1,z2,z3,z4.
+	
+    Output: 
+    - Their inverses 1/z1,1/z2,1/z3,1/z4 (over-ride variables).
+	*/
+
+	return 1/z1,1/z2,1/z3,1/z4;
+	
+end function;
+
+////////////////////////////////////////////////////////////////////////////////
+
+distort_and_diff:=function(xP)
+
+	/*
+    Given the x-coordinate of an affine point P, this function returns the
+    projective x-coordinates of the difference point Q-P, where Q=tau(P) is 
+    the image under the distortion map of the point P. 
+
+	Input: 
+    - The coordinate xP of the point P=(xP,yP).
+
+	Output: 
+    - The point (x(Q-P),z(Q-P)), where Q=tau(P).
+	*/
+
+	XD:=i*(xP^2+1);		
+	ZD:=2*xP;
+
+	return XD,ZD;
+	
+end function;
+
+////////////////////////////////////////////////////////////////////////////////
+
+get_A:=function(xP,xQ,xR)
+
+    /*
+    Given the x-coordinates of P, Q, and R, returns the value A 
+    (corresponding to the Montgomery curve E_A: y^2=x^3+A*x^2+x) 
+    such that R=Q-P on E_A
+
+    Input: 
+    - The x-coordinates xP, xQ, and xR of the points P, Q and R
+
+    Output: 
+    - The coefficient A corresponding to the curve E_A: y^2=x^3+A*x^2+x
+    */
+
+    A:=(xR*xP+xR*xQ+xP*xQ-1)^2/(4*xP*xQ*xR)-(xP+xQ+xR); 
+
+    return A;   
+    
+end function;
+
+////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////
+/////////////////////// Key exchange functions /////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////
+//////////////////////// ALICE KEY GENERATION //////////////////////////////////
+/////////////////// WEIERSTRASS/AFFINE/VELU/MAGMA/SLOW /////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+keygen_Alice_Weierstrass:=function(SK_Alice,params)
+
+    /*
+    This function generates Alice's public key from her secret key and the 
+    public scheme parameters. It uses the simple but costly loop for traversing 
+    the isogeny tree; it uses Magma's internal "IsogenyFromKernel" function to 
+    compute and evaluate the isogenies in affine Weierstrass form. Subsequently, 
+    it's painfully slow. 
+    
+    Input: 
+    - Alice's secret key SK_Alice, which is a random even number between 1 and 
+      oA-1,
+    - three public parameters params=[XPB,XPA,YPA]: the x-coordinate of PB, 
+      and both coordinates of PA.
+
+    Output: 
+    - Alice's public key [A,phi_A(x(PB)),phi_A(x(QB)),phi_A(x(QB-PB))].
+    */
+
+    E:=EllipticCurve([Fp2|1,0]); // Weierstrass curve y^2=x^3+x
+    _<x>:=PolynomialRing(Fp2);   // for computing isogeny kernels
+    phiP:=E0![params[3],params[4]];
+    phiQ:=E0![-params[3],i*params[4]];
+
+    P:=E0![params[1],params[2]];
+    Q:=E0![-params[1],i*params[2]];
+    R:=P+SK_Alice*Q;
+
+    // Alice's main loop
+    for e:=eA-2 to 0 by -2 do
+        S:=2^e*R;
+        ker:=&*[x-P[1] : P in [z*S: z in [1..3]]];
+        E,phi:=IsogenyFromKernel(E,ker);
+        R:=phi(R);
+        phiP:=phi(phiP);
+        phiQ:=phi(phiQ);
+    end for;
+
+    a:=Coefficients(E)[4];
+    b:=Coefficients(E)[5];
+
+    PK_Alice:=[a,b,phiP[1],phiP[2],phiQ[1],phiQ[2]]; //6 values in Fp2
+
+    return PK_Alice;
+
+end function;
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////// ALICE KEYGEN ////////////////////////////////////
+////////////////////// KUMMER/PROJECTIVE/FAST/OURS /////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+keygen_Alice_fast:=function(SK_Alice,params,splits,MAX)
+
+    /*
+    This function generates Alice's public key from her secret key and the
+    public scheme parameters. It uses the optimal way of traversing the
+    isogeny tree as described by De Feo, Jao and Plut. 
+    
+    Input: 
+    - Alice's secret key SK_Alice, which is a random even number between 1 and 
+      oA-1,
+    - three public parameters params=[XPB,XPA,YPA]: the x-coordinate of PB, 
+      and both coordinates of PA,
+    - the parameter "splits", a vector that guides the optimal route through
+      the isogeny tree; it is generated individually for Alice using
+      "optimalstrategies.mag" and the ratios of 4-isogeny evaluation versus 
+      multiplication-by-4,
+    - the parameter "MAX", the maximum number of multiplication-by-4
+      computations.
+
+    Output: 
+    - Alice's public key [phi_A(x(PB)),phi_A(x(QB)),phi_A(x(QB-PB))].
+    */
+
+    A:=0; C:=1; // the starting Montgomery curve (A:C) = (0:1)
+    phiPX:=params[1]; phiPZ:=1; 
+    phiQX:=-phiPX; phiQZ:=1;	// Q=(-xP,yP), tau(P) but yP instead of yP*i
+    							// the "*i" is handled implicitly
+    phiDX,phiDZ:=distort_and_diff(phiPX);	// (phiDX:phiDZ):=x(Q-P)
+
+    // computes x(R)=(RX:RZ) via secret_pt function
+	RX0,RX1,RZ:=secret_pt(params[2],params[3],SK_Alice,Alice);
+	RX:=RX0+RX1*i;
+
+	// the first iteration is different so not in the main loop
+	phiPX,phiPZ:=first_4_isog(phiPX,phiPZ,A);
+	phiQX,phiQZ:=first_4_isog(phiQX,phiQZ,A);
+	phiDX,phiDZ:=first_4_isog(phiDX,phiDZ,A);
+	RX,RZ,A,C:=first_4_isog(RX,RZ,A);
+
+    pts:=[];
+	index:=0;
+
+    // Alice's main loop
+	for row:=1 to MAX-1 do
+
+        // multiply (RX:RZ) until it has order 4, and store intermediate points
+        while index lt (MAX - row) do
+            Append(~pts, [RX,RZ,index]);
+            m := splits[MAX-index-row+1];
+	        RX,RZ:=xDBLe(RX,RZ,A,C,2*m);
+            index +:= m;
+        end while;
+
+        // compute the 4-isogeny based on kernel (RX:RZ)
+		A,C,consts:=get_4_isog(RX,RZ); 
+
+        // evaluate the 4-isogeny at every point in pts
+	    for i:=1 to #pts do 
+	    	pts[i][1],pts[i][2]:=eval_4_isog(consts,pts[i][1],pts[i][2]); 
+	    end for;
+
+        // evaluate the 4-isogeny at Bob's (intermediate) points 
+        // x(P), x(Q), x(Q-P)
+		phiPX,phiPZ:=eval_4_isog(consts,phiPX,phiPZ); 
+		phiQX,phiQZ:=eval_4_isog(consts,phiQX,phiQZ);
+		phiDX,phiDZ:=eval_4_isog(consts,phiDX,phiDZ);
+
+        // R becomes the last point in pts and then pts is pruned
+		RX:=pts[#pts][1]; 
+	    RZ:=pts[#pts][2]; 
+	    index:=Integers()!pts[#pts][3];	
+
+		Prune(~pts);
+
+	end for;
+
+    // compute and evaluate the last 4-isogeny
+	A,C,consts:=get_4_isog(RX,RZ); 
+	phiPX,phiPZ:=eval_4_isog(consts,phiPX,phiPZ);
+	phiQX,phiQZ:=eval_4_isog(consts,phiQX,phiQZ);
+	phiDX,phiDZ:=eval_4_isog(consts,phiDX,phiDZ);
+
+    // normalize everything via a 3-way simultaneous inversion
+	phiPX:=phiPX/phiPZ;
+	phiQX:=phiQX/phiQZ;
+	phiDX:=phiDX/phiDZ;
+
+	PK_Alice:=[phiPX,phiQX,phiDX]; //3 values in Fp2
+
+	return PK_Alice;
+
+end function;
+
+
+////////////////////////////////////////////////////////////////////////////////
+/////////////////////////// BOB KEY GENERATION /////////////////////////////////
+/////////////////// WEIERSTRASS/AFFINE/VELU/MAGMA/SLOW /////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+keygen_Bob_Weierstrass:=function(SK_Bob,params)
+
+    /*
+    This function generates Bob's public key from his secret key and the 
+    public scheme parameters. It uses the simple but costly loop for traversing 
+    the isogeny tree; it uses Magma's internal "IsogenyFromKernel" function to 
+    compute and evaluate the isogenies in affine Weierstrass form. Subsequently, 
+    it's painfully slow. 
+    
+    Input: 
+    - Bob's secret key SK_Bob, which is a random value between 1 and oB-1, 
+    - three public parameters params=[XPA,XPB,YPB]: the x-coordinate of PA, and 
+      both coordinates of PB.
+
+    Output: 
+    - Bob's public key [A,phi_B(x(PA)),phi_B(x(QA)),phi_B(x(QA-PA))].
+    */
+
+
+    E:=EllipticCurve([Fp2|1,0]); // Weierstrass curve y^2=x^3+x
+    _<x>:=PolynomialRing(Fp2);   // for computing isogeny kernels
+    phiP:=E0![params[1],params[2]];
+    phiQ:=E0![-params[1],i*params[2]];
+
+    P:=E0![params[3],params[4]];
+    Q:=E0![-params[3],i*params[4]];
+    R:=P+SK_Bob*Q;
+
+    // Bob's main loop
+    for e:=eB-1 to 0 by -1 do
+        S:=3^e*R;
+        ker:=&*[x-P[1] : P in [z*S: z in [1..2]]];
+        E,phi:=IsogenyFromKernel(E,ker);
+        R:=phi(R);
+        phiP:=phi(phiP);
+        phiQ:=phi(phiQ);
+    end for;
+
+    a:=Coefficients(E)[4];
+    b:=Coefficients(E)[5];
+
+    PK_Bob:=[a,b,phiP[1],phiP[2],phiQ[1],phiQ[2]]; //6 values in Fp2
+
+    return PK_Bob;
+
+end function;
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////// BOB KEYGEN //////////////////////////////////////
+////////////////////// KUMMER/PROJECTIVE/FAST/OURS /////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+keygen_Bob_fast:=function(SK_Bob,params,splits,MAX)
+
+    /*
+    This function generates Bob's public key from his secret key and the 
+    public scheme parameters. It uses the optimal way of traversing the
+    isogeny tree as described by De Feo, Jao and Plut. 
+    
+    Input: 
+    - Bob's secret key SK_Bob, which is a random value between 1 and oB-1, 
+    - three public parameters params=[XPA,XPB,YPB]: the x-coordinate of PA, and 
+      both coordinates of PB.
+    - the parameter "splits", a vector that guides the optimal route through the 
+      isogeny tree; it is generated individually for Bob using 
+      "optimalstrategies.m" and the ratios of 3-isogeny evaluation versus 
+      multiplication-by-3,
+    - the parameter "MAX", the maximum number of multiplication-by-3
+      computations.
+
+    Output: 
+    - Bob's public key [phi_B(x(PA)),phi_B(x(QA)),phi_B(x(QA-PA))].
+    */
+
+    A:=0; C:=1;  // the starting Montgomery curve (A:C) = (0:1)
+    phiPX:=params[1]; phiPZ:=1; 
+    phiQX:=-phiPX; phiQZ:=1;	// Q=(-xP,yP), tau(P) but yP instead of yP*i
+    							// the "*i" is handled implicitly
+    phiDX,phiDZ:=distort_and_diff(phiPX);	// (phiDX:phiDZ):=x(Q-P)
+
+    // computes x(R)=(RX:RZ) via secret_pt function
+    RX0,RX1,RZ:=secret_pt(params[2],params[3],SK_Bob,Bob);
+    RX:=RX0+RX1*i;
+
+	pts:=[];
+	index:=0;
+	
+    // Bob's main loop
+	for row:=1 to MAX-1 do
+
+        // multiply (RX:RZ) until it has order 3, and store intermediate points
+        while index lt (MAX - row) do
+            Append(~pts, [RX,RZ,index]);
+            m := splits[MAX-index-row+1];
+	        RX,RZ:=xTPLe(RX,RZ,A,C,m);
+            index +:= m;
+        end while;
+
+        // compute the 3-isogeny based on kernel (RX:RZ)
+		A,C:=get_3_isog(RX,RZ); 
+
+        // evaluate the 3-isogeny at every point in pts
+	    for i:=1 to #pts do 
+	    	pts[i][1],pts[i][2]:=eval_3_isog(RX,RZ,pts[i][1],pts[i][2]); 
+	    end for;
+
+        // evaluate the 3-isogeny at Alice's (intermediate) points 
+        // x(P), x(Q), x(Q-P)
+		phiPX,phiPZ:=eval_3_isog(RX,RZ,phiPX,phiPZ);
+		phiQX,phiQZ:=eval_3_isog(RX,RZ,phiQX,phiQZ);
+		phiDX,phiDZ:=eval_3_isog(RX,RZ,phiDX,phiDZ);
+
+        // R becomes the last point in pts and then pts is pruned
+		RX:=pts[#pts][1]; 
+	    RZ:=pts[#pts][2]; 
+	    index:=Integers()!pts[#pts][3];	
+
+		Prune(~pts);
+
+	end for;
+
+    // compute and evaluate the last 3-isogeny
+	A,C:=get_3_isog(RX,RZ); 
+	phiPX,phiPZ:=eval_3_isog(RX,RZ,phiPX,phiPZ);
+	phiQX,phiQZ:=eval_3_isog(RX,RZ,phiQX,phiQZ);
+	phiDX,phiDZ:=eval_3_isog(RX,RZ,phiDX,phiDZ);
+
+    // normalize everything via a 3-way simultaneous inversion
+    phiPX:=phiPX/phiPZ;
+    phiQX:=phiQX/phiQZ;
+    phiDX:=phiDX/phiDZ;
+
+    PK_Bob:=[phiPX,phiQX,phiDX]; // 4 values in Fp2
+
+    return PK_Bob;
+
+end function;
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////// ALICE SHARED SECRET /////////////////////////////////
+/////////////////// WEIERSTRASS/AFFINE/VELU/MAGMA/SLOW /////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+shared_secret_Alice_Weierstrass:=function(SK_Alice,PK_Bob)
+
+    /*
+    This function generates Alice's shared secret from her secret key and Bob's 
+    public key. It uses the simple but costly loop for traversing the isogeny 
+    tree; it uses Magma's internal "IsogenyFromKernel" function to compute and 
+    evaluate the isogenies in affine Weierstrass form. Subsequently, it's 
+    painfully slow. 
+    
+    Input: 
+    - Alice's secret key SK_Alice, a random even number between 1 and oA-1,
+    - Bob's public key PK_Bob=[A,phi_B(x(PA)),phi_B(x(QA)),phi_B(x(QA-PA))].
+
+    Output: 
+    - Alice's shared secret: the j-invariant of E_AB.
+    */
+
+    a:=PK_Bob[1]; b:=PK_Bob[2];
+    E:=EllipticCurve([Fp2|a,b]);
+    _<x>:=PolynomialRing(Fp2); // for computing isogeny kernels
+
+    P:=E![PK_Bob[3],PK_Bob[4]];
+    Q:=E![PK_Bob[5],PK_Bob[6]];
+    R:=P+SK_Alice*Q;
+
+    // Alice's main loop
+    for e:=eA-2 to 0 by -2 do
+        
+        S:=2^e*R;
+        ker:=&*[x-P[1] : P in [z*S: z in [1..3]]];
+        E,phi:=IsogenyFromKernel(E,ker);
+        R:=phi(R);
+
+    end for;
+
+    shared_secret_Alice:=jInvariant(E);
+
+    return shared_secret_Alice;
+
+end function;
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////// ALICE SHARED SECRET /////////////////////////////////
+////////////////////// KUMMER/PROJECTIVE/FAST/OURS /////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+shared_secret_Alice_fast:=function(SK_Alice,PK_Bob,params,splits,MAX)
+
+    /*
+    This function generates Alice's shared secret from her secret key and Bob's
+    public key. It uses the optimal way of traversing the isogeny tree as
+    described by De Feo, Jao and Plut. 
+    
+    Input: 
+    - Alice's secret key SK_Alice, a random even number between 1 and oA-1,
+    - Bob's public key PK_Bob=[phi_B(x(PA)),phi_B(x(QA)),phi_B(x(QA-PA))],
+    - the parameter "splits", a vector that guides the optimal route through the 
+      isogeny tree; it is generated individually for Alice using 
+      "optimalstrategies.m" and the ratios of 4-isogeny evaluation versus 
+      multiplication-by-4,
+    - the parameter "MAX", the maximum number of multiplication-by-4
+      computations.
+
+    Output: 
+    - Alice's shared secret: the j-invariant of E_AB.
+    */
+
+    A:=get_A(PK_Bob[1],PK_Bob[2],PK_Bob[3]); 
+    C:=1;  // starting on Bob's Montgomery curve
+
+    // computes R=phi_B(xPA)+SK_Alice*phi_B(xQA) via 3 point ladder
+    RX,RZ:=LADDER_3_pt(SK_Alice,PK_Bob[1],PK_Bob[2],PK_Bob[3],A,Alice);   
+
+    // the first iteration is different so not in the main loop
+    RX,RZ,A,C:=first_4_isog(RX,RZ,A);
+
+	pts:=[];
+	index:=0;
+
+    // Alice's main loop
+	for row:=1 to MAX-1 do
+
+        // multiply (RX:RZ) until it has order 4, and store intermediate points
+        while index lt (MAX - row) do
+            Append(~pts, [RX,RZ,index]);
+            m := splits[MAX-index-row+1];
+	        RX,RZ:=xDBLe(RX,RZ,A,C,2*m);
+            index +:= m;
+        end while;
+
+        // compute the 4-isogeny based on kernel (RX:RZ)
+		A,C,consts:=get_4_isog(RX,RZ); 
+
+        // evaluate the 4-isogeny at every point in pts
+	    for i:=1 to #pts do 
+	    	pts[i][1],pts[i][2]:=eval_4_isog(consts,pts[i][1],pts[i][2]); 
+	    end for;
+
+        // R becomes the last point in pts and then pts is pruned
+		RX:=pts[#pts][1]; 
+	    RZ:=pts[#pts][2]; 
+	    index:=Integers()!pts[#pts][3];	
+
+		Prune(~pts);
+
+	end for;
+
+    // compute the last 4-isogeny
+	A,C,consts:=get_4_isog(RX,RZ); 
+
+    // compute the j Invariant of E_AB
+    shared_secret_Alice:=j_inv(A,C);
+
+    return shared_secret_Alice;
+
+end function;
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////// BOB'S SHARED SECRET /////////////////////////////////
+/////////////////// WEIERSTRASS/AFFINE/VELU/MAGMA/SLOW /////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+shared_secret_Bob_Weierstrass:=function(SK_Bob,PK_Alice)
+
+    /*
+    This function generates Bob's shared secret from his secret key and Alice's 
+    public key. It uses the simple but costly loop for traversing the isogeny 
+    tree; it uses Magma's internal "IsogenyFromKernel" function to compute and 
+    evaluate the isogenies in affine Weierstrass form. Subsequently, it's 
+    painfully slow. 
+    
+    Input: 
+    - Bob's secret key SK_Bob, a random number between 1 and oB-1,
+    - Alice's public key PK_Alice=[A,phi_A(x(PB)),phi_A(x(QB)),phi_A(x(QB-PB))].
+
+    Output: 
+    - Bob's shared secret: the j-invariant of E_BA.
+    */
+
+    a:=PK_Alice[1]; b:=PK_Alice[2];
+    E:=EllipticCurve([Fp2|a,b]);
+    _<x>:=PolynomialRing(Fp2); // for computing isogeny kernels
+
+    P:=E![PK_Alice[3],PK_Alice[4]];
+    Q:=E![PK_Alice[5],PK_Alice[6]];
+    R:=P+SK_Bob*Q;
+
+    // Bob's main loop
+    for e:=eB-1 to 0 by -1 do
+
+        S:=3^e*R;
+        ker:=&*[x-P[1] : P in [z*S: z in [1..2]]];
+        E,phi:=IsogenyFromKernel(E,ker);
+        R:=phi(R);
+
+    end for;
+
+    shared_secret_Bob:=jInvariant(E);
+
+    return shared_secret_Bob;
+
+end function;
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////// BOB'S SHARED SECRET /////////////////////////////////
+////////////////////// KUMMER/PROJECTIVE/FAST/OURS /////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+shared_secret_Bob_fast:=function(SK_Bob,PK_Alice,params,splits,MAX)
+
+    /*
+    This function generates Bob's shared secret from his secret key and Alice's
+    public key. It uses the optimal way of traversing the isogeny tree as
+    described by De Feo, Jao and Plut. 
+    
+    Input: 
+    - Bob's secret key SK_Bob, a random number between 1 and oB-1,
+    - Alice's public key PK_Alice=[phi_A(xPB),phi_A(xQB),phi_A(x(QB-PB))],
+    - the parameter "splits", a vector that guides the optimal route through the 
+      isogeny tree; it is generated individually for Bob using 
+      "optimalstrategies.m" and the ratios of 3-isogeny evaluation versus 
+      multiplication-by-3,
+    - the parameter "MAX", the maximum number of multiplication-by-3
+      computations.
+
+    Output: 
+    - Bob's shared secret: the j-invariant of E_BA.
+    */
+
+    A:=get_A(PK_Alice[1],PK_Alice[2],PK_Alice[3]); 
+    C:=1; // starting on Alice's Montgomery curve
+
+    // computes R=phi_A(xPB)+SK_Bob*phi_A(xQB) via 3 point ladder
+    RX,RZ:=LADDER_3_pt(SK_Bob,PK_Alice[1],PK_Alice[2],PK_Alice[3],A,Bob);   
+
+	pts:=[];
+	index:=0;
+	
+    // Bob's main loop
+	for row:=1 to MAX-1 do
+
+        // multiply (RX:RZ) until it has order 3, and store intermediate points
+        while index lt (MAX - row) do
+            Append(~pts, [RX,RZ,index]);
+            m := splits[MAX-index-row+1];
+	        RX,RZ:=xTPLe(RX,RZ,A,C,m);
+            index +:= m;
+        end while;
+
+        // compute the 3-isogeny based on kernel (RX:RZ)
+		A,C:=get_3_isog(RX,RZ); 
+
+        // evaluate the 3-isogeny at every point in pts
+	    for i:=1 to #pts do 
+	    	pts[i][1],pts[i][2]:=eval_3_isog(RX,RZ,pts[i][1],pts[i][2]); 
+	    end for;
+
+        // R becomes the last point in pts and then pts is pruned
+		RX:=pts[#pts][1]; 
+	    RZ:=pts[#pts][2]; 
+	    index:=Integers()!pts[#pts][3];	
+
+		Prune(~pts);
+
+	end for;
+
+    // compute the last 3-isogeny
+	A,C:=get_3_isog(RX,RZ); 
+
+    // compute the j Invariant of E_BA
+    shared_secret_Bob:=j_inv(A,C);
+
+    return shared_secret_Bob;
+
+end function;
+
+
+////////////////////////////////////////////////////////////////////////////////
+///////////////////////// Key exchange testing /////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+
+MAX_Alice:=185;
+MAX_Bob:=239;
+
+params_Alice:=[XPB,XPA,YPA];
+params_Bob:=[XPA,XPB,YPB];
+
+params_both_Weierstrass:=[XPA,YPA,XPB,YPB];
+
+"====================================================================";
+"Generating secret keys...";
+SK_Alice:=Random(1, (oA div lA)-1)*lA; // Random even number between 1 and oA-1 
+SK_Bob:=Random(1, (oB div lB)-1)*lB; // Random multiple of lB between 1 and oB-1 
+"Done with secret keys.";
+"====================================================================";
+
+"Generating Alice's public key... (Weierstrass algorithm).";
+"(This takes a couple of minutes because of Magma's IsogenyFromKernel
+function.)";
+PK_Alice:=keygen_Alice_Weierstrass(SK_Alice,params_both_Weierstrass);
+"Generating Alice's public key... (fast algorithm).";
+PK_Alice_fast:=keygen_Alice_fast(SK_Alice,params_Alice,splits_Alice,MAX_Alice);
+"Done with Alice's public key.\n";
+
+"Test result from Alice's Weierstrass key gen equal to result from 
+Alice's fast key gen?";
+
+//Weierstrass curve generated by Magma in Alice's public key
+a:=PK_Alice[1]; b:=PK_Alice[2];
+E:=EllipticCurve([Fp2|a,b]);
+
+//Montgomery curve generated by our code in Alice's public key
+A:=get_A(PK_Alice_fast[1],PK_Alice_fast[2],PK_Alice_fast[3]);
+_<x>:=PolynomialRing(Fp2);
+EA:=EllipticCurve(x^3+A*x^2+x);
+
+jInvariant(EA) eq jInvariant(E);
+
+"====================================================================";
+
+"Generating Bob's public key... (Weierstrass algorithm).";
+"(This takes a couple of minutes because of Magma's IsogenyFromKernel 
+function.)";
+PK_Bob:=keygen_Bob_Weierstrass(SK_Bob,params_both_Weierstrass);
+"Generating Bob's public key... (fast algorithm).";
+PK_Bob_fast:=keygen_Bob_fast(SK_Bob,params_Bob,splits_Bob,MAX_Bob);
+"Done with Bob's public key.\n";
+
+"Test result from Bob's Weierstrass key gen equal to result from 
+Bob's fast key gen?";
+
+//Weierstrass curve generated by Magma in Alice's public key
+a:=PK_Bob[1]; b:=PK_Bob[2];
+E:=EllipticCurve([Fp2|a,b]);
+
+//Montgomery curve generated by our code in Alice's public key
+A:=get_A(PK_Bob_fast[1],PK_Bob_fast[2],PK_Bob_fast[3]);
+_<x>:=PolynomialRing(Fp2);
+EB:=EllipticCurve(x^3+A*x^2+x);
+
+jInvariant(EB) eq jInvariant(E);
+
+"====================================================================";
+
+"Generating shared secret for Alice... (Weierstrass algorithm).";
+"(This takes a couple of minutes because of Magma's IsogenyFromKernel 
+function).";
+secret_Alice:=shared_secret_Alice_Weierstrass(SK_Alice,PK_Bob);
+"Generating shared secret for Alice... (fast algorithm).";
+secret_Alice_fast:=shared_secret_Alice_fast(SK_Alice,PK_Bob_fast,params_Alice,
+                                            splits_Alice,MAX_Alice);
+"Done with Alice's shared secret computation.\n";
+
+"Results from Weierstrass and fast algorithms equal?", 
+secret_Alice eq secret_Alice_fast;
+"====================================================================";
+
+"Generating shared secret for Bob... (Weierstrass algorithm).";
+"(This takes a couple of minutes because of Magma's IsogenyFromKernel 
+function).";
+secret_Bob:=shared_secret_Bob_Weierstrass(SK_Bob,PK_Alice);
+"Generating shared secret for Bob... (fast algorithm).";
+secret_Bob_fast:=shared_secret_Bob_fast(SK_Bob,PK_Alice_fast,params_Bob,
+                                        splits_Bob,MAX_Bob);
+"Done with Bob's shared secret computation.\n";
+
+"Results from Weierstrass and fast algorithms equal?", 
+secret_Bob eq secret_Bob_fast;
+"====================================================================";
+"Shared secrets are equal?", secret_Alice_fast eq secret_Bob_fast;
+"====================================================================";

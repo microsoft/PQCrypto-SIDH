@@ -1,0 +1,618 @@
+////////////////////////////////////////////////////////////////////////////////
+//                                                                   
+// Code for SIDH key exchange with optional public key compression           
+// 
+// (c) 2016 Microsoft Corporation. All rights reserved.      
+//                                                                   
+////////////////////////////////////////////////////////////////////////////////
+// 
+// SIDH.mag 
+// 
+// This file contains the key exchange functions for SIDH without public key
+// compression. Simple functions are slow but follow the straightforward
+// multiplication-based strategy for isogeny tree traversal. 
+//
+////////////////////////////////////////////////////////////////////////////////
+//  
+// References: 
+//                                                            
+// Efficient algorithms for supersingular isogeny Diffie-Hellman 
+// Craig Costello, Patrick Longa, Michael Naehrig, CRYPTO 2016.         
+//                                                                               
+// Efficient compression of SIDH public keys
+// Craig Costello, David Jao, Patrick Longa, Michael Naehrig, Joost Renes, 
+// David Urbanik, EUROCRYPT 2017.     
+// 
+////////////////////////////////////////////////////////////////////////////////
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+/////////////////////// Key exchange functions /////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////
+//////////////////////// ALICE KEY GENERATION //////////////////////////////////
+/////////////////////// SIMPLE BUT SLOW VERSION ////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+keygen_Alice_simple:=function(SK_Alice,params)
+
+    /*
+    This function generates Alice's public key from her secret key and the 
+    public scheme parameters. It uses a simple but costly loop for traversing 
+    the isogeny tree.
+    
+    Input: 
+    - Alice's secret key SK_Alice, which is a random even number between 1 and 
+      oA-1,
+    - three public parameters params=[XPB,XPA,YPA]: the x-coordinate of PB, 
+      and both coordinates of PA.
+
+    Output: 
+    - Alice's public key [phi_A(x(PB)),phi_A(x(QB)),phi_A(x(QB-PB))].
+    */
+
+
+    A:=0; C:=1; // the starting Montgomery curve (A:C) = (0:1)
+    phiPX:=params[1]; phiPZ:=1; 
+    phiQX:=-phiPX; phiQZ:=1;	// Q=(-xP,yP), tau(P) but yP instead of yP*i
+    							// the "*i" is handled implicitly
+    phiDX,phiDZ:=distort_and_diff(phiPX);	// (phiDX:phiDZ):=x(Q-P)
+
+    // Computes x(R)=(RX:RZ) via secret_pt function
+    RX0,RX1,RZ:=secret_pt(params[2],params[3],SK_Alice,Alice);
+    RX:=RX0+RX1*i;
+
+	isos:=0; mulm:=0;  // operation counters -- ignore these
+
+    // the first iteration is different so not in the main loop
+    phiPX,phiPZ:=first_4_isog(phiPX,phiPZ,A); isos+:=1;
+    phiQX,phiQZ:=first_4_isog(phiQX,phiQZ,A); isos+:=1;
+    phiDX,phiDZ:=first_4_isog(phiDX,phiDZ,A); isos+:=1;
+    RX,RZ,A,C:=first_4_isog(RX,RZ,A); isos+:=1;
+
+    // Alice's main loop
+    for e:=eA-4 to 0 by -2 do
+        
+        SX,SZ:=xDBLe(RX,RZ,A,C,e); mulm+:=e div 2;  // computes S=[2^e]R
+        A,C,consts:=get_4_isog(SX,SZ);          // computes the 4-isogeny phi
+        RX,RZ:=eval_4_isog(consts,RX,RZ); isos+:=1; // R=phi(R)
+        phiPX,phiPZ:=eval_4_isog(consts,phiPX,phiPZ); isos+:=1; // P=phi(P)
+        phiQX,phiQZ:=eval_4_isog(consts,phiQX,phiQZ); isos+:=1; // Q=phi(Q)
+        phiDX,phiDZ:=eval_4_isog(consts,phiDX,phiDZ); isos+:=1; // R=phi(R)
+
+    end for;
+
+    // normalize everything via a 3-way simultaneous inversion
+    phiPZ,phiQZ,phiDZ:=inv_3_way(phiPZ,phiQZ,phiDZ); 
+    phiPX:=phiPX*phiPZ;
+    phiQX:=phiQX*phiQZ;
+    phiDX:=phiDX*phiDZ;
+
+    PK_Alice:=[phiPX,phiQX,phiDX]; // 3 values in Fp2
+
+    "Alice simple keygen requires: ", mulm, "muls-by-4 and ", isos, 
+    "4-isogenies";
+
+    return PK_Alice;
+
+end function;
+
+////////////////////////////////////////////////////////////////////////////////
+/////////////////////////// ALICE FAST KEYGEN //////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+keygen_Alice_fast:=function(SK_Alice,params,splits,MAX)
+
+    /*
+    This function generates Alice's public key from her secret key and the
+    public scheme parameters. It uses the optimal way of traversing the
+    isogeny tree as described by De Feo, Jao and Plut. 
+    
+    Input: 
+    - Alice's secret key SK_Alice, which is a random even number between 1 and 
+      oA-1,
+    - three public parameters params=[XPB,XPA,YPA]: the x-coordinate of PB, 
+      and both coordinates of PA,
+    - the parameter "splits", a vector that guides the optimal route through
+      the isogeny tree; it is generated individually for Alice using
+      "optimalstrategies.mag" and the ratios of 4-isogeny evaluation versus 
+      multiplication-by-4,
+    - the parameter "MAX", the maximum number of multiplication-by-4
+      computations.
+
+    Output: 
+    - Alice's public key [phi_A(x(PB)),phi_A(x(QB)),phi_A(x(QB-PB))].
+    */
+
+    A:=0; C:=1; // the starting Montgomery curve (A:C) = (0:1)
+    phiPX:=params[1]; phiPZ:=1; 
+    phiQX:=-phiPX; phiQZ:=1;	// Q=(-xP,yP), tau(P) but yP instead of yP*i
+    							// the "*i" is handled implicitly
+    phiDX,phiDZ:=distort_and_diff(phiPX);	// (phiDX:phiDZ):=x(Q-P)
+
+    // computes x(R)=(RX:RZ) via secret_pt function
+	RX0,RX1,RZ:=secret_pt(params[2],params[3],SK_Alice,Alice);
+	RX:=RX0+RX1*i;
+
+	isos:=0; mulm:=0; // operation counters -- ignore these	
+
+	// the first iteration is different so not in the main loop
+	phiPX,phiPZ:=first_4_isog(phiPX,phiPZ,A); isos+:=1;
+	phiQX,phiQZ:=first_4_isog(phiQX,phiQZ,A); isos+:=1;
+	phiDX,phiDZ:=first_4_isog(phiDX,phiDZ,A); isos+:=1;
+	RX,RZ,A,C:=first_4_isog(RX,RZ,A); isos+:=1;
+
+    pts:=[];
+	index:=0;
+
+    // Alice's main loop
+	for row:=1 to MAX-1 do
+
+        // multiply (RX:RZ) until it has order 4, and store intermediate points
+        while index lt (MAX - row) do
+            Append(~pts, [RX,RZ,index]);
+            m := splits[MAX-index-row+1];
+	        RX,RZ:=xDBLe(RX,RZ,A,C,2*m); mulm +:= m;
+            index +:= m;
+        end while;
+
+        // compute the 4-isogeny based on kernel (RX:RZ)
+		A,C,consts:=get_4_isog(RX,RZ); 
+
+        // evaluate the 4-isogeny at every point in pts
+	    for i:=1 to #pts do 
+	    	pts[i][1],pts[i][2]:=eval_4_isog(consts,pts[i][1],pts[i][2]); 
+            isos+:=1;
+	    end for;
+
+        // evaluate the 4-isogeny at Bob's (intermediate) points 
+        // x(P), x(Q), x(Q-P)
+		phiPX,phiPZ:=eval_4_isog(consts,phiPX,phiPZ); isos+:=1;
+		phiQX,phiQZ:=eval_4_isog(consts,phiQX,phiQZ); isos+:=1;
+		phiDX,phiDZ:=eval_4_isog(consts,phiDX,phiDZ); isos+:=1;
+
+        // R becomes the last point in pts and then pts is pruned
+		RX:=pts[#pts][1]; 
+	    RZ:=pts[#pts][2]; 
+	    index:=Integers()!pts[#pts][3];	
+
+		Prune(~pts);
+
+	end for;
+
+    // compute and evaluate the last 4-isogeny
+	A,C,consts:=get_4_isog(RX,RZ); 
+	phiPX,phiPZ:=eval_4_isog(consts,phiPX,phiPZ); isos+:=1;
+	phiQX,phiQZ:=eval_4_isog(consts,phiQX,phiQZ); isos+:=1;
+	phiDX,phiDZ:=eval_4_isog(consts,phiDX,phiDZ); isos+:=1;
+
+    // normalize everything via a 3-way simultaneous inversion
+	phiPZ,phiQZ,phiDZ:=inv_3_way(phiPZ,phiQZ,phiDZ);
+	phiPX:=phiPX*phiPZ;
+	phiQX:=phiQX*phiQZ;
+	phiDX:=phiDX*phiDZ;
+
+	PK_Alice:=[phiPX,phiQX,phiDX]; //3 values in Fp2
+
+    "Alice FAST keygen requires: ", mulm, "muls-by-4 and ", isos, 
+    "4-isogenies";
+
+	return PK_Alice;
+
+end function;
+
+
+////////////////////////////////////////////////////////////////////////////////
+/////////////////////////// BOB KEY GENERATION /////////////////////////////////
+///////////////////////// SIMPLE BUT SLOW VERSION //////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+keygen_Bob_simple:=function(SK_Bob,params)
+
+    /*
+    This function generates Bob's public key from her secret key and the 
+    public scheme parameters. It uses a simple but costly loop for traversing 
+    the isogeny tree.
+    
+    Input: 
+    - Bob's secret key SK_Bob, which is a random value between 1 and oB-1, 
+    - three public parameters params=[XPA,XPB,YPB]: the x-coordinate of PA, and 
+      both coordinates of PB.
+
+    Output: 
+    - Bob's public key [phi_B(x(PA)),phi_B(x(QA)),phi_B(x(QA-PA))].
+    */
+
+    A:=0; C:=1; // the starting Montgomery curve (A:C) = (0:1)
+    phiPX:=params[1]; phiPZ:=1; 
+    phiQX:=-phiPX; phiQZ:=1;	// Q=(-xP,yP), tau(P) but yP instead of yP*i
+    							// the "*i" is handled implicitly
+    phiDX,phiDZ:=distort_and_diff(phiPX);	// (phiDX:phiDZ):=x(Q-P)
+
+    // computes x(R)=(RX:RZ) via secret_pt function
+    RX0,RX1,RZ:=secret_pt(params[2],params[3],SK_Bob,Bob);
+    RX:=RX0+RX1*i;
+
+	isos:=0; mulm:=0; // operation counters -- ignore these	
+
+    // Bob's main loop
+    for e:=eB-1 to 0 by -1 do
+
+        SX,SZ:=xTPLe(RX,RZ,A,C,e); mulm+:=e;  // computes S=[3^e]R
+        A,C:=get_3_isog(SX,SZ);              // computes the 3-isogeny phi
+        RX,RZ:=eval_3_isog(SX,SZ,RX,RZ);  isos+:=1; //R=phi(R)
+        phiPX,phiPZ:=eval_3_isog(SX,SZ,phiPX,phiPZ);  isos+:=1; // P=phi(P)
+        phiQX,phiQZ:=eval_3_isog(SX,SZ,phiQX,phiQZ);  isos+:=1; // Q=phi(Q)
+        phiDX,phiDZ:=eval_3_isog(SX,SZ,phiDX,phiDZ);  isos+:=1; // R=phi(R)
+
+    end for;
+
+    // normalize everything via a 3-way simultaneous inversion
+    phiPZ,phiQZ,phiDZ:=inv_3_way(phiPZ,phiQZ,phiDZ);
+    phiPX:=phiPX*phiPZ;
+    phiQX:=phiQX*phiQZ;
+    phiDX:=phiDX*phiDZ;
+
+    PK_Bob:=[phiPX,phiQX,phiDX]; //3 values in Fp2
+
+    "Bob simple keygen requires: ", mulm, "muls-by-3 and ", isos, 
+    "3-isogenies";
+
+    return PK_Bob;
+
+end function;
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////// BOB KEYGEN FAST /////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+keygen_Bob_fast:=function(SK_Bob,params,splits,MAX)
+
+    /*
+    This function generates Bob's public key from his secret key and the 
+    public scheme parameters. It uses the optimal way of traversing the
+    isogeny tree as described by De Feo, Jao and Plut. 
+    
+    Input: 
+    - Bob's secret key SK_Bob, which is a random value between 1 and oB-1, 
+    - three public parameters params=[XPA,XPB,YPB]: the x-coordinate of PA, and 
+      both coordinates of PB.
+    - the parameter "splits", a vector that guides the optimal route through the 
+      isogeny tree; it is generated individually for Bob using 
+      "optimalstrategies.m" and the ratios of 3-isogeny evaluation versus 
+      multiplication-by-3,
+    - the parameter "MAX", the maximum number of multiplication-by-3
+      computations.
+
+    Output: 
+    - Bob's public key [phi_B(x(PA)),phi_B(x(QA)),phi_B(x(QA-PA))].
+    */
+
+    A:=0; C:=1;  // the starting Montgomery curve (A:C) = (0:1)
+    phiPX:=params[1]; phiPZ:=1; 
+    phiQX:=-phiPX; phiQZ:=1;	// Q=(-xP,yP), tau(P) but yP instead of yP*i
+    							// the "*i" is handled implicitly
+    phiDX,phiDZ:=distort_and_diff(phiPX);	// (phiDX:phiDZ):=x(Q-P)
+
+    // computes x(R)=(RX:RZ) via secret_pt function
+    RX0,RX1,RZ:=secret_pt(params[2],params[3],SK_Bob,Bob);
+    RX:=RX0+RX1*i;
+
+	pts:=[];
+	index:=0;
+	
+	isos:=0; mulm:=0; // operation counters -- ignore these  
+
+    // Bob's main loop
+	for row:=1 to MAX-1 do
+
+        // multiply (RX:RZ) until it has order 3, and store intermediate points
+        while index lt (MAX - row) do
+            Append(~pts, [RX,RZ,index]);
+            m := splits[MAX-index-row+1];
+	        RX,RZ:=xTPLe(RX,RZ,A,C,m); mulm +:= m;
+            index +:= m;
+        end while;
+
+        // compute the 3-isogeny based on kernel (RX:RZ)
+		A,C:=get_3_isog(RX,RZ); 
+
+        // evaluate the 3-isogeny at every point in pts
+	    for i:=1 to #pts do 
+	    	pts[i][1],pts[i][2]:=eval_3_isog(RX,RZ,pts[i][1],pts[i][2]); 
+            isos+:=1;
+	    end for;
+
+        // evaluate the 3-isogeny at Alice's (intermediate) points 
+        // x(P), x(Q), x(Q-P)
+		phiPX,phiPZ:=eval_3_isog(RX,RZ,phiPX,phiPZ); isos+:=1;
+		phiQX,phiQZ:=eval_3_isog(RX,RZ,phiQX,phiQZ); isos+:=1;
+		phiDX,phiDZ:=eval_3_isog(RX,RZ,phiDX,phiDZ); isos+:=1;
+
+        // R becomes the last point in pts and then pts is pruned
+		RX:=pts[#pts][1]; 
+	    RZ:=pts[#pts][2]; 
+	    index:=Integers()!pts[#pts][3];	
+
+		Prune(~pts);
+
+	end for;
+
+    // compute and evaluate the last 3-isogeny
+	A,C:=get_3_isog(RX,RZ); 
+	phiPX,phiPZ:=eval_3_isog(RX,RZ,phiPX,phiPZ); isos+:=1;
+	phiQX,phiQZ:=eval_3_isog(RX,RZ,phiQX,phiQZ); isos+:=1;
+	phiDX,phiDZ:=eval_3_isog(RX,RZ,phiDX,phiDZ); isos+:=1;
+
+    // normalize everything via a 3-way simultaneous inversion
+    phiPZ,phiQZ,phiDZ:=inv_3_way(phiPZ,phiQZ,phiDZ);
+    phiPX:=phiPX*phiPZ;
+    phiQX:=phiQX*phiQZ;
+    phiDX:=phiDX*phiDZ;
+
+    PK_Bob:=[phiPX,phiQX,phiDX]; // 4 values in Fp2
+
+    "Bob FAST keygen requires: ", mulm, "muls-by-3 and ", isos, 
+    "3-isogenies";
+
+    return PK_Bob;
+
+end function;
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////// ALICE SHARED SECRET /////////////////////////////////
+///////////////////////// SIMPLE BUT SLOW VERSION //////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+shared_secret_Alice_simple:=function(SK_Alice,PK_Bob)
+
+    /*
+    This function generates Alice's shared secret from her secret key and Bob's
+    public key. It uses a simple but costly loop for traversing the isogeny
+    tree.
+    
+    Input: 
+    - Alice's secret key SK_Alice, a random even number between 1 and oA-1,
+    - Bob's public key PK_Bob=[phi_B(x(PA)),phi_B(x(QA)),phi_B(x(QA-PA))].
+
+    Output: 
+    - Alice's shared secret: the j-invariant of E_AB.
+    */
+
+    A:=get_A(PK_Bob[1],PK_Bob[2],PK_Bob[3]); 
+    C:=1; // starting on Bob's Montgomery curve
+
+    // computes R=phi_B(xPA)+SK_Alice*phi_B(xQA) via 3 point ladder
+    RX,RZ:=LADDER_3_pt(SK_Alice,PK_Bob[1],PK_Bob[2],PK_Bob[3],A,Alice);   
+
+	isos:=0; mulm:=0;
+
+    // the first iteration is different so not in the main loop
+    RX,RZ,A,C:=first_4_isog(RX,RZ,A); isos+:=1;
+
+    // Alice's main loop
+    for e:=eA-4 to 0 by -2 do
+        
+        SX,SZ:=xDBLe(RX,RZ,A,C,e); mulm+:=e div 2;   // computes S=[2^e]R
+        A,C,consts:=get_4_isog(SX,SZ);      // computes the 4-isogeny phi
+        RX,RZ:=eval_4_isog(consts,RX,RZ); isos+:=1; // R=phi(R)
+
+    end for;
+
+    shared_secret_Alice:=j_inv(A,C);
+
+    "Alice simple secret requires: ", mulm, "muls-by-4 and ", isos, 
+    "4-isogenies";
+
+    return shared_secret_Alice;
+
+end function;
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////// ALICE SHARED SECRET /////////////////////////////////
+///////////////////////////////  FAST  /////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+shared_secret_Alice_fast:=function(SK_Alice,PK_Bob,params,splits,MAX)
+
+    /*
+    This function generates Alice's shared secret from her secret key and Bob's
+    public key. It uses the optimal way of traversing the isogeny tree as
+    described by De Feo, Jao and Plut. 
+    
+    Input: 
+    - Alice's secret key SK_Alice, a random even number between 1 and oA-1,
+    - Bob's public key PK_Bob=[phi_B(x(PA)),phi_B(x(QA)),phi_B(x(QA-PA))],
+    - the parameter "splits", a vector that guides the optimal route through the 
+      isogeny tree; it is generated individually for Alice using 
+      "optimalstrategies.m" and the ratios of 4-isogeny evaluation versus 
+      multiplication-by-4,
+    - the parameter "MAX", the maximum number of multiplication-by-4
+      computations.
+
+    Output: 
+    - Alice's shared secret: the j-invariant of E_AB.
+    */
+
+    A:=get_A(PK_Bob[1],PK_Bob[2],PK_Bob[3]); 
+    C:=1;  // starting on Bob's Montgomery curve
+
+    // computes R=phi_B(xPA)+SK_Alice*phi_B(xQA) via 3 point ladder
+    RX,RZ:=LADDER_3_pt(SK_Alice,PK_Bob[1],PK_Bob[2],PK_Bob[3],A,Alice);   
+
+	isos:=0; mulm:=0;
+
+    // the first iteration is different so not in the main loop
+    RX,RZ,A,C:=first_4_isog(RX,RZ,A); isos+:=1;
+
+	pts:=[];
+	index:=0;
+
+    // Alice's main loop
+	for row:=1 to MAX-1 do
+
+        // multiply (RX:RZ) until it has order 4, and store intermediate points
+        while index lt (MAX - row) do
+            Append(~pts, [RX,RZ,index]);
+            m := splits[MAX-index-row+1];
+	        RX,RZ:=xDBLe(RX,RZ,A,C,2*m); mulm +:= m;
+            index +:= m;
+        end while;
+
+        // compute the 4-isogeny based on kernel (RX:RZ)
+		A,C,consts:=get_4_isog(RX,RZ); 
+
+        // evaluate the 4-isogeny at every point in pts
+	    for i:=1 to #pts do 
+	    	pts[i][1],pts[i][2]:=eval_4_isog(consts,pts[i][1],pts[i][2]); 
+            isos+:=1;
+	    end for;
+
+        // R becomes the last point in pts and then pts is pruned
+		RX:=pts[#pts][1]; 
+	    RZ:=pts[#pts][2]; 
+	    index:=Integers()!pts[#pts][3];	
+
+		Prune(~pts);
+
+	end for;
+
+    // compute the last 4-isogeny
+	A,C,consts:=get_4_isog(RX,RZ); 
+
+    // compute the j Invariant of E_AB
+    shared_secret_Alice:=j_inv(A,C);
+
+    "Alice FAST secret requires: ", mulm, "muls-by-4 and ", isos, "4-isogenies";
+
+    return shared_secret_Alice;
+
+end function;
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////// BOB'S SHARED SECRET /////////////////////////////////
+///////////////////////// SIMPLE BUT SLOW VERSION //////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+shared_secret_Bob_simple:=function(SK_Bob,PK_Alice)
+
+    /*
+    This function generates Bob's shared secret from his secret key and Alice's
+    public key. It uses a simple but costly loop for traversing the isogeny 
+    tree.
+    
+    Input: 
+    - Bob's secret key SK_Bob, a random number between 1 and oB-1,
+    - Alice's public key PK_Alice=[phi_A(x(PB)),phi_A(x(QB)),phi_A(x(QB-PB))].
+
+    Output: 
+    - Bob's shared secret: the j-invariant of E_BA.
+    */
+
+    A:=get_A(PK_Alice[1],PK_Alice[2],PK_Alice[3]); 
+    C:=1; // starting on Alice's Montgomery curve
+
+    // computes R=phi_A(xPB)+SK_Bob*phi_A(xQB) via 3 point ladder
+    RX,RZ:=LADDER_3_pt(SK_Bob,PK_Alice[1],PK_Alice[2],PK_Alice[3],A,Bob);   
+
+	isos:=0; mulm:=0;
+
+    // Bob's main loop
+    for e:=eB-1 to 0 by -1 do
+
+        SX,SZ:=xTPLe(RX,RZ,A,C,e); mulm+:=e; // computes S=[3^e]R
+        A,C:=get_3_isog(SX,SZ); // computes the 3-isogeny phi
+        RX,RZ:=eval_3_isog(SX,SZ,RX,RZ); isos+:=1; // R=phi(R)
+
+    end for;
+
+    // compute the j-invariant of E_BA
+    shared_secret_Bob:=j_inv(A,C);
+
+    "Bob simple secret requires: ", mulm, "muls-by-3 and ", isos, "3-isogenies";
+
+    return shared_secret_Bob;
+
+end function;
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////// BOB'S SHARED SECRET /////////////////////////////////
+//////////////////////////////// FAST //////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+shared_secret_Bob_fast:=function(SK_Bob,PK_Alice,params,splits,MAX)
+
+    /*
+    This function generates Bob's shared secret from his secret key and Alice's
+    public key. It uses the optimal way of traversing the isogeny tree as
+    described by De Feo, Jao and Plut. 
+    
+    Input: 
+    - Bob's secret key SK_Bob, a random number between 1 and oB-1,
+    - Alice's public key PK_Alice=[phi_A(xPB),phi_A(xQB),phi_A(x(QB-PB))],
+    - the parameter "splits", a vector that guides the optimal route through the 
+      isogeny tree; it is generated individually for Bob using 
+      "optimalstrategies.m" and the ratios of 3-isogeny evaluation versus 
+      multiplication-by-3,
+    - the parameter "MAX", the maximum number of multiplication-by-3
+      computations.
+
+    Output: 
+    - Bob's shared secret: the j-invariant of E_BA.
+    */
+
+    A:=get_A(PK_Alice[1],PK_Alice[2],PK_Alice[3]); 
+    C:=1; // starting on Alice's Montgomery curve
+
+    // computes R=phi_A(xPB)+SK_Bob*phi_A(xQB) via 3 point ladder
+    RX,RZ:=LADDER_3_pt(SK_Bob,PK_Alice[1],PK_Alice[2],PK_Alice[3],A,Bob);   
+
+	pts:=[];
+	index:=0;
+	
+	isos:=0; mulm:=0;
+
+    // Bob's main loop
+	for row:=1 to MAX-1 do
+
+        // multiply (RX:RZ) until it has order 3, and store intermediate points
+        while index lt (MAX - row) do
+            Append(~pts, [RX,RZ,index]);
+            m := splits[MAX-index-row+1];
+	        RX,RZ:=xTPLe(RX,RZ,A,C,m); mulm +:= m;
+            index +:= m;
+        end while;
+
+        // compute the 3-isogeny based on kernel (RX:RZ)
+		A,C:=get_3_isog(RX,RZ); 
+
+        // evaluate the 3-isogeny at every point in pts
+	    for i:=1 to #pts do 
+	    	pts[i][1],pts[i][2]:=eval_3_isog(RX,RZ,pts[i][1],pts[i][2]); 
+            isos+:=1;
+	    end for;
+
+        // R becomes the last point in pts and then pts is pruned
+		RX:=pts[#pts][1]; 
+	    RZ:=pts[#pts][2]; 
+	    index:=Integers()!pts[#pts][3];	
+
+		Prune(~pts);
+
+	end for;
+
+    // compute the last 3-isogeny
+	A,C:=get_3_isog(RX,RZ); 
+
+    // compute the j Invariant of E_BA
+    shared_secret_Bob:=j_inv(A,C);
+
+    "Bob FAST secret requires: ", mulm, "muls-by-3 and ", isos, "3-isogenies";
+
+    return shared_secret_Bob;
+
+end function;
+
+

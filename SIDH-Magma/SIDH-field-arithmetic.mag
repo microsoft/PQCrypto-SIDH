@@ -1,0 +1,399 @@
+////////////////////////////////////////////////////////////////////////////////
+//                                                                   
+// Code for SIDH key exchange with optional public key compression          
+// 
+// (c) 2016 Microsoft Corporation. All rights reserved.        
+//                                                                   
+////////////////////////////////////////////////////////////////////////////////
+// 
+// SIDH-field-arithmetic.mag 
+// 
+// Arithmetic file implementing some special field arithmetic functions, such as
+// cubing formulas, square roots and arithmetic in the cyclotomic subgroup. 
+// 
+////////////////////////////////////////////////////////////////////////////////
+//  
+// References: 
+//                                                            
+// Efficient algorithms for supersingular isogeny Diffie-Hellman 
+// Craig Costello, Patrick Longa, Michael Naehrig, CRYPTO 2016.         
+//                                                                               
+// Efficient compression of SIDH public keys
+// Craig Costello, David Jao, Patrick Longa, Michael Naehrig, Joost Renes, 
+// David Urbanik, EUROCRYPT 2017.     
+// 
+////////////////////////////////////////////////////////////////////////////////
+
+
+////////////////////////////////////////////////////////////////////////////////
+//////////////////////////// Cubing ////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+Fp2_cub_formula := function(a)
+/*
+    This function is for cubing in Fp2. It can be implemented with 2S + 2M 
+    and is thus slightly faster than a naive square and multiplication 
+    approach (5M), see below. 
+*/
+   aseq := ElementToSequence(Fp2!a);
+   a0 := aseq[1];
+   a1 := aseq[2];
+   
+   return a0*(a0^2-3*a1^2) + i*a1*(3*a0^2-a1^2);
+end function;
+
+Fp2_cub := function(a)
+/*
+    This function is for cubing in Fp2. It uses 2S + 2M and is thus
+    slightly faster than a naive square and multiplication approach (5M). 
+*/
+   aseq := ElementToSequence(Fp2!a);
+   a0 := aseq[1];
+   a1 := aseq[2];
+   
+   t0 := a0^2;
+   t1 := a1^2;
+   c1 := t0 - t1;
+   t0 := t0 + t0;
+   t1 := t1 + t1;
+   c0 := c1 - t1;
+   c1 := c1 + t0;
+   c0 := c0*a0;
+   c1 := c1*a1;
+
+   return c0 + c1*i; 
+end function;
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////// Square roots ////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+sqrt_Fp2:=function(v)
+/*
+    This function computes square roots (of elements that are square) of
+    elements in Fp2 using only Fp arithmetic. Inputs and outputs Fp2 elements
+    and makes arbitrary (but deterministic) choice of square root.
+*/
+  a:=Fp!ElementToSequence(v)[1]; //parse into Fp
+  b:=Fp!ElementToSequence(v)[2];
+
+  //Fp arithmetic
+  t0:=a^2;
+  t1:=b^2;
+  t0:=t0+t1;
+  t1:=t0^((p+1) div 4); //370 squarings, 239 cubes
+  t0:=a+t1;
+  t0:=t0/2;
+  t2:=t0^((p-3) div 4); //subchain from inversion
+  t1:=t0*t2;
+  t2:=t2*b;
+  t2:=t2/2;
+  t3:=t1^2;
+
+  if t3 eq t0 then
+    y:=t1+t2*i; //parsing back into Fp2
+  else
+    y:=t2-t1*i; //parsing back into Fp2
+  end if;
+
+  return y;
+
+end function;
+
+
+sqrt_Fp2_frac:=function(u,v)
+/*
+    This function computes square roots of elements in (Fp2)^2 using Hamburg's
+    trick. Works entirely with Fp arithmetic.
+*/
+    u0:=ElementToSequence(u)[1];
+    u1:=ElementToSequence(u)[2];
+    v0:=ElementToSequence(v)[1];
+    v1:=ElementToSequence(v)[2];
+
+    // below is all Fp arithmetic
+    t0:=v0^2;
+    t1:=v1^2;
+    t0:=t0+t1;   
+    t1:=u0*v0;
+    t2:=u1*v1; 
+    t1:=t1+t2;  
+    t2:=u1*v0;
+    t3:=u0*v1;
+    t2:=t2-t3;    
+    t3:=t1^2;    
+    t4:=t2^2;
+    t3:=t3+t4;
+    t:=t3^((p+1) div 4);    // 370 squarings, 239 cubings
+    t:=t+t1;
+    t:=2*t;              
+    t3:=t0^2;      
+    t3:=t3*t0;   
+    t3:=t3*t;
+    t3:=t3^((p-3) div 4);   // should be in inversion chain 
+    t3:=t0*t3;          
+    t1:=t*t3;      
+    y0:=t1/2;         
+    y1:=t3*t2; 
+    t1:=t1^2;
+    t1:=t1*t0;
+
+    if t1 ne t then
+        temp:=y0;
+        y0:=y1;
+        y1:=temp;
+    end if;
+
+    t0:=y0^2;
+    t1:=y1^2;
+    t0:=t0-t1;
+    t0:=t0*v0;
+    t1:=y0*y1;
+    t1:=t1*v1;
+    t1:=t1+t1;
+    t0:=t0-t1;
+    
+    if t0 ne u0 then
+        y1:=-y1;
+    end if;
+   
+    return y0+y1*i; //parse back into Fp2
+
+end function;
+
+
+////////////////////////////////////////////////////////////////////////////////
+//////////////// Almost Montgomery inversion (base field) //////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+// Notation following Savas-Koc
+moninv_phasei := function(a,p)
+    u := p; 
+    v := a; 
+    r := 0;
+    s := 1;
+    k := 0;
+
+    while v gt 0 do
+        if IsEven(u) then
+            u := ShiftRight(u,1);
+            s := 2*s;
+        elif IsEven(v) then
+            v := ShiftRight(v,1);
+            r := 2*r;
+        elif u gt v then
+            u := ShiftRight(u-v,1);
+            r := r+s;
+            s := 2*s;
+        elif v ge u then
+            v := ShiftRight(v-u,1);
+            s := s+r;
+            r := 2*r;
+        end if;
+        k +:= 1;
+    end while;
+
+    if r ge p then
+        r -:= p;
+    end if;
+
+    r := p-r;
+
+    return r, k;
+end function;
+
+moninv_phaseii := function(r,p,k,n)
+    
+    for j in [1..k-n] do
+        if r mod 2 eq 0 then
+            r := ShiftRight(r,1);
+        else
+            r := ShiftRight(r+p,1);
+        end if;
+    end for;
+
+    return r;
+end function;
+
+moninv := function(a,p,n)
+    r,k := moninv_phasei(a,p);
+    x := moninv_phaseii(r,p,k,n);
+
+    return x;
+end function;
+
+
+////////////////////////////////////////////////////////////////////////////////
+//////////// Montgomery inversion (quadratic extension field) //////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+fp2_inv := function(a,p,n)
+    a0 := Eltseq(a)[1]; // Re
+    a1 := Eltseq(a)[2]; // Im
+
+    num := a0-i*a1;
+    den := a0^2+a1^2;
+    den := GF(p)!(moninv(Integers()!den,p,n));
+
+    return num*den;
+end function;
+
+
+////////////////////////////////////////////////////////////////////////////////
+/////// n-way simultaneous inversion using Montgomery's trick //////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+mont_n_way_inv:=function(vec,n)
+  
+  a:=[Fp2!0: j in [1..n]]; //initialize vector of length n
+
+  a[1]:=vec[1];
+  for j:=2 to n do
+    a[j]:=a[j-1]*vec[j];
+  end for;
+
+  a_inv:=1/a[n];
+ 
+  for j:=n to 2 by -1 do
+    a[j]:=a_inv*a[j-1];
+    a_inv:=a_inv*vec[j];
+  end for;
+
+  a[1]:=a_inv;
+
+  return a;
+
+end function;
+
+
+////////////////////////////////////////////////////////////////////////////////
+/////// Arithmetic operations in the cyclotomic subgroup of Fp2 ////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+cube_Fp2_cycl_formula := function(a)
+   // Cyclotomic cubing on elements of norm 1, using a^(p+1) = 1.
+   aseq := ElementToSequence(Fp2!a);
+   a0 := aseq[1];
+   a1 := aseq[2];
+   
+   return (a0*(4*a0^2-3)) + i*(a1*(4*a0^2-1));
+end function;
+
+cube_Fp2_cycl := function(a)
+   aseq := ElementToSequence(a);
+   a0 := aseq[1];
+   a1 := aseq[2];
+   
+   t0 := a0 + a0;
+   t0 := t0^2;
+   t0 := t0 - 1;
+   a1 := t0*a1;
+   t0 := t0 - 2;
+   a0 := t0*a0;
+
+   return a0 + i*a1; 
+end function;
+
+
+inv_Fp2_cycl := function(a)
+   // Cyclotomic inversion, a^(p+1) = 1 => a^(-1) = a^p = a0 - i*a1.
+   aseq := ElementToSequence(Fp2!a);
+   a0 := aseq[1];
+   a1 := aseq[2];
+   
+   return a0 - i*a1;
+end function;
+
+
+sqr_Fp2_cycl_formula := function(a)
+/* 
+    Cyclotomic squaring on elements of norm 1, using a^(p+1) = 1.
+    This uses 2 base field squarings. If base field squaring is not faster
+    than base field multiplication, savings are very small.
+*/
+   aseq := ElementToSequence(Fp2!a);
+   a0 := aseq[1];
+   a1 := aseq[2];
+   
+   return (2*a0^2-1) + i*((a0+a1)^2-1);
+end function;
+
+sqr_Fp2_cycl := function(a)
+   aseq := ElementToSequence(Fp2!a);
+   a0 := aseq[1];
+   a1 := aseq[2];
+
+   t0 := a0 + a1;
+   t0 := t0^2;
+   a1 := t0 - 1;   
+   t0 := a0^2;
+   t0 := t0 + t0;
+   a0 := t0 - 1;
+
+   return a0 + i*a1; 
+end function;
+
+
+exp_Fp2_cycl := function(y,t)
+    // exponentiation y^t via square and multiply in the cyclotomic group
+    res:=y;
+
+    if t eq 0 then
+        res := 1;
+    else
+        seq := IntegerToSequence(t, 2);
+        for i in [1..#seq-1] do
+            res := sqr_Fp2_cycl(res); 
+            if seq[#seq-i] eq 1 then
+                res := res*y; 
+            end if;
+        end for;
+    end if;
+
+    return res;
+end function;
+
+
+////////////////////////////////////////////////////////////////////////////////
+//////////////////////////// Cube test /////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+is_cube_Fp2:=function(u)
+/*
+    Function for deciding whether an element in Fp2 is a cube.
+*/
+  u0:=ElementToSequence(u)[1];
+  u1:=ElementToSequence(u)[2];
+
+  //Fp arith from here
+  v0:=u0^2;
+  v1:=u1^2;
+  t0:=v0+v1;
+  t0:=1/t0; //Fp inversion the quick and dirty one with binary Euclid
+  v0:=v0-v1;
+  v1:=u0*u1;
+  v1:=2*v1;
+  v1:=-v1;
+  v0:=v0*t0;
+  v1:=v1*t0;
+  //parse back to Fp2 for (cheap) exponentiation
+
+  v:=v0+v1*i;
+  for e:=1 to 372 do
+    v:=sqr_Fp2_cycl(v);
+  end for;
+  for e:=1 to 238 do
+    v:=cube_Fp2_cycl(v);
+  end for;
+  if v eq 1 then
+    assert u^((p^2-1) div 3) eq 1;
+    return true;
+  else
+    assert not u^((p^2-1) div 3) eq 1;
+    return false;
+  end if;
+
+end function;
+
+
+

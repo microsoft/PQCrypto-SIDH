@@ -1,0 +1,177 @@
+////////////////////////////////////////////////////////////////////////////////
+//                                                                   
+// Code to compute optimal strategies for isogeny tree traversal      
+//                                                                   
+// Based on the relative cost ratios of scalar multiplications,      
+// optimal strategies are computed by a dynamic programming approach 
+// as described in DeFeo, Jao, Plut: Towards quantum-resistant       
+// cryptosystems from supersingular elliptic curve isogenies,        
+// J. Math. Crypt., 8(3):209-247, 2014.    
+//        
+// (c) 2016 Microsoft Corporation. All rights reserved.                            
+//                                    
+////////////////////////////////////////////////////////////////////////////////
+// 
+// Reference:
+//                                                              
+// Efficient algorithms for supersingular isogeny Diffie-Hellman 
+// Craig Costello, Patrick Longa, Michael Naehrig, CRYPTO 2016.        
+//                                                                                              
+////////////////////////////////////////////////////////////////////////////////
+
+clear;
+RR := RealField(10);
+Z := Integers();
+ZPQ<P,Q> := PolynomialRing(Z,2);
+
+////////////////////////////////////////////////////////////////////////////////
+
+nA := 185;          // Computing 4^nA-isogenies
+//pA := RR!(2*12.9);  // Linux cost for 2 doublings
+//qA := RR!(22.8);    // Linux cost for 4-isogeny evaluation
+// New op counts 2016-06-15
+pA := RR!(2*12.1);  // Linux cost for 2 doublings
+qA := RR!(21.6);    // Linux cost for 4-isogeny evaluation
+
+nB := 239;          // Computing 3^nB-isogenies
+pB := RR!24.3;      // Linux cost for tripling
+qB := RR!16.0;      // Linux cost for 3-isogeny evaluation
+
+////////////////////////////////////////////////////////////////////////////////
+
+NextCpq := function(p,q,Cpq,PQcounts)
+   /*
+   Computes the cost of an optimal strategy for traversing a tree on n leaves
+   together with the operation counts in terms of scalar multiplications and 
+   isogeny evaluation, given this information for trees on 1 up to n-1 leaves.
+   
+   Input: 
+   - The cost p for a scalar multiplication by \ell,
+   - the cost q for the evaluation of an \ell-isogeny,
+   - a list Cpq of length n-1 that contains the cost of an optimal strategy 
+     for traversal of a tree with i leaves in Cpq[i], and 
+   - a list PQcounts of pairs such that the i-th pair contains the number 
+     PQcounts[i][1] of \ell-scalar multiplications and the number 
+     PQcounts[i][2] of \ell-isogeny evaluations in order to traverse a tree 
+     on i leaves using the optimal strategy with cost Cpq[i]. 
+  
+   Output: 
+   - The cost newCpq of an optimal strategy for traversing a tree on n leaves, 
+   - the corresponding operation counts newPQcount, and 
+   - the splitting newSpq of the n-node strategy into two optimal 
+     sub-strategies.
+   */
+
+  pgtq := p gt q;  
+  n := #Cpq + 1;    // new index = number of leaves in new strategy
+
+  // Compute all possibilities for the cost of a strategy on n leaves by going 
+  // through all possible splits into two optimal sub-strategies from the
+  // (n-1) strategies provided in PQcounts.
+  // Cost = cost of subtree with i leaves + cost of subtree with (n-i) leaves
+  //        + cost of (n-i) scalar mults to get to i-subtree root
+  //        + cost of i isogeny evaluations to get to (n-i) subtree root 
+  newCpqs := [(Cpq[i] + Cpq[n-i] + (n-i)*p + i*q) : i in [1..(n-1)]];  
+
+  newCpq := newCpqs[1];
+  m := 1;
+  // Choose the cheapest strategy.
+  for i in [2..(n-1)] do
+    tmpCpq := newCpqs[i];
+    if newCpq ge tmpCpq then 
+    // including equality in the condition prefers larger number of isogenies
+       newCpq := tmpCpq;
+       m := i;
+    end if;
+  end for;
+  // chosen strategy (m-leave sub-tree on the left, (n-m)-subtree on the right) 
+  newSpq := [m,n-m]; 
+  // updating operation counts
+  newPQcount := [PQcounts[m][1] + PQcounts[n-m][1] + (n-m), 
+                 PQcounts[m][2] + PQcounts[n-m][2] + m]; 
+    
+  return newCpq, newSpq, newPQcount;
+end function;
+
+////////////////////////////////////////////////////////////////////////////////
+
+GetStrategies := function (n,p,q)
+  /*
+  Computes a list of optimal strategies for traversing trees with number of 
+  leaves between 1 and n.
+ 
+  Input: 
+  - The number n of leaves on the tree,
+  - the cost p for scalar multiplication by \ell, and 
+  - the cost q for \ell-isogeny evaluation. 
+ 
+  Output:
+  - A list Spq of length n containing the splits into two subtrees for all
+    optimal strategies on trees with 1<=i<=n leaves.
+  - A list PQcounts of length n containing operation counts for the above 
+    strategies. 
+  */
+
+  assert n ge 3;
+  // Cost for sub-trees with one leaf (=0) and two leaves (p+q) 
+  Cpq := [0, p+q];             
+  // Splits for these sub-trees
+  Spq := [[0,0], [1,1]];
+  // Operation counts for these sub-trees
+  PQcounts := [[0,0], [1,1]];
+  
+  // Compute in sequence all optimal strategies for trees with 3<=i<=n leaves. 
+  repeat 
+     newCpq, newSpq, newPQcount := NextCpq(p,q,Cpq,PQcounts);
+     Append(~Cpq, newCpq);
+     Append(~Spq, newSpq);
+     Append(~PQcounts, newPQcount);
+  until #Cpq eq n;
+
+  return Spq, PQcounts;
+end function;
+
+////////////////////////////////////////////////////////////////////////////////
+
+function GetSplits(n,Spq)
+   /*
+   Assembles a list of splits by taking the number of leaves in the respective
+   right subtrees which is equal to the number of scalar multiplications to 
+   reach the root of the next sub-strategy.
+ 
+   Input:
+   - The number n of leaves on the tree and
+   - the list of splits into two sub-trees as above.
+  
+   Output:
+   - A list of length n describing the splits by giving the number of scalar
+     multiplications by \ell to the root of the next subtree.
+   */
+
+   return [Spq[i][2]: i in [1..n]];
+end function;
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// Computing optimal strategies
+//
+////////////////////////////////////////////////////////////////////////////////
+
+"";
+SpqA, PQcountsA := GetStrategies(nA,pA,qA); 
+"Top Strategy for A:", SpqA[nA];
+PQcountsA[nA][1], "MUL-BY-4 and", PQcountsA[nA][2], "4-ISO-EVAL == ",
+PQcountsA[nA][1]*pA + PQcountsA[nA][2]*qA, "total units";
+"Splits for A:", GetSplits(nA,SpqA);
+
+
+"";
+SpqB, PQcountsB := GetStrategies(nB,pB,qB); 
+"Top Strategy for B:", SpqB[nB];
+PQcountsB[nB][1], "MUL-BY-3 and", PQcountsB[nB][2], "3-ISO-EVAL == ",
+PQcountsB[nB][1]*pB + PQcountsB[nB][2]*qB, "total units";
+"Splits for B:", GetSplits(nB,SpqB);
+"";
+
+////////////////////////////////////////////////////////////////////////////////
+
