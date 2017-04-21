@@ -27,10 +27,10 @@ The field arithmetic implementation for 64-bit ARM processors ([`ARM64 folder`](
 
 ## Main Features
 
-- Support ephemeral Diffie-Hellman key exchange.
-- Support a peace-of-mind hybrid key exchange mode that adds a classical elliptic curve Diffie-Hellman key exchange on a high-security Montgomery curve providing 384 bits of classical ECDH security.
+- Supports ephemeral Diffie-Hellman key exchange.
+- Supports a peace-of-mind hybrid key exchange mode that adds a classical elliptic curve Diffie-Hellman key exchange on a high-security Montgomery curve providing 384 bits of classical ECDH security.
 - Protected against timing and cache-timing attacks through regular, constant-time implementation of all operations on secret key material.
-- Support for Windows OS using Microsoft Visual Studio and Linux OS using GNU GCC and clang.     
+- Support for Windows using Microsoft Visual Studio and Linux using GNU GCC and clang.     
 - Basic implementation of the underlying arithmetic functions using portable C to enable support on a wide range of platforms including x64, x86 and ARM. 
 - Optimized implementation of the underlying arithmetic functions for x64 platforms with optional, high-performance x64 assembly for Linux. 
 - Optimized implementation of the underlying arithmetic functions for 64-bit ARM platforms using assembly for Linux.
@@ -43,7 +43,7 @@ The field arithmetic implementation for 64-bit ARM processors ([`ARM64 folder`](
 
 ## Supported Platforms
 
-**SIDH v2.0** is supported on a wide range of platforms including x64, x86 and ARM devices running Windows or Linux OS. We have tested the library with Microsoft Visual Studio 2015, GNU GCC v4.9, and clang v3.8.
+**SIDH v2.0** is supported on a wide range of platforms including x64, x86 and ARM devices running Windows or Linux. We have tested the library with Microsoft Visual Studio 2015, GNU GCC v4.9, and clang v3.8.
 
 See instructions below to choose an implementation option and compile on one of the supported platforms.
 
@@ -64,9 +64,9 @@ Finally, the outputs of the shared secret functions are not processed by a key d
 
 Note that, excepting x64 and ARMv8, platforms are only supported by the generic implementation. 
 
-Follow the instructions in the sections "_Instructions for Windows OS_" or "_Instructions for Linux OS_" below to configure these different implementation options.
+Follow the instructions in the sections "_Instructions for Windows_" or "_Instructions for Linux_" below to configure these different implementation options.
 
-## Instructions for Windows OS
+## Instructions for Windows
 
 ### Building the library with Visual Studio:
 
@@ -80,7 +80,7 @@ After building the solution file, there should be two executable files available
 
 After building the solution file, add the generated `SIDH.lib` file to the set of References for a project, and add [`SIDH.h`](SIDH.h) and [`SIDH_api.h`](SIDH_api.h) to the list of header files of a project.
 
-## Instructions for Linux OS
+## Instructions for Linux
 
 To compile on Linux using GNU GCC or clang, execute the following command from the command prompt:
 
