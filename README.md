@@ -1,7 +1,3 @@
-# Contributing
-
-This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
-
 # SIDH v2.0 (C Edition)
 
 The **SIDH v2.0** library is a supersingular isogeny-based cryptography library that implements a new suite of algorithms for a post-quantum, ephemeral Diffie-Hellman key exchange scheme [2].
@@ -128,3 +124,7 @@ The extended version is available [`here`](http://eprint.iacr.org/2016/413).
 
 [3]  Craig Costello, David Jao, Patrick Longa, Michael Naehrig, Joost Renes, and David Urbanik, "Efficient compression of SIDH public keys". Advances in Cryptology - EUROCRYPT 2017, LNCS 10210, pp. 679-706, 2017. 
 The preprint version is available [`here`](http://eprint.iacr.org/2016/963). 
+
+# Contributing
+
+This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
