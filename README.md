@@ -31,10 +31,10 @@ The field arithmetic implementation for 64-bit ARM processors ([`ARM64 folder`](
 - Supports a peace-of-mind hybrid key exchange mode that adds a classical elliptic curve Diffie-Hellman key exchange on a high-security Montgomery curve providing 384 bits of classical ECDH security.
 - Protected against timing and cache-timing attacks through regular, constant-time implementation of all operations on secret key material.
 - Support for Windows using Microsoft Visual Studio and Linux using GNU GCC and clang.     
-- Basic implementation of the underlying arithmetic functions using portable C to enable support on a wide range of platforms including x64, x86 and ARM. 
-- Optimized implementation of the underlying arithmetic functions for x64 platforms with optional, high-performance x64 assembly for Linux. 
-- Optimized implementation of the underlying arithmetic functions for 64-bit ARM platforms using assembly for Linux.
-- Testing and benchmarking code for key exchange. See [`kex_tests.c`](tests/kex_tests.c).
+- Provides basic implementation of the underlying arithmetic functions using portable C to enable support on a wide range of platforms including x64, x86 and ARM. 
+- Provides an optimized implementation of the underlying arithmetic functions for x64 platforms with optional, high-performance x64 assembly for Linux. 
+- Provides an optimized implementation of the underlying arithmetic functions for 64-bit ARM platforms using assembly for Linux.
+- Includes testing and benchmarking code for key exchange. See [`kex_tests.c`](tests/kex_tests.c).
 
 ## New in Version 2.0
 
