@@ -43,7 +43,7 @@ ifeq "$(GENERIC)" "TRUE"
     EXTRA_OBJECTS=fp_generic.o
 else
 ifeq "$(ARCH)" "x64"
-    EXTRA_OBJECTS=fp_x64.o fp_x64_asm.o
+    EXTRA_OBJECTS=fp_x64.o fp_x64_gas_asm.o
 endif
 ifeq "$(ARCH)" "ARM64"
     EXTRA_OBJECTS=fp_arm64.o fp_arm64_asm.o
@@ -86,8 +86,8 @@ ifeq "$(ARCH)" "x64"
     fp_x64.o: AMD64/fp_x64.c
 	    $(CC) $(CFLAGS) AMD64/fp_x64.c
 
-    fp_x64_asm.o: AMD64/fp_x64_asm.S
-	    $(CC) $(CFLAGS) AMD64/fp_x64_asm.S
+    fp_x64_gas_asm.o: AMD64/fp_x64_gas_asm.S
+	    $(CC) $(CFLAGS) AMD64/fp_x64_gas_asm.S
 endif
 ifeq "$(ARCH)" "ARM64"
     fp_arm64.o: ARM64/fp_arm64.c
@@ -110,5 +110,5 @@ kex_tests.o: tests/kex_tests.c SIDH.h
 .PHONY: clean
 
 clean:
-	rm -f arith_test kex_test fp_generic.o fp_x64.o fp_x64_asm.o fp_arm64.o fp_arm64_asm.o $(OBJECTS_ALL)
+	rm -f arith_test kex_test fp_generic.o fp_x64.o fp_x64_gas_asm.o fp_arm64.o fp_arm64_asm.o $(OBJECTS_ALL)
 
