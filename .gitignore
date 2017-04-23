@@ -250,3 +250,10 @@ paket-files/
 # JetBrains Rider
 .idea/
 *.sln.iml
+
+# Generated object files
+*.o
+
+# Generated binaries
+arith_test
+kex_test
