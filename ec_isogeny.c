@@ -448,7 +448,7 @@ void xTPL(const point_proj_t P, point_proj_t Q, const f2elm_t A24, const f2elm_t
 { // Tripling of a Montgomery point in projective coordinates (X:Z).
   // Input: projective Montgomery x-coordinates P = (X:Z), where x=X/Z and Montgomery curve constant A/C.
   // Output: projective Montgomery x-coordinates Q = 3*P = (X3:Z3).
-    f2elm_t t0, t1, t2, t3, t4, t5;
+    f2elm_t t0, t1, t2, t3, t4 = {0}, t5;
 
     fp2sub751(P->X, P->Z, t2);                         // t2 = X-Z           
     fp2add751(P->X, P->Z, t3);                         // t3 = X+Z 
@@ -598,7 +598,7 @@ static void get_point_notin_2E(felm_t alpha, const f2elm_t A, const felm_t one, 
   // Output: alpha such that alpha*u = alpha*(i+4) is a good x-coordinate, which means it corresponds to a point P not in [2]E.
   //         Then, [3^eB]P has full order 2^eA.
     digit_t *A0 = (digit_t*)A[0], *A1 = (digit_t*)A[1];
-    felm_t X0, X1, x0, x1, t0, sqrt, X0_temp = {0}, X1_temp = {0}, alpha52 = {0}, alpha52_2 = {0}, alpha47 = {0}, alpha47_2 = {0};
+    felm_t X0, X1, x0, x1, t0 = {0}, sqrt, X0_temp = {0}, X1_temp = {0}, alpha52 = {0}, alpha52_2 = {0}, alpha47 = {0}, alpha47_2 = {0};
     unsigned int i;
     
     fpsub751(A0, A1, x0);                            // x0 = A0-A1
@@ -666,7 +666,7 @@ void generate_2_torsion_basis(const f2elm_t A, point_full_proj_t R1, point_full_
     felm_t *XQ = (felm_t*)Q->X,  *ZQ = (felm_t*)Q->Z;
     felm_t *Y1 = (felm_t*)R1->Y, *Y2 = (felm_t*)R2->Y;
     felm_t zero, alpha = {0};
-	f2elm_t t0, t1, one = {0};
+	f2elm_t t0 = {0}, t1, one = {0};
 	felm_t four, value47 = {0}, value52 = {0};
 
 	fpzero751(zero);
@@ -738,7 +738,7 @@ static uint64_t sqrt17[NWORDS64_FIELD] = { 0x89127CDB8966913D, 0xF788014C8C8401A
 
 static void get_X_on_curve(f2elm_t A, unsigned int* r, f2elm_t x, felm_t t1, felm_t a, felm_t b) 
 { // Elligator2 for X
-    felm_t v0, v1, r0, r1, t0, t2, t3, rsq = {0};
+    felm_t v0, v1, r0, r1, t0 = {0}, t2 = {0}, t3, rsq = {0};
     unsigned int i;
 
     fpcopy751(((felm_t*)&LIST)[(*r << 1)-2], r1);    // r1 = list[2*r-1]
@@ -816,7 +816,7 @@ static void get_X_on_curve(f2elm_t A, unsigned int* r, f2elm_t x, felm_t t1, fel
 
 static void get_pt_on_curve(f2elm_t A, unsigned int* r, f2elm_t x, f2elm_t y)
 { // Elligator2
-    felm_t t0, t1, t2, t3, a, b;
+    felm_t t0, t1, t2 = {0}, t3, a, b;
 
     get_X_on_curve(A, r, x, t1, a, b);
     fpadd751(a, t1, t0);                             // t0 = a+t1
@@ -829,12 +829,12 @@ static void get_pt_on_curve(f2elm_t A, unsigned int* r, f2elm_t x, f2elm_t y)
     fpmul751_mont(b, t1, t1);                        // t1 = t1*b
 	fpcorrection751(t0);
 	fpcorrection751(t2);
-  
+
     if (fpequal751_non_constant_time(t0, t2) == true) {
         fpcopy751(t3, y[0]);                         // y0 = t3
         fpcopy751(t1, y[1]);                         // y1 = t1;
     } else {
-        fpneg751(t3);          
+        fpneg751(t3);
         fpcopy751(t1, y[0]);                         // y0 = t1;
         fpcopy751(t3, y[1]);                         // y1 = -t3
     }
@@ -874,7 +874,7 @@ static void get_3_torsion_elt(f2elm_t A, unsigned int* r, point_proj_t P, point_
 
 
 void generate_3_torsion_basis(f2elm_t A, point_full_proj_t R1, point_full_proj_t R2, PCurveIsogenyStruct CurveIsogeny)
-{ // Produces points R1 and R2 such that {R1, R2} is a basis for E[3^239].       
+{ // Produces points R1 and R2 such that {R1, R2} is a basis for E[3^239].
   // Input:   curve constant A.
   // Outputs: R1 = (X1:Y1:Z1) and R2 = (X2:Y2:Z2).
     point_proj_t R, R3, R4;
@@ -883,13 +883,13 @@ void generate_3_torsion_basis(f2elm_t A, point_full_proj_t R1, point_full_proj_t
 	felm_t *X4 = (felm_t*)R4->X, *Z4 = (felm_t*)R4->Z;
     felm_t *X1 = (felm_t*)R1->X, *Y1 = (felm_t*)R1->Y, *Z1 = (felm_t*)R1->Z;
     felm_t *X2 = (felm_t*)R2->X, *Y2 = (felm_t*)R2->Y, *Z2 = (felm_t*)R2->Z;
-    f2elm_t u, v, c, f, t0, f0, fX, fY, Y, Y3, one = {0};
+    f2elm_t u = {0}, v, c, f, t0 = {0}, f0, fX, fY, Y, Y3, one = {0};
 	felm_t zero = {0};
-    unsigned int r = 1;         
+    unsigned int r = 1;
     unsigned int triples = 0, pts_found = 0;
 
-    get_3_torsion_elt(A, &r, R, R3, &triples, CurveIsogeny);        
-    fpcopy751(CurveIsogeny->Montgomery_one, one[0]); 
+    get_3_torsion_elt(A, &r, R, R3, &triples, CurveIsogeny);
+    fpcopy751(CurveIsogeny->Montgomery_one, one[0]);
 	fpzero751(zero);
 
     if (triples == 239) {
@@ -1591,8 +1591,8 @@ void recover_y(const publickey_t PK, point_full_proj_t phiP, point_full_proj_t p
 
 
 void compress_2_torsion(const unsigned char* PublicKeyA, unsigned char* CompressedPKA, uint64_t* a0, uint64_t* b0, uint64_t* a1, uint64_t* b1, point_t R1, point_t R2, PCurveIsogenyStruct CurveIsogeny)
-{ // 2-torsion compression                                                                          
-    point_full_proj_t P, Q, phP, phQ, phX;
+{ // 2-torsion compression
+    point_full_proj_t P = {0}, Q = {0}, phP, phQ, phX;
     point_t phiP, phiQ;
     publickey_t PK;
     digit_t* comp = (digit_t*)CompressedPKA;
@@ -1601,8 +1601,8 @@ void compress_2_torsion(const unsigned char* PublicKeyA, unsigned char* Compress
     digit_t tmp[2*NWORDS_ORDER];
 
     to_fp2mont(((f2elm_t*)PublicKeyA)[0], ((f2elm_t*)&PK)[0]);    // Converting to Montgomery representation
-    to_fp2mont(((f2elm_t*)PublicKeyA)[1], ((f2elm_t*)&PK)[1]); 
-    to_fp2mont(((f2elm_t*)PublicKeyA)[2], ((f2elm_t*)&PK)[2]); 
+    to_fp2mont(((f2elm_t*)PublicKeyA)[1], ((f2elm_t*)&PK)[1]);
+    to_fp2mont(((f2elm_t*)PublicKeyA)[2], ((f2elm_t*)&PK)[2]);
 
     recover_y(PK, phP, phQ, phX, A, CurveIsogeny);
     generate_2_torsion_basis(A, P, Q, CurveIsogeny);
@@ -1624,7 +1624,7 @@ void compress_2_torsion(const unsigned char* PublicKeyA, unsigned char* Compress
     ph2(phiP, phiQ, R1, R2, A, a0, b0, a1, b1, CurveIsogeny);
 
     if ((a0[0] & 1) == 1) {  // Storing [b1*a0inv, a1*a0inv, b0*a0inv] and setting bit384 to 0
-        inv_mod_orderA((digit_t*)a0, inv);        
+        inv_mod_orderA((digit_t*)a0, inv);
 		multiply((digit_t*)b0, inv, tmp, NWORDS_ORDER);
 		copy_words(tmp, &comp[0], NWORDS_ORDER);
 		comp[NWORDS_ORDER-1] &= (digit_t)(-1) >> 12;       // Hardcoded value
@@ -1647,7 +1647,7 @@ void compress_2_torsion(const unsigned char* PublicKeyA, unsigned char* Compress
 		comp[3*NWORDS_ORDER-1] &= (digit_t)(-1) >> 12;
 		comp[3*NWORDS_ORDER-1] |= (digit_t)1 << (sizeof(digit_t)*8 - 1);
     }
-    
+
     from_fp2mont(A, (felm_t*)&comp[3*NWORDS_ORDER]);  // Converting back from Montgomery representation
 }
 
@@ -2139,15 +2139,15 @@ void mont_twodim_scalarmult(digit_t* a, const point_t R, const point_t S, const 
 
 
 void decompress_2_torsion(const unsigned char* SecretKey, const unsigned char* CompressedPKB, point_proj_t R, f2elm_t A, PCurveIsogenyStruct CurveIsogeny)
-{ // 2-torsion decompression function                                                                          
+{ // 2-torsion decompression function
     point_t R1, R2;
-    point_full_proj_t P, Q;
+    point_full_proj_t P = {0}, Q = {0};
     digit_t* comp = (digit_t*)CompressedPKB;
     f2elm_t A24, vec[2], invs[2], one = {0};
     digit_t tmp1[2*NWORDS_ORDER], tmp2[2*NWORDS_ORDER], vone[2*NWORDS_ORDER] = {0}, mask = (digit_t)(-1);
     unsigned int bit;
 
-    mask >>= (CurveIsogeny->owordbits - CurveIsogeny->oAbits);  
+    mask >>= (CurveIsogeny->owordbits - CurveIsogeny->oAbits);
     vone[0] = 1;
     fpcopy751(CurveIsogeny->Montgomery_one, one[0]);
     to_fp2mont((felm_t*)&comp[3*NWORDS_ORDER], A);    // Converting to Montgomery representation

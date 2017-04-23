@@ -587,7 +587,7 @@ void fp2inv751_mont(f2elm_t a)
 void fp2inv751_mont_bingcd(f2elm_t a)
 {// GF(p751^2) inversion using Montgomery arithmetic, a = (a0-i*a1)/(a0^2+a1^2)
  // This uses the binary GCD for inversion in fp and is NOT constant time!!!
-	f2elm_t t1;
+	f2elm_t t1 = {0};
 
 	fpsqr751_mont(a[0], t1[0]);             // t10 = a0^2
 	fpsqr751_mont(a[1], t1[1]);             // t11 = a1^2
@@ -677,7 +677,7 @@ void mont_n_way_inv(const f2elm_t* vec, const int n, f2elm_t* out)
 
 void sqrt_Fp2_frac(const f2elm_t u, const f2elm_t v, f2elm_t y)
 { // Computes square roots of elements in (Fp2)^2 using Hamburg's trick. 
-    felm_t t0, t1, t2, t3, t4, t;
+    felm_t t0 = {0}, t1 = {0}, t2, t3 = {0}, t4, t;
     digit_t *u0 = (digit_t*)u[0], *u1 = (digit_t*)u[1];
     digit_t *v0 = (digit_t*)v[0], *v1 = (digit_t*)v[1];
     digit_t *y0 = (digit_t*)y[0], *y1 = (digit_t*)y[1];
@@ -743,7 +743,7 @@ void sqrt_Fp2_frac(const f2elm_t u, const f2elm_t v, f2elm_t y)
 
 void sqrt_Fp2(const f2elm_t u, f2elm_t y)
 { // Computes square roots of elements in (Fp2)^2 using Hamburg's trick. 
-    felm_t t0, t1, t2, t3;
+    felm_t t0 = {0}, t1, t2, t3 = {0};
     digit_t *a  = (digit_t*)u[0], *b  = (digit_t*)u[1];
     unsigned int i;
 
@@ -913,8 +913,8 @@ void exp84_Fp2_cycl(const f2elm_t y, uint64_t* t, const felm_t one, f2elm_t res)
 
 bool is_cube_Fp2(f2elm_t u, PCurveIsogenyStruct CurveIsogeny)
 { // Check if a GF(p751^2) element is a cube.
-    f2elm_t v;
-    felm_t t0, zero = {0}, one = {0};
+    f2elm_t v = {0};
+    felm_t t0 = {0}, zero = {0}, one = {0};
     unsigned int e;
 
     fpcopy751(CurveIsogeny->Montgomery_one, one);

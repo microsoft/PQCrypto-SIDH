@@ -695,9 +695,9 @@ bool ecpoints_test(PCurveIsogenyStaticData CurveIsogenyData)
 	unsigned int pbytes = (CurveIsogenyData->pwordbits + 7)/8;      // Number of bytes in a field element 
 	unsigned int obytes = (CurveIsogenyData->owordbits + 7)/8;      // Number of bytes in an element in [1, order]
 	unsigned char *PrivateKeyA, *PublicKeyA, *PrivateKeyB, *PublicKeyB;
-	f2elm_t t0, t1;
+	f2elm_t t0 = {0}, t1;
 	f2elm_t A, C, zero, one, PK0, PK1, PK2;
-	point_full_proj_t R1, R2;
+	point_full_proj_t R1 = {0}, R2 = {0};
 	point_proj_t P1, P2, P3, P4;
 	PCurveIsogenyStruct CurveIsogeny = {0};
 	CRYPTO_STATUS Status = CRYPTO_SUCCESS;
@@ -838,7 +838,7 @@ bool ecpairing_test(PCurveIsogenyStaticData CurveIsogenyData)
 		unsigned char *PrivateKeyA, *PublicKeyA, *PrivateKeyB, *PublicKeyB;
 		f2elm_t t0, t1;
 		f2elm_t A, C, A24, C24, zero, one, PK0, PK1, PK2, pairings[5];
-		point_full_proj_t R1, R2, Q1, Q2, Q3, Q4;
+		point_full_proj_t R1 = {0}, R2 = {0}, Q1, Q2, Q3, Q4;
 		point_proj_t P1, P2, P3, P4, P5;
 		point_t S1, S2, SP, SQ;
 		PCurveIsogenyStruct CurveIsogeny = {0};
@@ -1468,12 +1468,12 @@ bool eccompress_test(PCurveIsogenyStaticData CurveIsogenyData)
 	unsigned int pbytes = (CurveIsogenyData->pwordbits + 7)/8;    // Number of bytes in a field element 
 	unsigned int obytes = (CurveIsogenyData->owordbits + 7)/8;    // Number of bytes in an element in [1, order]
 	unsigned char temp, bit, *PrivateKeyA, *PublicKeyA, *PrivateKeyB, *PublicKeyB, *CompressedPKA, *CompressedPKB, *SharedSecret1, *SharedSecret2;
-	f2elm_t A, A24, C24, C, zero, one, PK0, PK1, PK2, t0, t1;
+	f2elm_t A, A24, C24, C, zero, one, PK0 = {0}, PK1 = {0}, PK2, t0, t1;
     digit_t a0[NWORDS_ORDER], b0[NWORDS_ORDER], a1[NWORDS_ORDER], b1[NWORDS_ORDER];
     uint64_t Montgomery_rB[NWORDS64_ORDER] = {0x48062A91D3AB563D, 0x6CE572751303C2F5, 0x5D1319F3F160EC9D, 0xE35554E8C2D5623A, 0xCA29300232BC79A5, 0x8AAD843D646D78C5};  // Value -(3^239)^-1 mod 2^384
 	point_full_proj_t Q1, Q2, Q3, Q4;
 	point_proj_t P1, P2, R;
-    point_t R1, R2, R3, R4;
+    point_t R1, R2, R3 = {0}, R4 = {0};
 	PCurveIsogenyStruct CurveIsogeny = {0};
 	CRYPTO_STATUS Status = CRYPTO_SUCCESS;
 	bool passed;
