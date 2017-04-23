@@ -129,7 +129,7 @@ const char* SIDH_get_error_message(CRYPTO_STATUS Status)
 { // Output error/success message for a given CRYPTO_STATUS
     struct error_mapping {
         unsigned int index;
-        char*        string;
+        const char *string;
     } mapping[CRYPTO_STATUS_TYPE_SIZE] = {
         {CRYPTO_SUCCESS, CRYPTO_MSG_SUCCESS},
         {CRYPTO_ERROR, CRYPTO_MSG_ERROR},
