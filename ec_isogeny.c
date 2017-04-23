@@ -1437,8 +1437,10 @@ void phn84(f2elm_t r, const f2elm_t* t_ori, const f2elm_t* LUT, const f2elm_t* L
         }
         phn21(q, LUT, LUT_0, LUT_1, one, alpha_k);  // q order 2^84 
         alpha[k] += (alpha_k[0] << (k*20));
-	    mask = ((uint64_t)1 << (k * 20))-1;
-		alpha[k + 1] += ((alpha_k[0] >> (64 - k * 20)) & mask);
+        if (k > 0) {
+            mask = ((uint64_t)1 << (k * 20))-1;
+            alpha[k + 1] += ((alpha_k[0] >> (64 - k * 20)) & mask);
+        }
 		alpha[k + 1] += (alpha_k[1] << (k * 20));
         exp84_Fp2_cycl(t_ori[k], alpha_k, one, tmp); 
         fp2mul751_mont(t, tmp, t); 
