@@ -19,7 +19,7 @@ int crypto_kem_keypair(unsigned char *pk, unsigned char *sk)
 
     // Generate lower portion of secret key sk <- s||SK
     RandomBytesFunction(sk, CRYPTO_BYTES);
-    random_mod_order_B(sk + CRYPTO_BYTES);
+    random_mod_order_B(sk + CRYPTO_BYTES);    // Get random value in [0, 2^Floor(Log(2,oB))-1]
 
     // Generate public key pk
     EphemeralKeyGeneration_B(sk + CRYPTO_BYTES, pk);
