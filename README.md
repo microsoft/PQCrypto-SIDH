@@ -158,6 +158,13 @@ After building the solution file, add the generated `P503.lib` and `P751.lib` li
 
 **SIDH** is licensed under the MIT License; see [`License`](LICENSE) for details.
 
+The library includes some third party modules that are licensed differently. In particular:
+
+- `tests/aes/aes_c.c`: public domain
+- `tests/rng/rng.c`: copyrighted by Lawrence E. Bassham 
+- `tests/PQCtestKAT_kem<#>.c`: copyrighted by Lawrence E. Bassham 
+- `src/sha3/fips202.c`: public domain
+
 # References
 
 [1]  Craig Costello, Patrick Longa, and Michael Naehrig, "Efficient algorithms for supersingular isogeny Diffie-Hellman". Advances in Cryptology - CRYPTO 2016, LNCS 9814, pp. 572-601, 2016. 
