@@ -27,16 +27,11 @@ The library was developed by [Microsoft Research](http://research.microsoft.com/
 * [`Generic implementation for p751`](src/P751/generic/): implementation of the field arithmetic over the prime p751 in portable C.
 * [`random folder`](src/random/): randombytes function using the system random number generator.
 * [`sha3 folder`](src/sha3/): cSHAKE256 implementation.  
-* [`Test folder`](tests/): test files.     
-* [`Magma folder`](SIDH-Magma/): Magma scripts.   
+* [`Test folder`](tests/): test files.   
 * [`Visual Studio folder`](Visual%20Studio/): Visual Studio 2015 files for compilation in Windows.
 * [`Makefile`](Makefile): Makefile for compilation using the GNU GCC or clang compilers on Linux. 
 * [`License`](LICENSE): MIT license file.
 * [`Readme`](README.md): this readme file.
-
-## Contributions
-
-The field arithmetic implementation for 64-bit ARM processors ([`ARM64 folder`](src/P751/ARM64/)) was contributed and is copyrighted by David Urbanik (dburbani@uwaterloo.ca).
 
 ## Main Features
 
@@ -164,6 +159,14 @@ The library includes some third party modules that are licensed differently. In 
 - `tests/rng/rng.c`: copyrighted by Lawrence E. Bassham 
 - `tests/PQCtestKAT_kem<#>.c`: copyrighted by Lawrence E. Bassham 
 - `src/sha3/fips202.c`: public domain
+
+## Contributors
+
+The field arithmetic implementation for 64-bit ARM processors ([`ARM64 folder`](src/P751/ARM64/)) was contributed and is copyrighted by David Urbanik (dburbani@uwaterloo.ca).
+
+Other contributors include:
+
+- Joost Renes, while he was an intern with Microsoft Research.
 
 # References
 
