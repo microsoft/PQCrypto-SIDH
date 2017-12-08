@@ -2,7 +2,7 @@
 
 The **SIDH** library is an efficient supersingular isogeny-based cryptography library written in C language.
 **Version v3.0** of the library includes the ephemeral Diffie-Hellman key exchange scheme "SIDH" [1,2], and the CCA-secure
-key encapsulation mechanism "SIKE" []. These schemes are conjectured to offer protection against quantum computer attacks.
+key encapsulation mechanism "SIKE" [4]. These schemes are conjectured to be secure against quantum computer attacks.
 
 Concretely, the SIDH library includes the following KEM schemes:
 
@@ -19,7 +19,7 @@ The library was developed by [Microsoft Research](http://research.microsoft.com/
 ## Contents
 
 * [`KAT folder`](KAT/): Known Answer Test (KAT) files for the KEM.
-* [`src folder`](src/): C and header files. Public APIs are located in [`P503_api.h`](src/P503/P503_api.h) and [`P751_api.h`](src/P751/P751_api.h).
+* [`src folder`](src/): C and header files. Public APIs can be found in [`P503_api.h`](src/P503/P503_api.h) and [`P751_api.h`](src/P751/P751_api.h).
 * [`Optimized x64 implementation for p503`](src/P503/AMD64/): optimized implementation of the field arithmetic over the prime p503 for x64 platforms. 
 * [`Optimized x64 implementation for p751`](src/P751/AMD64/): optimized implementation of the field arithmetic over the prime p751 for x64 platforms.      
 * [`Optimized ARMv8 implementation for p751`](src/P751/ARM64/): optimized implementation of the field arithmetic over the prime p751 for ARMv8 platforms.
@@ -58,27 +58,27 @@ The field arithmetic implementation for 64-bit ARM processors ([`ARM64 folder`](
 
 ## New in Version 3.0
 
-- Added support for SIKE, an IND-CCA secure key encapsulation protocol.
+- Added support for SIKE [4], an IND-CCA secure key encapsulation protocol based on supersingular isogenies.
 - Added a new parameter set over the prime p503 that matches the post-quantum security of AES128.
-- The implementations are significantly more compact (in code size) and faster.
+- The implementations are significantly more compact and faster. Among other optimizations, the library exploits a new tripling formula from [5] and the fast three-point ladder algorithm from [6].  
 - Removed the code implementing public key compression [3]. 
-The old compression code [3] can be accessed [here](https://github.com/Microsoft/PQCrypto-SIDH/tree/v2.0).
-Note that a faster compression implementation [] is available in a [fork of SIDH](). 
+The old compression code can be accessed [here](https://github.com/Microsoft/PQCrypto-SIDH/tree/v2.0).
+Note that a faster compression implementation [7] is available in a [fork of SIDH](https://github.com/Microsoft/PQCrypto-SIDH/tree/v2.0). 
 In this case, public keys are reduced from 564 to 330 bytes, but the computing time suffers almost a two-fold slowdown.
 - Added Known Answer Tests (KATs).
 
 ## Supported Platforms
 
 **SIDH v3.0** is supported on a wide range of platforms including x64, x86 and ARM devices running Windows 
-or Linux OS. We have tested the library with Microsoft Visual Studio 2015, GNU GCC v4.9, and clang v3.8.
+or Linux OS. We have tested the library with Microsoft Visual Studio 2015, GNU GCC v5.4, and clang v3.8.
 See instructions below to choose an implementation option and compile on one of the supported platforms.
 
 ## Implementation Options
 
  The following implementation options are available:
-- Portable implementations enabled by setting "OPT_LEVEL=GENERIC". 
-- Optimized x64 assembly implementations for Linux enabled by setting "ARCH=x64" and "OPT_LEVEL=FAST".
-- Optimized ARMv8 assembly implementation for Linux enabled by setting "ARCH=ARM64" and "OPT_LEVEL=FAST".
+- Portable implementations enabled by setting `OPT_LEVEL=GENERIC`. 
+- Optimized x64 assembly implementations for Linux enabled by setting `ARCH=x64` and `OPT_LEVEL=FAST`.
+- Optimized ARMv8 assembly implementation for Linux enabled by setting `ARCH=ARM64` and `OPT_LEVEL=FAST`.
 
 Follow the instructions in the sections "_Instructions for Linux_" or "_Instructions for Windows_" below to configure these different implementation options.
 
@@ -90,8 +90,8 @@ By simply executing:
 $ make
 ```
 
-the library is compiled for x64 using clang, optimization level "fast", and using the special instructions MULX
-and ADX. Optimization level "fast" enables the use of assembly, which in turn is a requirement to enable the 
+the library is compiled for x64 using clang, optimization level `FAST`, and using the special instructions MULX
+and ADX. Optimization level `FAST` enables the use of assembly, which in turn is a requirement to enable the 
 optimizations using MULX/ADX.
 
 Other options for x64:
@@ -100,11 +100,11 @@ Other options for x64:
 $ make ARCH=x64 CC=[gcc/clang] OPT_LEVEL=[FAST/GENERIC] USE_MULX=[TRUE/FALSE] USE_ADX=[TRUE/FALSE] SET=[EXTENDED]
 ```
 
-Setting "SET=EXTENDED" adds the flags `-fwrapv -fomit-frame-pointer -march=native`. When OPT_LEVEL=FAST (i.e., 
+Setting `SET=EXTENDED` adds the flags `-fwrapv -fomit-frame-pointer -march=native`. When `OPT_LEVEL=FAST` (i.e., 
 assembly use enabled), the user is responsible for setting the flags MULX and ADX according to the targeted 
 platform (for example, MULX/ADX are not supported on Sandy or Ivy Bridge, only MULX is supported on Haswell, 
 and both MULX and ADX are supported on Broadwell, Skylake and Kaby Lake architectures). Note that USE_ADX can 
-only be set to TRUE if USE_MULX=TRUE.
+only be set to `TRUE` if `USE_MULX=TRUE`.
 
 Options for x86/ARM:
 
@@ -118,7 +118,7 @@ Options for ARM64:
 $ make ARCH=[ARM64] CC=[gcc/clang] OPT_LEVEL=[FAST/GENERIC] SET=[EXTENDED]
 ```
 
-As in the x64 case, OPT_LEVEL=FAST enables the use of assembly optimizations on ARMv8 platforms.
+As in the x64 case, `OPT_LEVEL=FAST` enables the use of assembly optimizations on ARMv8 platforms.
 
 Different tests and benchmarking results are obtained by running:
 
@@ -138,21 +138,21 @@ $ ./sike503/PQCtestKAT_kem
 $ ./sike751/PQCtestKAT_kem
 ```
 
-Whenever an unsupported configuration is applied, the following message will be displayed: `#error -- "Unsupported configuration"`. For example, ARCH=x86 and ARCH=ARM are only supported when GENERIC=TRUE.
+The program tries its best at auto-correcting unsupported configurations. For example, since the `FAST` implementation is currently only available for x64 and ARMv8 doing `make ARCH=x86 OPT_LEVEL=FAST` is actually processed using `ARCH=x86 OPT_LEVEL=GENERIC`.
 
 ## Instructions for Windows
 
 ### Building the library with Visual Studio:
 
-Open the solution file ([`SIDH.sln`](Visual%20Studio/SIDH/SIDH.sln)) in Visual Studio, and choose either x64 or Win32 from the platform menu. The option "Fast-generic" should be selected in the configuration menu. Finally, select "Build Solution" from the "Build" menu. 
+Open the solution file [`SIDH.sln`](Visual%20Studio/SIDH/SIDH.sln) in Visual Studio, choose either x64 or Win32 from the platform menu and then choose either `Fast` or `Generic` from the configuration menu (as explained above, the option `Fast` is not currently available for x86). Finally, select "Build Solution" from the "Build" menu. 
 
 ### Running the tests:
 
-After building the solution file, there should be 6 executable files: `arith_tests-503.exe` and `arith_tests-751.exe`, to run tests for the underlying arithmetic, `test_SIDHp503.exe` and `test_SIDHp751.exe`, to run tests for the key exchange, and `test_SIKEp503.exe` and `test_SIKEp751.exe`, to run tests for the KEM. 
+After building the solution file, there should be 6 executable files: `arith_tests-P503.exe` and `arith_tests-P751.exe`, to run tests for the underlying arithmetic, `test-SIDHp503.exe` and `test-SIDHp751.exe`, to run tests for the key exchange, and `test-SIKEp503.exe` and `test-SIKEp751.exe`, to run tests for the KEM. 
 
 ### Using the library:
 
-After building the solution file, add the generated `SIDH.lib` file to the set of References for a project, and add [`config.h`](src/config.h), and [`P503_api.h`](src/P503/P503_api.h) or [`P751_api.h`](src/P751/P751_api.h) to the list of header files of a project.
+After building the solution file, add the generated `P503.lib` and `P751.lib` library files to the set of References for a project, and add [`P503_api.h`](src/P503/P503_api.h) and [`P751_api.h`](src/P751/P751_api.h) to the list of header files of a project.
 
 ## License
 
@@ -168,14 +168,16 @@ The extended version is available [`here`](http://eprint.iacr.org/2016/413).
 [3]  Craig Costello, David Jao, Patrick Longa, Michael Naehrig, Joost Renes, and David Urbanik, "Efficient compression of SIDH public keys". Advances in Cryptology - EUROCRYPT 2017, LNCS 10210, pp. 679-706, 2017. 
 The preprint version is available [`here`](http://eprint.iacr.org/2016/963).
 
-[4]  Craig Costello, David Jao, Patrick Longa, Michael Naehrig, Joost Renes, and David Urbanik, "Efficient compression of SIDH public keys". Advances in Cryptology - EUROCRYPT 2017, LNCS 10210, pp. 679-706, 2017. 
-The preprint version is available [`here`](http://eprint.iacr.org/2016/963).  
+[4]   Reza Azarderakhsh, Matthew Campagna, Craig Costello, Luca De Feo, Basil Hess, Amir Jalali, Brian Koziel, Brian LaMacchia, Patrick Longa, Michael Naehrig, Joost Renes, Vladimir Soukharev, and David Urbanik, "Supersingular Isogeny Key Encapsulation". Submission to the NIST Post-Quantum Standardization project, 2017.  
 
-[4]  Craig Costello, David Jao, Patrick Longa, Michael Naehrig, Joost Renes, and David Urbanik, "Efficient compression of SIDH public keys". Advances in Cryptology - EUROCRYPT 2017, LNCS 10210, pp. 679-706, 2017. 
-The preprint version is available [`here`](http://eprint.iacr.org/2016/963). 
+[5]  Craig Costello, and Huseyin Hisil, "A simple and compact algorithm for SIDH with arbitrary degree isogenies". Advances in Cryptology - ASIACRYPT 2017 (to appear), 2017. 
+The preprint version is available [`here`](https://eprint.iacr.org/2017/504). 
 
-[6]  Craig Costello, David Jao, Patrick Longa, Michael Naehrig, Joost Renes, and David Urbanik, "Efficient compression of SIDH public keys". Advances in Cryptology - EUROCRYPT 2017, LNCS 10210, pp. 679-706, 2017. 
-The preprint version is available [`here`](http://eprint.iacr.org/2016/963). 
+[6]  Armando Faz-Hernández, Julio López, Eduardo Ochoa-Jiménez, and Francisco Rodríguez-Henríquez, "A faster software implementation of the supersingular isogeny Diffie-Hellman key exchange protocol". Cryptology ePrint Archive: Report 2017/1015, 2017. 
+The preprint version is available [`here`](https://eprint.iacr.org/2017/1015). 
+
+[7]  Gustavo H. M. Zanon, Marcos A. Simplicio Jr., Geovandro C. C. F. Pereira, Javad Doliskani, and Paulo S. L. M. Barreto, "Faster isogeny-based compressed key agreement". Cryptology ePrint Archive: Report 2017/1143, 2017. 
+The preprint version is available [`here`](https://eprint.iacr.org/2017/1143). 
 
 # Contributing
 
