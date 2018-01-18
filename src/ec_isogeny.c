@@ -165,12 +165,12 @@ void eval_3_isog(point_proj_t Q, const f2elm_t* coeff)
     fp2sub(Q->X, Q->Z, t1);                       // t1 = X-Z
     fp2mul_mont(t0, coeff[0], t0);                // t0 = coeff0*(X+Z)
     fp2mul_mont(t1, coeff[1], t1);                // t1 = coeff1*(X-Z)
-    fp2add(t0, t1, t2);                           // t2 = coeff0*(X-Z) + coeff1*(X+Z)
-    fp2sub(t1, t0, t0);                           // t0 = coeff0*(X-Z) - coeff1*(X+Z)
-    fp2sqr_mont(t2, t2);                          // t2 = [coeff0*(X-Z) + coeff1*(X+Z)]^2
-    fp2sqr_mont(t0, t0);                          // t1 = [coeff0*(X-Z) - coeff1*(X+Z)]^2
-    fp2mul_mont(Q->X, t2, Q->X);                  // X3final = X*[coeff0*(X-Z) + coeff1*(X+Z)]^2        
-    fp2mul_mont(Q->Z, t0, Q->Z);                  // Z3final = Z*[coeff0*(X-Z) - coeff1*(X+Z)]^2
+    fp2add(t0, t1, t2);                           // t2 = coeff0*(X+Z) + coeff1*(X-Z)
+    fp2sub(t1, t0, t0);                           // t0 = coeff1*(X-Z) - coeff0*(X+Z)
+    fp2sqr_mont(t2, t2);                          // t2 = [coeff0*(X+Z) + coeff1*(X-Z)]^2
+    fp2sqr_mont(t0, t0);                          // t0 = [coeff1*(X-Z) - coeff0*(X+Z)]^2
+    fp2mul_mont(Q->X, t2, Q->X);                  // X3final = X*[coeff0*(X+Z) + coeff1*(X-Z)]^2        
+    fp2mul_mont(Q->Z, t0, Q->Z);                  // Z3final = Z*[coeff1*(X-Z) - coeff0*(X+Z)]^2
 }
 
 
