@@ -146,20 +146,6 @@ __inline static void mp_addfast(const digit_t* a, const digit_t* b, digit_t* c)
 }
 
 
-__inline static void mp_addfastx2(const digit_t* a, const digit_t* b, digit_t* c)
-{ // Double-length multiprecision addition, c = a+b.    
-#if (OS_TARGET == OS_WIN) || defined(GENERIC_IMPLEMENTATION)
-
-    mp_add(a, b, c, 2*NWORDS_FIELD);
-    
-#elif (OS_TARGET == OS_LINUX)                 
-    
-    mp_addx2_asm(a, b, c);    
-
-#endif
-}
-
-
 void fp2sqr_mont(const f2elm_t a, f2elm_t c)
 { // GF(p^2) squaring using Montgomery arithmetic, c = a^2 in GF(p^2).
   // Inputs: a = a0+a1*i, where a0, a1 are in [0, 2*p-1] 
@@ -191,11 +177,27 @@ __inline static digit_t mp_subfast(const digit_t* a, const digit_t* b, digit_t* 
   // If c < 0 then returns mask = 0xFF..F, else mask = 0x00..0   
 #if (OS_TARGET == OS_WIN) || defined(GENERIC_IMPLEMENTATION)
 
-	return (0 - (digit_t)mp_sub(a, b, c, 2*NWORDS_FIELD));
+    return (0 - (digit_t)mp_sub(a, b, c, 2*NWORDS_FIELD));
 
 #elif (OS_TARGET == OS_LINUX)                 
 
-	return mp_subx2_asm(a, b, c);
+    return mp_subx2_asm(a, b, c);
+
+#endif
+}
+
+
+__inline static void mp_dblsubfast(const digit_t* a, const digit_t* b, digit_t* c)
+{ // Multiprecision subtraction, c = c-a-b, where lng(a) = lng(b) = 2*NWORDS_FIELD. 
+  // Inputs should be s.t. c > a and c > b  
+#if (OS_TARGET == OS_WIN) || defined(GENERIC_IMPLEMENTATION)
+
+    mp_sub(c, a, c, 2*NWORDS_FIELD);
+    mp_sub(c, b, c, 2*NWORDS_FIELD);
+
+#elif (OS_TARGET == OS_LINUX)                 
+
+    mp_dblsubx2_asm(a, b, c);
 
 #endif
 }
@@ -208,21 +210,23 @@ void fp2mul_mont(const f2elm_t a, const f2elm_t b, f2elm_t c)
     felm_t t1, t2;
     dfelm_t tt1, tt2, tt3; 
     digit_t mask;
-    unsigned int i, borrow = 0;
+    unsigned int i;
     
-    mp_mul(a[0], b[0], tt1, NWORDS_FIELD);           // tt1 = a0*b0
-    mp_mul(a[1], b[1], tt2, NWORDS_FIELD);           // tt2 = a1*b1
     mp_addfast(a[0], a[1], t1);                      // t1 = a0+a1
     mp_addfast(b[0], b[1], t2);                      // t2 = b0+b1
-    mask = mp_subfast(tt1, tt2, tt3);                // tt3 = a0*b0 - a1*b1. If tt3 < 0 then mask = 0xFF..F, else if tt3 >= 0 then mask = 0x00..0
+    mp_mul(a[0], b[0], tt1, NWORDS_FIELD);           // tt1 = a0*b0
+    mp_mul(a[1], b[1], tt2, NWORDS_FIELD);           // tt2 = a1*b1
+    mp_mul(t1, t2, tt3, NWORDS_FIELD);               // tt3 = (a0+a1)*(b0+b1)
+    mp_dblsubfast(tt1, tt2, tt3);                    // tt3 = (a0+a1)*(b0+b1) - a0*b0 - a1*b1 
+    mask = mp_subfast(tt1, tt2, tt1);                // tt1 = a0*b0 - a1*b1. If tt1 < 0 then mask = 0xFF..F, else if tt1 >= 0 then mask = 0x00..0
+
     for (i = 0; i < NWORDS_FIELD; i++) {
-        ADDC(borrow, tt3[NWORDS_FIELD+i], ((digit_t*)PRIME)[i] & mask, borrow, tt3[NWORDS_FIELD+i]);
+        t1[i] = ((digit_t*)PRIME)[i] & mask;
     }
-    rdc_mont(tt3, c[0]);                             // c[0] = a0*b0 - a1*b1
-    mp_addfastx2(tt1, tt2, tt1);                     // tt1 = a0*b0 + a1*b1
-    mp_mul(t1, t2, tt2, NWORDS_FIELD);               // tt2 = (a0+a1)*(b0+b1)
-	mp_subfast(tt2, tt1, tt2);                       // tt2 = (a0+a1)*(b0+b1) - a0*b0 - a1*b1 
-    rdc_mont(tt2, c[1]);                             // c[1] = (a0+a1)*(b0+b1) - a0*b0 - a1*b1 
+
+    rdc_mont(tt3, c[1]);                             // c[1] = (a0+a1)*(b0+b1) - a0*b0 - a1*b1 
+    mp_addfast((digit_t*)&tt1[NWORDS_FIELD], t1, (digit_t*)&tt1[NWORDS_FIELD]);
+    rdc_mont(tt1, c[0]);                             // c[0] = a0*b0 - a1*b1
 }
 
 
