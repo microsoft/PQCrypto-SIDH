@@ -113,8 +113,8 @@ const unsigned int strat_Bob[MAX_Bob-1] = {
 #define fp2inv_mont_bingcd            fp2inv751_mont_bingcd
 #define fpequal_non_constant_time     fpequal751_non_constant_time
 #define mp_add_asm                    mp_add751_asm
-#define mp_addx2_asm                  mp_add751x2_asm
 #define mp_subx2_asm                  mp_sub751x2_asm
+#define mp_dblsubx2_asm               mp_dblsub751x2_asm
 #define crypto_kem_keypair            crypto_kem_keypair_SIKEp751
 #define crypto_kem_enc                crypto_kem_enc_SIKEp751
 #define crypto_kem_dec                crypto_kem_dec_SIKEp751
