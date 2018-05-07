@@ -79,15 +79,13 @@ unsigned int mp_add(const digit_t* a, const digit_t* b, digit_t* c, const unsign
 // 751-bit multiprecision addition, c = a+b
 void mp_add751(const digit_t* a, const digit_t* b, digit_t* c);
 void mp_add751_asm(const digit_t* a, const digit_t* b, digit_t* c);
-//void mp_addmask751_asm(const digit_t* a, const digit_t mask, digit_t* c);
-
-// 2x751-bit multiprecision addition, c = a+b
-void mp_add751x2(const digit_t* a, const digit_t* b, digit_t* c);
-void mp_add751x2_asm(const digit_t* a, const digit_t* b, digit_t* c);
 
 // Multiprecision subtraction, c = a-b, where lng(a) = lng(b) = nwords. Returns the borrow bit 
 unsigned int mp_sub(const digit_t* a, const digit_t* b, digit_t* c, const unsigned int nwords);
 digit_t mp_sub751x2_asm(const digit_t* a, const digit_t* b, digit_t* c);
+
+// Double 2x751-bit multiprecision subtraction, c = c-a-b, where c > a and c > b
+void mp_dblsub751x2_asm(const digit_t* a, const digit_t* b, digit_t* c);
 
 // Multiprecision left shift
 void mp_shiftleft(digit_t* x, unsigned int shift, const unsigned int nwords);
