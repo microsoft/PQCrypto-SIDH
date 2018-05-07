@@ -26,6 +26,32 @@
 #define p503x2_6   0xC08B8D7BB4EF49A0
 #define p503x2_7   0x0080CDEA83023C3C
 
+p503p1_nz:
+.quad    0xAC00000000000000
+.quad    0x13085BDA2211E7A0
+.quad    0x1B9BF6C87B7E7DAF
+.quad    0x6045C6BDDA77A4D0
+.quad    0x004066F541811E1E
+
+// Define addition instructions
+#ifdef _MULX_
+#ifdef _ADX_
+
+#define ADD1    adox
+#define ADC1    adox
+#define ADD2    adcx
+#define ADC2    adcx
+
+#else
+
+#define ADD1    add
+#define ADC1    adc
+#define ADD2    add
+#define ADC2    adc
+
+#endif    
+#endif    
+
 
 .text
 //***********************************************************************
@@ -211,7 +237,7 @@ fpsub503_asm:
     adox   \T1, \T3        
     mulx   \T3, \T4, 24\M1   // T3:T4 = A0*B3
     adox   \T2, \T4 
-	       
+           
     mov    rdx, 8\M0
     mulx   \T5, \T4, \M1     // T5:T4 = A1*B0
     adox   \T3, rax 
@@ -227,7 +253,7 @@ fpsub503_asm:
     adcx   \T7, \T9        
     adcx   \T8, rax   
     adox   \T6, \T2
-	
+    
     mov    rdx, 16\M0
     mulx   \T1, \T0, \M1     // T1:T0 = A2*B0
     adox   \T7, \T3
@@ -974,6 +1000,179 @@ mul503_asm:
 
 #endif
 
+
+#ifdef _MULX_
+
+///////////////////////////////////////////////////////////////// MACRO
+// Schoolbook integer multiplication
+// Inputs:  memory pointers M0 and M1
+// Outputs: regs T0:T6
+// Temps:   regs T7:T9
+/////////////////////////////////////////////////////////////////
+.macro MUL128x320_SCHOOL M0, M1, T0, T1, T2, T3, T4, T5, T6, T7, T8, T9 
+    mov    rdx, \M0
+    mulx   \T1, \T0, \M1       // T0 <- C0_final    
+    mulx   \T2, \T4, 8\M1
+    xor    rax, rax
+    mulx   \T3, \T5, 16\M1 
+    ADD1   \T1, \T4               
+    ADC1   \T2, \T5     
+    mulx   \T4, \T7, 24\M1
+    ADC1   \T3, \T7         
+    mulx   \T5, \T6, 32\M1 
+    ADC1   \T4, \T6         
+    ADC1   \T5, rax   
+    
+    mov    rdx, 8\M0 
+    mulx   \T7, \T6, \M1 
+    ADD2   \T1, \T6            // T1 <- C1_final 
+    ADC2   \T2, \T7     
+    mulx   \T6, \T8, 8\M1
+    ADC2   \T3, \T6        
+    mulx   \T9, \T7, 16\M1
+    ADC2   \T4, \T9     
+    mulx   \T6, \T9, 24\M1   
+    ADC2   \T5, \T6  
+    mulx   \T6, rdx, 32\M1 
+    ADC2   \T6, rax 
+        
+    xor    rax, rax
+    ADD1   \T2, \T8 
+    ADC1   \T3, \T7  
+    ADC1   \T4, \T9  
+    ADC1   \T5, rdx   
+    ADC1   \T6, rax
+.endm
+
+  
+//**************************************************************************************
+//  Montgomery reduction
+//  Based on method described in Faz-Hernandez et al. https://eprint.iacr.org/2017/1015  
+//  Operation: c [reg_p2] = a [reg_p1]
+//  NOTE: a=c is not allowed
+//************************************************************************************** 
+.global rdc503_asm
+rdc503_asm:
+    push   rbx
+    push   r12
+    push   r13 
+    push   r14 
+    push   r15  
+
+    // a[0-1] x p503p1_nz --> result: r8:r14 
+    MUL128x320_SCHOOL [reg_p1], [p503p1_nz], r8, r9, r10, r11, r12, r13, r14, rbx, rcx, r15     
+
+    xor    r15, r15
+    add    r8, [reg_p1+24]  
+    adc    r9, [reg_p1+32]  
+    adc    r10, [reg_p1+40]   
+    adc    r11, [reg_p1+48]   
+    adc    r12, [reg_p1+56]   
+    adc    r13, [reg_p1+64]   
+    adc    r14, [reg_p1+72]  
+    adc    r15, [reg_p1+80]  
+    mov    [reg_p1+24], r8  
+    mov    [reg_p1+32], r9  
+    mov    [reg_p1+40], r10  
+    mov    [reg_p1+48], r11  
+    mov    [reg_p1+56], r12  
+    mov    [reg_p1+64], r13  
+    mov    [reg_p1+72], r14
+    mov    [reg_p1+80], r15   
+    mov    r8, [reg_p1+88]  
+    mov    r9, [reg_p1+96]  
+    mov    r10, [reg_p1+104]
+    mov    r11, [reg_p1+112]
+    mov    r12, [reg_p1+120]
+    adc    r8, 0
+    adc    r9, 0
+    adc    r10, 0
+    adc    r11, 0
+    adc    r12, 0
+    mov    [reg_p1+88], r8  
+    mov    [reg_p1+96], r9  
+    mov    [reg_p1+104], r10  
+    mov    [reg_p1+112], r11  
+    mov    [reg_p1+120], r12
+
+    // a[2-3] x p503p1_nz --> result: r8:r14
+    MUL128x320_SCHOOL [reg_p1+16], [p503p1_nz], r8, r9, r10, r11, r12, r13, r14, rbx, rcx, r15 
+
+    xor    r15, r15
+    add    r8, [reg_p1+40]  
+    adc    r9, [reg_p1+48]  
+    adc    r10, [reg_p1+56]   
+    adc    r11, [reg_p1+64]  
+    adc    r12, [reg_p1+72]   
+    adc    r13, [reg_p1+80]   
+    adc    r14, [reg_p1+88]  
+    adc    r15, [reg_p1+96]
+    mov    [reg_p1+40], r8  
+    mov    [reg_p1+48], r9  
+    mov    [reg_p1+56], r10  
+    mov    [reg_p1+64], r11   
+    mov    [reg_p1+72], r12  
+    mov    [reg_p1+80], r13  
+    mov    [reg_p1+88], r14
+    mov    [reg_p1+96], r15
+    mov    r8, [reg_p1+104]
+    mov    r9, [reg_p1+112]
+    mov    r10, [reg_p1+120] 
+    adc    r8, 0
+    adc    r9, 0
+    adc    r10, 0   
+    mov    [reg_p1+104], r8  
+    mov    [reg_p1+112], r9  
+    mov    [reg_p1+120], r10 
+
+    // a[4-5] x p503p1_nz --> result: r8:r14
+    MUL128x320_SCHOOL [reg_p1+32], [p503p1_nz], r8, r9, r10, r11, r12, r13, r14, rbx, rcx, r15  
+
+    xor    r15, r15
+    add    r8, [reg_p1+56]  
+    adc    r9, [reg_p1+64]  
+    adc    r10, [reg_p1+72]   
+    adc    r11, [reg_p1+80]  
+    adc    r12, [reg_p1+88]   
+    adc    r13, [reg_p1+96]   
+    adc    r14, [reg_p1+104]  
+    adc    r15, [reg_p1+112]
+    mov    [reg_p1+56], r8  
+    mov    [reg_p2], r9       // Final result c0  
+    mov    [reg_p1+72], r10  
+    mov    [reg_p1+80], r11   
+    mov    [reg_p1+88], r12  
+    mov    [reg_p1+96], r13  
+    mov    [reg_p1+104], r14
+    mov    [reg_p1+112], r15 
+
+    // a[6-7] x p503p1_nz --> result: r8:r14
+    MUL128x320_SCHOOL [reg_p1+48], [p503p1_nz], r8, r9, r10, r11, r12, r13, r14, rbx, rcx, r15  
+    
+    // Final result c1:c7
+    add    r8, [reg_p1+72]  
+    adc    r9, [reg_p1+80]  
+    adc    r10, [reg_p1+88]   
+    adc    r11, [reg_p1+96]  
+    adc    r12, [reg_p1+104]   
+    adc    r13, [reg_p1+112]   
+    adc    r14, [reg_p1+120] 
+    mov    [reg_p2+8], r8  
+    mov    [reg_p2+16], r9  
+    mov    [reg_p2+24], r10  
+    mov    [reg_p2+32], r11   
+    mov    [reg_p2+40], r12  
+    mov    [reg_p2+48], r13  
+    mov    [reg_p2+56], r14
+
+    pop    r15
+    pop    r14
+    pop    r13
+    pop    r12
+    pop    rbx
+   ret
+
+  #else
   
 //***********************************************************************
 //  Montgomery reduction
@@ -1297,121 +1496,40 @@ rdc503_asm:
   pop    r12
   ret
 
+  #endif
+
 
 //***********************************************************************
 //  503-bit multiprecision addition
 //  Operation: c [reg_p3] = a [reg_p1] + b [reg_p2]
 //*********************************************************************** 
 .global mp_add503_asm
-mp_add503_asm:
-  push   r12
-  push   r13
-  push   r14
-  push   r15
-  
+mp_add503_asm: 
   mov    r8, [reg_p1]
   mov    r9, [reg_p1+8]
   mov    r10, [reg_p1+16]
   mov    r11, [reg_p1+24]
-  mov    r12, [reg_p1+32]
-  mov    r13, [reg_p1+40]
-  mov    r14, [reg_p1+48]
-  mov    r15, [reg_p1+56]
-
   add    r8, [reg_p2] 
   adc    r9, [reg_p2+8] 
   adc    r10, [reg_p2+16] 
   adc    r11, [reg_p2+24] 
-  adc    r12, [reg_p2+32] 
-  adc    r13, [reg_p2+40] 
-  adc    r14, [reg_p2+48] 
-  adc    r15, [reg_p2+56]
-
   mov    [reg_p3], r8
   mov    [reg_p3+8], r9
   mov    [reg_p3+16], r10
   mov    [reg_p3+24], r11
-  mov    [reg_p3+32], r12
-  mov    [reg_p3+40], r13
-  mov    [reg_p3+48], r14
-  mov    [reg_p3+56], r15
   
-  pop    r15
-  pop    r14
-  pop    r13
-  pop    r12
-  ret
-
-
-//***********************************************************************
-//  2x503-bit multiprecision addition
-//  Operation: c [reg_p3] = a [reg_p1] + b [reg_p2]
-//*********************************************************************** 
-.global mp_add503x2_asm
-mp_add503x2_asm:
-  push   r12
-  push   r13
-  push   r14
-  push   r15
-  
-  mov    r8, [reg_p1]
-  mov    r9, [reg_p1+8]
-  mov    r10, [reg_p1+16]
-  mov    r11, [reg_p1+24]
-  mov    r12, [reg_p1+32]
-  mov    r13, [reg_p1+40]
-  mov    r14, [reg_p1+48]
-  mov    r15, [reg_p1+56]
-
-  add    r8, [reg_p2] 
-  adc    r9, [reg_p2+8] 
-  adc    r10, [reg_p2+16] 
-  adc    r11, [reg_p2+24] 
-  adc    r12, [reg_p2+32] 
-  adc    r13, [reg_p2+40] 
-  adc    r14, [reg_p2+48] 
-  adc    r15, [reg_p2+56]
-
-  mov    [reg_p3], r8
-  mov    [reg_p3+8], r9
-  mov    [reg_p3+16], r10
-  mov    [reg_p3+24], r11
-  mov    [reg_p3+32], r12
-  mov    [reg_p3+40], r13
-  mov    [reg_p3+48], r14
-  mov    [reg_p3+56], r15
-  
-  mov    r8, [reg_p1+64]
-  mov    r9, [reg_p1+72]
-  mov    r10, [reg_p1+80]
-  mov    r11, [reg_p1+88]
-  mov    r12, [reg_p1+96]
-  mov    r13, [reg_p1+104]
-  mov    r14, [reg_p1+112]
-  mov    r15, [reg_p1+120]
-
-  adc    r8, [reg_p2+64] 
-  adc    r9, [reg_p2+72] 
-  adc    r10, [reg_p2+80] 
-  adc    r11, [reg_p2+88] 
-  adc    r12, [reg_p2+96] 
-  adc    r13, [reg_p2+104] 
-  adc    r14, [reg_p2+112] 
-  adc    r15, [reg_p2+120]
-
-  mov    [reg_p3+64], r8
-  mov    [reg_p3+72], r9
-  mov    [reg_p3+80], r10
-  mov    [reg_p3+88], r11
-  mov    [reg_p3+96], r12
-  mov    [reg_p3+104], r13
-  mov    [reg_p3+112], r14
-  mov    [reg_p3+120], r15
-  
-  pop    r15
-  pop    r14
-  pop    r13
-  pop    r12
+  mov    r8, [reg_p1+32]
+  mov    r9, [reg_p1+40]
+  mov    r10, [reg_p1+48]
+  mov    r11, [reg_p1+56]
+  adc    r8, [reg_p2+32] 
+  adc    r9, [reg_p2+40] 
+  adc    r10, [reg_p2+48] 
+  adc    r11, [reg_p2+56]
+  mov    [reg_p3+32], r8
+  mov    [reg_p3+40], r9
+  mov    [reg_p3+48], r10
+  mov    [reg_p3+56], r11
   ret
 
 
@@ -1421,30 +1539,99 @@ mp_add503x2_asm:
 //*********************************************************************** 
 .global mp_sub503x2_asm
 mp_sub503x2_asm:
-  push   r12
-  push   r13
-  push   r14
-  push   r15
-  
   xor    rax, rax
   mov    r8, [reg_p1]
   mov    r9, [reg_p1+8]
   mov    r10, [reg_p1+16]
   mov    r11, [reg_p1+24]
-  mov    r12, [reg_p1+32]
-  mov    r13, [reg_p1+40]
-  mov    r14, [reg_p1+48]
-  mov    r15, [reg_p1+56]
-
+  mov    rcx, [reg_p1+32]
   sub    r8, [reg_p2] 
+  sbb    r9, [reg_p2+8] 
+  sbb    r10, [reg_p2+16] 
+  sbb    r11, [reg_p2+24] 
+  sbb    rcx, [reg_p2+32] 
+  mov    [reg_p3], r8
+  mov    [reg_p3+8], r9
+  mov    [reg_p3+16], r10
+  mov    [reg_p3+24], r11
+  mov    [reg_p3+32], rcx
+
+  mov    r8, [reg_p1+40]
+  mov    r9, [reg_p1+48]
+  mov    r10, [reg_p1+56] 
+  mov    r11, [reg_p1+64]
+  mov    rcx, [reg_p1+72] 
+  sbb    r8, [reg_p2+40] 
+  sbb    r9, [reg_p2+48] 
+  sbb    r10, [reg_p2+56]
+  sbb    r11, [reg_p2+64] 
+  sbb    rcx, [reg_p2+72]
+  mov    [reg_p3+40], r8
+  mov    [reg_p3+48], r9
+  mov    [reg_p3+56], r10
+  mov    [reg_p3+64], r11
+  mov    [reg_p3+72], rcx
+  
+  mov    r8, [reg_p1+80]
+  mov    r9, [reg_p1+88] 
+  mov    r10, [reg_p1+96]
+  mov    r11, [reg_p1+104]
+  mov    rcx, [reg_p1+112]
+  sbb    r8, [reg_p2+80]
+  sbb    r9, [reg_p2+88]
+  sbb    r10, [reg_p2+96] 
+  sbb    r11, [reg_p2+104] 
+  sbb    rcx, [reg_p2+112]
+  mov    [reg_p3+80], r8 
+  mov    [reg_p3+88], r9
+  mov    [reg_p3+96], r10
+  mov    [reg_p3+104], r11
+  mov    [reg_p3+112], rcx
+  
+  mov    r8, [reg_p1+120]
+  sbb    r8, [reg_p2+120]
+  sbb    rax, 0
+  mov    [reg_p3+120], r8
+  ret
+
+
+//***********************************************************************
+//  Double 2x503-bit multiprecision subtraction
+//  Operation: c [reg_p3] = c [reg_p3] - a [reg_p1] - b [reg_p2]
+//*********************************************************************** 
+.global mp_dblsub503x2_asm
+mp_dblsub503x2_asm:
+  push   r12
+  push   r13
+  push   r14
+  
+  xor    rax, rax
+  mov    r8, [reg_p3]
+  mov    r9, [reg_p3+8]
+  mov    r10, [reg_p3+16]
+  mov    r11, [reg_p3+24]
+  mov    r12, [reg_p3+32]
+  mov    r13, [reg_p3+40]
+  mov    r14, [reg_p3+48]
+  mov    rcx, [reg_p3+56]
+  sub    r8, [reg_p1]
+  sbb    r9, [reg_p1+8] 
+  sbb    r10, [reg_p1+16] 
+  sbb    r11, [reg_p1+24] 
+  sbb    r12, [reg_p1+32] 
+  sbb    r13, [reg_p1+40] 
+  sbb    r14, [reg_p1+48] 
+  sbb    rcx, [reg_p1+56]
+  adc    rax, 0
+  sub    r8, [reg_p2]
   sbb    r9, [reg_p2+8] 
   sbb    r10, [reg_p2+16] 
   sbb    r11, [reg_p2+24] 
   sbb    r12, [reg_p2+32] 
   sbb    r13, [reg_p2+40] 
   sbb    r14, [reg_p2+48] 
-  sbb    r15, [reg_p2+56]
-
+  sbb    rcx, [reg_p2+56]
+  adc    rax, 0  
   mov    [reg_p3], r8
   mov    [reg_p3+8], r9
   mov    [reg_p3+16], r10
@@ -1452,27 +1639,33 @@ mp_sub503x2_asm:
   mov    [reg_p3+32], r12
   mov    [reg_p3+40], r13
   mov    [reg_p3+48], r14
-  mov    [reg_p3+56], r15
-  
-  mov    r8, [reg_p1+64]
-  mov    r9, [reg_p1+72]
-  mov    r10, [reg_p1+80]
-  mov    r11, [reg_p1+88]
-  mov    r12, [reg_p1+96]
-  mov    r13, [reg_p1+104]
-  mov    r14, [reg_p1+112]
-  mov    r15, [reg_p1+120]
-
-  sbb    r8, [reg_p2+64] 
+  mov    [reg_p3+56], rcx
+    
+  mov    r8, [reg_p3+64]
+  mov    r9, [reg_p3+72]
+  mov    r10, [reg_p3+80]
+  mov    r11, [reg_p3+88]
+  mov    r12, [reg_p3+96]
+  mov    r13, [reg_p3+104]
+  mov    r14, [reg_p3+112]
+  mov    rcx, [reg_p3+120]
+  sub    r8, rax 
+  sbb    r8, [reg_p1+64] 
+  sbb    r9, [reg_p1+72] 
+  sbb    r10, [reg_p1+80] 
+  sbb    r11, [reg_p1+88] 
+  sbb    r12, [reg_p1+96] 
+  sbb    r13, [reg_p1+104] 
+  sbb    r14, [reg_p1+112] 
+  sbb    rcx, [reg_p1+120]
+  sub    r8, [reg_p2+64] 
   sbb    r9, [reg_p2+72] 
   sbb    r10, [reg_p2+80] 
   sbb    r11, [reg_p2+88] 
   sbb    r12, [reg_p2+96] 
   sbb    r13, [reg_p2+104] 
   sbb    r14, [reg_p2+112] 
-  sbb    r15, [reg_p2+120]
-  sbb    rax, 0
-
+  sbb    rcx, [reg_p2+120]
   mov    [reg_p3+64], r8
   mov    [reg_p3+72], r9
   mov    [reg_p3+80], r10
@@ -1480,9 +1673,8 @@ mp_sub503x2_asm:
   mov    [reg_p3+96], r12
   mov    [reg_p3+104], r13
   mov    [reg_p3+112], r14
-  mov    [reg_p3+120], r15
+  mov    [reg_p3+120], rcx
   
-  pop    r15
   pop    r14
   pop    r13
   pop    r12
