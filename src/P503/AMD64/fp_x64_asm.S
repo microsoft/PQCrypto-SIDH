@@ -1129,6 +1129,7 @@ rdc503_asm:
     MUL128x320_SCHOOL [reg_p1+32], [p503p1_nz], r8, r9, r10, r11, r12, r13, r14, rbx, rcx, r15  
 
     xor    r15, r15
+    xor    rbx, rbx
     add    r8, [reg_p1+56]  
     adc    r9, [reg_p1+64]  
     adc    r10, [reg_p1+72]   
@@ -1137,14 +1138,16 @@ rdc503_asm:
     adc    r13, [reg_p1+96]   
     adc    r14, [reg_p1+104]  
     adc    r15, [reg_p1+112]
+	adc    rbx, [reg_p1+120]
     mov    [reg_p1+56], r8  
     mov    [reg_p2], r9       // Final result c0  
-    mov    [reg_p1+72], r10  
+    mov    [reg_p1+72], r10 
     mov    [reg_p1+80], r11   
     mov    [reg_p1+88], r12  
     mov    [reg_p1+96], r13  
     mov    [reg_p1+104], r14
     mov    [reg_p1+112], r15 
+    mov    [reg_p1+120], rbx 
 
     // a[6-7] x p503p1_nz --> result: r8:r14
     MUL128x320_SCHOOL [reg_p1+48], [p503p1_nz], r8, r9, r10, r11, r12, r13, r14, rbx, rcx, r15  
@@ -1170,7 +1173,7 @@ rdc503_asm:
     pop    r13
     pop    r12
     pop    rbx
-   ret
+    ret
 
   #else
   
