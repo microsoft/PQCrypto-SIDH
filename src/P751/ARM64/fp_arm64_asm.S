@@ -63,20 +63,20 @@ fpadd751_asm:
     ldp x13, x14, [x0,#80]
 
     //  add first summand and second summand and store result in x3 - x14
-    ldp x15, x16,   [x1,#0]
-    ldp x17, x18,   [x1,#16]
+    ldp x15, x16, [x1,#0]
+    ldp x17, x18, [x1,#16]
     adds x3, x3, x15
     adcs x4, x4, x16
     adcs x5, x5, x17
     adcs x6, x6, x18
-    ldp x15, x16,   [x1,#32]
-    ldp x17, x18,   [x1,#48]
+    ldp x15, x16, [x1,#32]
+    ldp x17, x18, [x1,#48]
     adcs x7, x7, x15
     adcs x8, x8, x16
     adcs x9, x9, x17
     adcs x10, x10, x18
-    ldp x15, x16,   [x1,#64]
-    ldp x17, x18,   [x1,#80]
+    ldp x15, x16, [x1,#64]
+    ldp x17, x18, [x1,#80]
     adcs x11, x11, x15
     adcs x12, x12, x16
     adcs x13, x13, x17
@@ -2211,24 +2211,24 @@ mp_add751_asm:
     ldp x11, x12, [x0,#64]
     ldp x13, x14, [x0,#80]
 
-    ldp x15, x16,   [x1,#0]
-    ldp x17, x18,   [x1,#16]
+    ldp x15, x16, [x1,#0]
+    ldp x17, x18, [x1,#16]
     adds x3, x3, x15
     adcs x4, x4, x16
     adcs x5, x5, x17
     adcs x6, x6, x18
-    ldp x15, x16,   [x1,#32]
-    ldp x17, x18,   [x1,#48]
+    ldp x15, x16, [x1,#32]
+    ldp x17, x18, [x1,#48]
     adcs x7, x7, x15
     adcs x8, x8, x16
     adcs x9, x9, x17
     adcs x10, x10, x18
-    ldp x15, x16,   [x1,#64]
-    ldp x17, x18,   [x1,#80]
+    ldp x15, x16, [x1,#64]
+    ldp x17, x18, [x1,#80]
     adcs x11, x11, x15
     adcs x12, x12, x16
     adcs x13, x13, x17
-    adcs x14, x14, x18
+    adc  x14, x14, x18
 
     stp x3, x4,   [x2,#0]
     stp x5, x6,   [x2,#16]
@@ -2252,20 +2252,20 @@ mp_add751x2_asm:
     ldp x11, x12, [x0,#64]
     ldp x13, x14, [x0,#80]
 
-    ldp x15, x16,   [x1,#0]
-    ldp x17, x18,   [x1,#16]
+    ldp x15, x16, [x1,#0]
+    ldp x17, x18, [x1,#16]
     adds x3, x3, x15
     adcs x4, x4, x16
     adcs x5, x5, x17
     adcs x6, x6, x18
-    ldp x15, x16,   [x1,#32]
-    ldp x17, x18,   [x1,#48]
+    ldp x15, x16, [x1,#32]
+    ldp x17, x18, [x1,#48]
     adcs x7, x7, x15
     adcs x8, x8, x16
     adcs x9, x9, x17
     adcs x10, x10, x18
-    ldp x15, x16,   [x1,#64]
-    ldp x17, x18,   [x1,#80]
+    ldp x15, x16, [x1,#64]
+    ldp x17, x18, [x1,#80]
     adcs x11, x11, x15
     adcs x12, x12, x16
     adcs x13, x13, x17
@@ -2285,24 +2285,24 @@ mp_add751x2_asm:
     ldp x11, x12, [x0,#160]
     ldp x13, x14, [x0,#176]
 
-    ldp x15, x16,   [x1,#96]
-    ldp x17, x18,   [x1,#112]
+    ldp x15, x16, [x1,#96]
+    ldp x17, x18, [x1,#112]
     adcs x3, x3, x15
     adcs x4, x4, x16
     adcs x5, x5, x17
     adcs x6, x6, x18
-    ldp x15, x16,   [x1,#128]
-    ldp x17, x18,   [x1,#144]
+    ldp x15, x16, [x1,#128]
+    ldp x17, x18, [x1,#144]
     adcs x7, x7, x15
     adcs x8, x8, x16
     adcs x9, x9, x17
     adcs x10, x10, x18
-    ldp x15, x16,   [x1,#160]
-    ldp x17, x18,   [x1,#176]
+    ldp x15, x16, [x1,#160]
+    ldp x17, x18, [x1,#176]
     adcs x11, x11, x15
     adcs x12, x12, x16
     adcs x13, x13, x17
-    adcs x14, x14, x18
+    adc  x14, x14, x18
 
     stp x3, x4,   [x2,#96]
     stp x5, x6,   [x2,#112]
@@ -2326,20 +2326,20 @@ mp_sub751x2_asm:
     ldp x11, x12, [x0,#64]
     ldp x13, x14, [x0,#80]
 
-    ldp x15, x16,   [x1,#0]
-    ldp x17, x18,   [x1,#16]
+    ldp x15, x16, [x1,#0]
+    ldp x17, x18, [x1,#16]
     subs x3, x3, x15
     sbcs x4, x4, x16
     sbcs x5, x5, x17
     sbcs x6, x6, x18
-    ldp x15, x16,   [x1,#32]
-    ldp x17, x18,   [x1,#48]
+    ldp x15, x16, [x1,#32]
+    ldp x17, x18, [x1,#48]
     sbcs x7, x7, x15
     sbcs x8, x8, x16
     sbcs x9, x9, x17
     sbcs x10, x10, x18
-    ldp x15, x16,   [x1,#64]
-    ldp x17, x18,   [x1,#80]
+    ldp x15, x16, [x1,#64]
+    ldp x17, x18, [x1,#80]
     sbcs x11, x11, x15
     sbcs x12, x12, x16
     sbcs x13, x13, x17
@@ -2359,20 +2359,20 @@ mp_sub751x2_asm:
     ldp x11, x12, [x0,#160]
     ldp x13, x14, [x0,#176]
 
-    ldp x15, x16,   [x1,#96]
-    ldp x17, x18,   [x1,#112]
+    ldp x15, x16, [x1,#96]
+    ldp x17, x18, [x1,#112]
     sbcs x3, x3, x15
     sbcs x4, x4, x16
     sbcs x5, x5, x17
     sbcs x6, x6, x18
-    ldp x15, x16,   [x1,#128]
-    ldp x17, x18,   [x1,#144]
+    ldp x15, x16, [x1,#128]
+    ldp x17, x18, [x1,#144]
     sbcs x7, x7, x15
     sbcs x8, x8, x16
     sbcs x9, x9, x17
     sbcs x10, x10, x18
-    ldp x15, x16,   [x1,#160]
-    ldp x17, x18,   [x1,#176]
+    ldp x15, x16, [x1,#160]
+    ldp x17, x18, [x1,#176]
     sbcs x11, x11, x15
     sbcs x12, x12, x16
     sbcs x13, x13, x17
@@ -2385,4 +2385,127 @@ mp_sub751x2_asm:
     stp x9, x10,  [x2,#144]
     stp x11, x12, [x2,#160]
     stp x13, x14, [x2,#176]
+    ret
+
+
+//***********************************************************************
+//  Double 2x751-bit multiprecision subtraction
+//  Operation: c [x2] = c [x2] - a [x0] - b [x1]
+//*********************************************************************** 
+.global mp_dblsub751x2_asm
+mp_dblsub751x2_asm:
+    sub sp, sp, #96
+    stp x19, x20, [sp]
+    stp x21, x22, [sp, #16]
+    stp x23, x24, [sp, #32]
+    stp x25, x26, [sp, #48]
+    stp x27, x28, [sp, #64]
+    stp x29, x30, [sp, #80]
+    ldp x3, x4,   [x2,#0]
+    ldp x5, x6,   [x2,#16]
+    ldp x7, x8,   [x2,#32]
+    ldp x9, x10,  [x2,#48]
+    ldp x11, x12, [x2,#64]
+    ldp x13, x14, [x2,#80]
+    ldp x15, x16, [x2,#96]
+    ldp x17, x18, [x2,#112]
+    ldp x19, x20, [x2,#128]
+    ldp x21, x22, [x2,#144]
+    ldp x23, x24, [x2,#160]
+    ldp x25, x26, [x2,#176]
+
+    ldp x27, x28, [x0,#0]
+    ldp x29, x30, [x0,#16]
+    subs x3, x3, x27
+    sbcs x4, x4, x28
+    sbcs x5, x5, x29
+    sbcs x6, x6, x30
+    ldp x27, x28, [x0,#32]
+    ldp x29, x30, [x0,#48]
+    sbcs x7, x7, x27
+    sbcs x8, x8, x28
+    sbcs x9, x9, x29
+    sbcs x10, x10, x30
+    ldp x27, x28, [x0,#64]
+    ldp x29, x30, [x0,#80]
+    sbcs x11, x11, x27
+    sbcs x12, x12, x28
+    sbcs x13, x13, x29
+    sbcs x14, x14, x30
+    ldp x27, x28, [x0,#96]
+    ldp x29, x30, [x0,#112]
+    sbcs x15, x15, x27
+    sbcs x16, x16, x28
+    sbcs x17, x17, x29
+    sbcs x18, x18, x30
+    ldp x27, x28, [x0,#128]
+    ldp x29, x30, [x0,#144]
+    sbcs x19, x19, x27
+    sbcs x20, x20, x28
+    sbcs x21, x21, x29
+    sbcs x22, x22, x30
+    ldp x27, x28, [x0,#160]
+    ldp x29, x30, [x0,#176]
+    sbcs x23, x23, x27
+    sbcs x24, x24, x28
+    sbcs x25, x25, x29
+    sbc  x26, x26, x30
+
+    ldp x27, x28, [x1,#0]
+    ldp x29, x30, [x1,#16]
+    subs x3, x3, x27
+    sbcs x4, x4, x28
+    sbcs x5, x5, x29
+    sbcs x6, x6, x30
+    ldp x27, x28, [x1,#32]
+    ldp x29, x30, [x1,#48]
+    sbcs x7, x7, x27
+    sbcs x8, x8, x28
+    sbcs x9, x9, x29
+    sbcs x10, x10, x30
+    ldp x27, x28, [x1,#64]
+    ldp x29, x30, [x1,#80]
+    sbcs x11, x11, x27
+    sbcs x12, x12, x28
+    sbcs x13, x13, x29
+    sbcs x14, x14, x30
+    ldp x27, x28, [x1,#96]
+    ldp x29, x30, [x1,#112]
+    sbcs x15, x15, x27
+    sbcs x16, x16, x28
+    sbcs x17, x17, x29
+    sbcs x18, x18, x30
+    ldp x27, x28, [x1,#128]
+    ldp x29, x30, [x1,#144]
+    sbcs x19, x19, x27
+    sbcs x20, x20, x28
+    sbcs x21, x21, x29
+    sbcs x22, x22, x30
+    ldp x27, x28, [x1,#160]
+    ldp x29, x30, [x1,#176]
+    sbcs x23, x23, x27
+    sbcs x24, x24, x28
+    sbcs x25, x25, x29
+    sbc  x26, x26, x30
+
+    stp x3, x4,   [x2,#0]
+    stp x5, x6,   [x2,#16]
+    stp x7, x8,   [x2,#32]
+    stp x9, x10,  [x2,#48]
+    stp x11, x12, [x2,#64]
+    stp x13, x14, [x2,#80]
+    stp x15, x16, [x2,#96]
+    stp x17, x18, [x2,#112]
+    stp x19, x20, [x2,#128]
+    stp x21, x22, [x2,#144]
+    stp x23, x24, [x2,#160]
+    stp x25, x26, [x2,#176]	
+    
+    ldp x19, x20, [sp]
+    ldp x21, x22, [sp, #16]
+    ldp x23, x24, [sp, #32]
+    ldp x25, x26, [sp, #48]
+    ldp x27, x28, [sp, #64]
+    ldp x29, x30, [sp, #80]
+    add sp, sp, #96
     ret
