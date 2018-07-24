@@ -62,7 +62,7 @@ ifeq "$(ARCHITECTURE)" "_AMD64_"
     EXTRA_OBJECTS_503=objs503/fp_x64.o objs503/fp_x64_asm.o
     EXTRA_OBJECTS_751=objs751/fp_x64.o objs751/fp_x64_asm.o
 else ifeq "$(ARCHITECTURE)" "_ARM64_"
-    EXTRA_OBJECTS_503=objs503/fp_arm64.o
+    EXTRA_OBJECTS_503=objs503/fp_arm64.o objs503/fp_arm64_asm.o
     EXTRA_OBJECTS_751=objs751/fp_arm64.o objs751/fp_arm64_asm.o
 endif
 endif
@@ -101,6 +101,9 @@ ifeq "$(ARCHITECTURE)" "_AMD64_"
 else ifeq "$(ARCHITECTURE)" "_ARM64_"
     objs503/fp_arm64.o: src/P503/ARM64/fp_arm64.c
 	    $(CC) -c $(CFLAGS) src/P503/ARM64/fp_arm64.c -o objs503/fp_arm64.o
+
+    objs503/fp_arm64_asm.o: src/P503/ARM64/fp_arm64_asm.S
+	    $(CC) -c $(CFLAGS) src/P503/ARM64/fp_arm64_asm.S -o objs503/fp_arm64_asm.o
 
     objs751/fp_arm64.o: src/P751/ARM64/fp_arm64.c
 	    $(CC) -c $(CFLAGS) src/P751/ARM64/fp_arm64.c -o objs751/fp_arm64.o
@@ -164,4 +167,3 @@ check: tests
 
 clean:
 	rm -rf *.req objs503 objs751 objs lib503 lib751 sidh503 sidh751 sike503 sike751 arith_tests-*
-
