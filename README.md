@@ -22,7 +22,8 @@ The library was developed by [Microsoft Research](http://research.microsoft.com/
 * [`src folder`](src/): C and header files. Public APIs can be found in [`P503_api.h`](src/P503/P503_api.h) and [`P751_api.h`](src/P751/P751_api.h).
 * [`Optimized x64 implementation for p503`](src/P503/AMD64/): optimized implementation of the field arithmetic over the prime p503 for x64 platforms. 
 * [`Optimized x64 implementation for p751`](src/P751/AMD64/): optimized implementation of the field arithmetic over the prime p751 for x64 platforms.      
-* [`Optimized ARMv8 implementation for p751`](src/P751/ARM64/): optimized implementation of the field arithmetic over the prime p751 for ARMv8 platforms.
+* [`Optimized ARMv8 implementation for p503`](src/P503/ARM64/): optimized implementation of the field arithmetic over the prime p503 for 64-bit ARMv8 platforms.    
+* [`Optimized ARMv8 implementation for p751`](src/P751/ARM64/): optimized implementation of the field arithmetic over the prime p751 for 64-bit ARMv8 platforms.
 * [`Generic implementation for p503`](src/P503/generic/): implementation of the field arithmetic over the prime p503 in portable C.
 * [`Generic implementation for p751`](src/P751/generic/): implementation of the field arithmetic over the prime p751 in portable C.
 * [`random folder`](src/random/): randombytes function using the system random number generator.
@@ -162,7 +163,7 @@ The library includes some third party modules that are licensed differently. In 
 
 ## Contributors
 
-The field arithmetic implementation for 64-bit ARM processors ([`ARM64 folder`](src/P751/ARM64/)) was contributed and is copyrighted by David Urbanik (dburbani@uwaterloo.ca).
+The field arithmetic implementation over p751 for 64-bit ARM processors ([`ARM64 folder`](src/P751/ARM64/)) was contributed and is copyrighted by David Urbanik (dburbani@uwaterloo.ca).
 
 Other contributors include:
 
@@ -178,15 +179,16 @@ The extended version is available [`here`](http://eprint.iacr.org/2016/413).
 [3]  Craig Costello, David Jao, Patrick Longa, Michael Naehrig, Joost Renes, and David Urbanik, "Efficient compression of SIDH public keys". Advances in Cryptology - EUROCRYPT 2017, LNCS 10210, pp. 679-706, 2017. 
 The preprint version is available [`here`](http://eprint.iacr.org/2016/963).
 
-[4]   Reza Azarderakhsh, Matthew Campagna, Craig Costello, Luca De Feo, Basil Hess, Amir Jalali, David Jao, Brian Koziel, Brian LaMacchia, Patrick Longa, Michael Naehrig, Joost Renes, Vladimir Soukharev, and David Urbanik, "Supersingular Isogeny Key Encapsulation". Submission to the NIST Post-Quantum Standardization project (to appear soon), 2017.  
+[4]   Reza Azarderakhsh, Matthew Campagna, Craig Costello, Luca De Feo, Basil Hess, Amir Jalali, David Jao, Brian Koziel, Brian LaMacchia, Patrick Longa, Michael Naehrig, Joost Renes, Vladimir Soukharev, and David Urbanik, "Supersingular Isogeny Key Encapsulation". Submission to the NIST Post-Quantum Standardization project, 2017.  
+The submission package is available [`here`](https://csrc.nist.gov/CSRC/media/Projects/Post-Quantum-Cryptography/documents/round-1/submissions/SIKE.zip).
 
-[5]  Craig Costello, and Huseyin Hisil, "A simple and compact algorithm for SIDH with arbitrary degree isogenies". Advances in Cryptology - ASIACRYPT 2017 (to appear), 2017. 
+[5]  Craig Costello, and Huseyin Hisil, "A simple and compact algorithm for SIDH with arbitrary degree isogenies". Advances in Cryptology - ASIACRYPT 2017, LNCS 10625, pp. 303-329, 2017. 
 The preprint version is available [`here`](https://eprint.iacr.org/2017/504). 
 
-[6]  Armando Faz-Hernández, Julio López, Eduardo Ochoa-Jiménez, and Francisco Rodríguez-Henríquez, "A faster software implementation of the supersingular isogeny Diffie-Hellman key exchange protocol". Cryptology ePrint Archive: Report 2017/1015, 2017. 
+[6]  Armando Faz-Hernández, Julio López, Eduardo Ochoa-Jiménez, and Francisco Rodríguez-Henríquez, "A faster software implementation of the supersingular isogeny Diffie-Hellman key exchange protocol". IEEE Transactions on Computers (to appear). 
 The preprint version is available [`here`](https://eprint.iacr.org/2017/1015). 
 
-[7]  Gustavo H. M. Zanon, Marcos A. Simplicio Jr., Geovandro C. C. F. Pereira, Javad Doliskani, and Paulo S. L. M. Barreto, "Faster isogeny-based compressed key agreement". Cryptology ePrint Archive: Report 2017/1143, 2017. 
+[7]  Gustavo H. M. Zanon, Marcos A. Simplicio Jr., Geovandro C. C. F. Pereira, Javad Doliskani, and Paulo S. L. M. Barreto, "Faster isogeny-based compressed key agreement". PQCrypto 2018, LCNS 10786, pp. 248-268, 2018. 
 The preprint version is available [`here`](https://eprint.iacr.org/2017/1143). 
 
 # Contributing
