@@ -26,6 +26,8 @@
 #define p503x2_6   0xC08B8D7BB4EF49A0
 #define p503x2_7   0x0080CDEA83023C3C
 
+.text
+
 p503p1_nz:
 .quad    0xAC00000000000000
 .quad    0x13085BDA2211E7A0
@@ -53,7 +55,6 @@ p503p1_nz:
 #endif    
 
 
-.text
 //***********************************************************************
 //  Field addition
 //  Operation: c [reg_p3] = a [reg_p1] + b [reg_p2]
@@ -1060,7 +1061,7 @@ rdc503_asm:
     push   r15  
 
     // a[0-1] x p503p1_nz --> result: r8:r14 
-    MUL128x320_SCHOOL [reg_p1], [p503p1_nz], r8, r9, r10, r11, r12, r13, r14, rbx, rcx, r15     
+    MUL128x320_SCHOOL [reg_p1], [rip+p503p1_nz], r8, r9, r10, r11, r12, r13, r14, rbx, rcx, r15     
 
     xor    r15, r15
     add    r8, [reg_p1+24]  
@@ -1096,7 +1097,7 @@ rdc503_asm:
     mov    [reg_p1+120], r12
 
     // a[2-3] x p503p1_nz --> result: r8:r14
-    MUL128x320_SCHOOL [reg_p1+16], [p503p1_nz], r8, r9, r10, r11, r12, r13, r14, rbx, rcx, r15 
+    MUL128x320_SCHOOL [reg_p1+16], [rip+p503p1_nz], r8, r9, r10, r11, r12, r13, r14, rbx, rcx, r15 
 
     xor    r15, r15
     add    r8, [reg_p1+40]  
@@ -1126,7 +1127,7 @@ rdc503_asm:
     mov    [reg_p1+120], r10 
 
     // a[4-5] x p503p1_nz --> result: r8:r14
-    MUL128x320_SCHOOL [reg_p1+32], [p503p1_nz], r8, r9, r10, r11, r12, r13, r14, rbx, rcx, r15  
+    MUL128x320_SCHOOL [reg_p1+32], [rip+p503p1_nz], r8, r9, r10, r11, r12, r13, r14, rbx, rcx, r15  
 
     xor    r15, r15
     xor    rbx, rbx
@@ -1150,7 +1151,7 @@ rdc503_asm:
     mov    [reg_p1+120], rbx 
 
     // a[6-7] x p503p1_nz --> result: r8:r14
-    MUL128x320_SCHOOL [reg_p1+48], [p503p1_nz], r8, r9, r10, r11, r12, r13, r14, rbx, rcx, r15  
+    MUL128x320_SCHOOL [reg_p1+48], [rip+p503p1_nz], r8, r9, r10, r11, r12, r13, r14, rbx, rcx, r15  
     
     // Final result c1:c7
     add    r8, [reg_p1+72]  
