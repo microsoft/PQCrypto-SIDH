@@ -175,6 +175,7 @@ Other contributors include:
 The extended version is available [`here`](http://eprint.iacr.org/2016/413). 
 
 [2]  David Jao and Luca DeFeo, "Towards quantum-resistant cryptosystems from supersingular elliptic curve isogenies". PQCrypto 2011, LNCS 7071, pp. 19-34, 2011. 
+The extended version is available [`here`](https://eprint.iacr.org/2011/506).
 
 [3]  Craig Costello, David Jao, Patrick Longa, Michael Naehrig, Joost Renes, and David Urbanik, "Efficient compression of SIDH public keys". Advances in Cryptology - EUROCRYPT 2017, LNCS 10210, pp. 679-706, 2017. 
 The preprint version is available [`here`](http://eprint.iacr.org/2016/963).
