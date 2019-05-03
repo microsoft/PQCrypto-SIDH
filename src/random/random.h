@@ -1,5 +1,5 @@
-#ifndef __RANDOM_H__
-#define __RANDOM_H__
+#ifndef RANDOM_H
+#define RANDOM_H
 
 
 // Generate random bytes and output the result to random_array

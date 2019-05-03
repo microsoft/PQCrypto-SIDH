@@ -2,8 +2,8 @@
 * Header defining the APIs for AES256
 *********************************************************************************************/
 
-#ifndef __AES_H
-#define __AES_H
+#ifndef AES_H
+#define AES_H
 
 #include <stdint.h>
 #include <stdlib.h>

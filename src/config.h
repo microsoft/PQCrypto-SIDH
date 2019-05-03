@@ -4,8 +4,8 @@
 * Abstract: configuration file and platform-dependent macros
 *********************************************************************************************/  
 
-#ifndef __CONFIG_H__
-#define __CONFIG_H__
+#ifndef CONFIG_H
+#define CONFIG_H
 
 #include <stdint.h>
 #include <stdbool.h>

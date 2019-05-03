@@ -21,13 +21,13 @@ static void clear_words(void* mem, digit_t nwords)
 
 static void init_basis(digit_t *gen, f2elm_t XP, f2elm_t XQ, f2elm_t XR)
 { // Initialization of basis points
-
+    
     fpcopy(gen,                  XP[0]);
     fpcopy(gen +   NWORDS_FIELD, XP[1]);
     fpcopy(gen + 2*NWORDS_FIELD, XQ[0]);
-    fpzero(XQ[1]);
-    fpcopy(gen + 3*NWORDS_FIELD, XR[0]);
-    fpcopy(gen + 4*NWORDS_FIELD, XR[1]);
+    fpcopy(gen + 3*NWORDS_FIELD, XQ[1]);
+    fpcopy(gen + 4*NWORDS_FIELD, XR[0]);
+    fpcopy(gen + 5*NWORDS_FIELD, XR[1]);
 }
 
 
@@ -94,12 +94,26 @@ int EphemeralKeyGeneration_A(const unsigned char* PrivateKeyA, unsigned char* Pu
     fpcopy((digit_t*)&Montgomery_one, (phiQ->Z)[0]);
     fpcopy((digit_t*)&Montgomery_one, (phiR->Z)[0]);
 
-    // Initialize constants
+    // Initialize constants: A24plus = A+2C, C24 = 4C, where A=6, C=1
     fpcopy((digit_t*)&Montgomery_one, A24plus[0]);
+    fp2add(A24plus, A24plus, A24plus);
     fp2add(A24plus, A24plus, C24);
+    fp2add(A24plus, C24, A);
+    fp2add(C24, C24, A24plus);
 
     // Retrieve kernel point
-    LADDER3PT(XPA, XQA, XRA, (digit_t*)PrivateKeyA, ALICE, R, A);
+    LADDER3PT(XPA, XQA, XRA, (digit_t*)PrivateKeyA, ALICE, R, A);    
+
+#if (OALICE_BITS % 2 == 1)
+    point_proj_t S;
+
+    xDBLe(R, S, A24plus, C24, (int)(OALICE_BITS-1));
+    get_2_isog(S, A24plus, C24); 
+    eval_2_isog(phiP, S); 
+    eval_2_isog(phiQ, S); 
+    eval_2_isog(phiR, S);
+    eval_2_isog(R, S);
+#endif
 
     // Traverse tree
     index = 0;        
@@ -161,11 +175,12 @@ int EphemeralKeyGeneration_B(const unsigned char* PrivateKeyB, unsigned char* Pu
     fpcopy((digit_t*)&Montgomery_one, (phiQ->Z)[0]);
     fpcopy((digit_t*)&Montgomery_one, (phiR->Z)[0]);
 
-    // Initialize constants
+    // Initialize constants: A24minus = A-2C, A24plus = A+2C, where A=6, C=1
     fpcopy((digit_t*)&Montgomery_one, A24plus[0]);
     fp2add(A24plus, A24plus, A24plus);
-    fp2copy(A24plus, A24minus);
-    fp2neg(A24minus);
+    fp2add(A24plus, A24plus, A24minus);
+    fp2add(A24plus, A24minus, A);
+    fp2add(A24minus, A24minus, A24plus);
 
     // Retrieve kernel point
     LADDER3PT(XPB, XQB, XRB, (digit_t*)PrivateKeyB, BOB, R, A);
@@ -231,14 +246,22 @@ int EphemeralSecretAgreement_A(const unsigned char* PrivateKeyA, const unsigned 
     fp2_decode(PublicKeyB + FP2_ENCODED_BYTES, PKB[1]);
     fp2_decode(PublicKeyB + 2*FP2_ENCODED_BYTES, PKB[2]);
 
-    // Initialize constants
-    get_A(PKB[0], PKB[1], PKB[2], A); // TODO: Can return projective A?
+    // Initialize constants: A24plus = A+2C, C24 = 4C, where C=1
+    get_A(PKB[0], PKB[1], PKB[2], A);
     fpadd((digit_t*)&Montgomery_one, (digit_t*)&Montgomery_one, C24[0]);
     fp2add(A, C24, A24plus);
     fpadd(C24[0], C24[0], C24[0]);
 
     // Retrieve kernel point
-    LADDER3PT(PKB[0], PKB[1], PKB[2], (digit_t*)PrivateKeyA, ALICE, R, A);
+    LADDER3PT(PKB[0], PKB[1], PKB[2], (digit_t*)PrivateKeyA, ALICE, R, A);   
+
+#if (OALICE_BITS % 2 == 1)
+    point_proj_t S;
+
+    xDBLe(R, S, A24plus, C24, (int)(OALICE_BITS-1));
+    get_2_isog(S, A24plus, C24);
+    eval_2_isog(R, S);
+#endif
 
     // Traverse tree
     index = 0;        
@@ -264,9 +287,9 @@ int EphemeralSecretAgreement_A(const unsigned char* PrivateKeyA, const unsigned 
     }
 
     get_4_isog(R, A24plus, C24, coeff); 
-    fp2div2(C24, C24);                                                
-    fp2sub(A24plus, C24, A24plus);                              
-    fp2div2(C24, C24);                               
+    fp2add(A24plus, A24plus, A24plus);                                                
+    fp2sub(A24plus, C24, A24plus); 
+    fp2add(A24plus, A24plus, A24plus);                    
     j_inv(A24plus, C24, jinv);
     fp2_encode(jinv, SharedSecretA);    // Format shared secret
 
@@ -290,8 +313,8 @@ int EphemeralSecretAgreement_B(const unsigned char* PrivateKeyB, const unsigned 
     fp2_decode(PublicKeyA + FP2_ENCODED_BYTES, PKB[1]);
     fp2_decode(PublicKeyA + 2*FP2_ENCODED_BYTES, PKB[2]);
 
-    // Initialize constants
-    get_A(PKB[0], PKB[1], PKB[2], A); // TODO: Can return projective A?
+    // Initialize constants: A24plus = A+2C, A24minus = A-2C, where C=1
+    get_A(PKB[0], PKB[1], PKB[2], A);
     fpadd((digit_t*)&Montgomery_one, (digit_t*)&Montgomery_one, A24minus[0]);
     fp2add(A, A24minus, A24plus);
     fp2sub(A, A24minus, A24minus);

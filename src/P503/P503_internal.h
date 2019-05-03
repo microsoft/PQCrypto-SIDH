@@ -4,8 +4,8 @@
 * Abstract: internal header file for P503
 *********************************************************************************************/  
 
-#ifndef __P503_INTERNAL_H__
-#define __P503_INTERNAL_H__
+#ifndef P503_INTERNAL_H
+#define P503_INTERNAL_H
 
 #include "../config.h"
  
@@ -44,7 +44,7 @@
 #define MASK_ALICE              0x03 
 #define MASK_BOB                0x0F 
 #define PRIME                   p503 
-#define PARAM_A                 0  
+#define PARAM_A                 6  
 #define PARAM_C                 1
 // Fixed parameters for isogeny tree computation
 #define MAX_INT_POINTS_ALICE    7        
@@ -53,7 +53,7 @@
 #define MAX_Bob                 159
 #define MSG_BYTES               24
 #define SECRETKEY_A_BYTES       (OALICE_BITS + 7) / 8
-#define SECRETKEY_B_BYTES       (OBOB_BITS + 7) / 8
+#define SECRETKEY_B_BYTES       (OBOB_BITS - 1 + 7) / 8
 #define FP2_ENCODED_BYTES       2*((NBITS_FIELD + 7) / 8)
 
 

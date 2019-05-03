@@ -13,9 +13,13 @@
 #endif
 #include <stdlib.h>
 
-     
+
+static uint64_t p434[7]  = { 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFDC1767AE2FFFFFF, 
+                             0x7BC65C783158AEA3, 0x6CFC5FD681C52056, 0x0002341F27177344 };
 static uint64_t p503[8]  = { 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xABFFFFFFFFFFFFFF, 
                              0x13085BDA2211E7A0, 0x1B9BF6C87B7E7DAF, 0x6045C6BDDA77A4D0, 0x004066F541811E1E };
+static uint64_t p610[10] = { 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0x6E01FFFFFFFFFFFF, 
+                             0xB1784DE8AA5AB02E, 0x9AE7BF45048FF9AB, 0xB255B2FA10C4252A, 0x819010C251E7D88C, 0x000000027BF6A768 };
 static uint64_t p751[12] = { 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xEEAFFFFFFFFFFFFF,
                              0xE3EC968549F878A8, 0xDA959B1A13F7CC76, 0x084E9867D6EBE876, 0x8562B5045CB25748, 0x0E12909F97BADC66, 0x00006FE5D541F71C };
 
@@ -74,6 +78,33 @@ static void sub_test(digit_t* a, digit_t* b, digit_t* c, unsigned int nwords)
 }
 
 
+void fprandom434_test(digit_t* a)
+{ // Generating a pseudo-random field element in [0, p434-1] 
+  // SECURITY NOTE: distribution is not fully uniform. TO BE USED FOR TESTING ONLY.
+    unsigned int i, diff = 448-434, nwords = NBITS_TO_NWORDS(434);
+    unsigned char* string = NULL;
+
+    string = (unsigned char*)a;
+    for (i = 0; i < sizeof(digit_t)*nwords; i++) {
+        *(string + i) = (unsigned char)rand();              // Obtain 448-bit number
+    }
+    a[nwords-1] &= (((digit_t)(-1) << diff) >> diff);
+
+    while (compare_words((digit_t*)p434, a, nwords) < 1) {  // Force it to [0, modulus-1]
+        sub_test(a, (digit_t*)p434, a, nwords);
+    }
+}
+
+
+void fp2random434_test(digit_t* a)
+{ // Generating a pseudo-random element in GF(p434^2) 
+  // SECURITY NOTE: distribution is not fully uniform. TO BE USED FOR TESTING ONLY.
+
+    fprandom434_test(a);
+    fprandom434_test(a+NBITS_TO_NWORDS(434));
+}
+
+
 void fprandom503_test(digit_t* a)
 { // Generating a pseudo-random field element in [0, p503-1] 
   // SECURITY NOTE: distribution is not fully uniform. TO BE USED FOR TESTING ONLY.
@@ -98,6 +129,33 @@ void fp2random503_test(digit_t* a)
 
     fprandom503_test(a);
     fprandom503_test(a+NBITS_TO_NWORDS(503));
+}
+
+
+void fprandom610_test(digit_t* a)
+{ // Generating a pseudo-random field element in [0, p610-1] 
+  // SECURITY NOTE: distribution is not fully uniform. TO BE USED FOR TESTING ONLY.
+    unsigned int i, diff = 640-610, nwords = NBITS_TO_NWORDS(610);
+    unsigned char* string = NULL;
+
+    string = (unsigned char*)a;
+    for (i = 0; i < sizeof(digit_t)*nwords; i++) {
+        *(string + i) = (unsigned char)rand();              // Obtain 640-bit number
+    }
+    a[nwords-1] &= (((digit_t)(-1) << diff) >> diff);
+
+    while (compare_words((digit_t*)p610, a, nwords) < 1) {  // Force it to [0, modulus-1]
+        sub_test(a, (digit_t*)p610, a, nwords);
+    }
+}
+
+
+void fp2random610_test(digit_t* a)
+{ // Generating a pseudo-random element in GF(p610^2) 
+  // SECURITY NOTE: distribution is not fully uniform. TO BE USED FOR TESTING ONLY.
+
+    fprandom610_test(a);
+    fprandom610_test(a+NBITS_TO_NWORDS(610));
 }
 
 
