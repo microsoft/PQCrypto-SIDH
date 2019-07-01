@@ -52,8 +52,8 @@
 #define MAX_Alice               152
 #define MAX_Bob                 192
 #define MSG_BYTES               24
-#define SECRETKEY_A_BYTES       (OALICE_BITS + 7) / 8
-#define SECRETKEY_B_BYTES       (OBOB_BITS - 1 + 7) / 8
+#define SECRETKEY_A_BYTES       ((OALICE_BITS + 7) / 8)
+#define SECRETKEY_B_BYTES       ((OBOB_BITS - 1 + 7) / 8)
 #define FP2_ENCODED_BYTES       2*((NBITS_FIELD + 7) / 8)
 
 // SIDH's basic element definitions and point representations
