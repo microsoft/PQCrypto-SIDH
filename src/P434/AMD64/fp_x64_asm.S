@@ -465,7 +465,7 @@ mul434_asm:
     and    r10, rbx
     and    r11, rbx
 
-    // r8-r11 <- masked (AH + AL) + masked (AH + AL)
+    // r8-r11 <- masked (AH + AL) + masked (BH + BL)
     add    r8, r12
     adc    r9, r13
     adc    r10, r14
@@ -481,7 +481,7 @@ mul434_asm:
     // [rcx] <- AL x BL
     MUL256_SCHOOL  [reg_p1], [reg_p2], [rcx], r8, r9, r10, r11, r12, r13, r14, r15, rbx, rbp     // Result C0-C3
 
-    // [rsp] <- AH x BH 
+    // [rcx+64] <- AH x BH
     MUL192_SCHOOL  [reg_p1+32], [reg_p2+32], [rcx+64], r8, r9, r10, r11, r12, r13, r14
     
     // r8-r11 <- (AH+AL) x (BH+BL), final step
@@ -665,7 +665,7 @@ rdc434_asm:
     push   r12
     push   r13 
 
-    // a[0-1] x p434p1_nz --> result: r8:r13 
+    // a[0-1] x p434p1 --> result: r8:r13
     MUL128x256_SCHOOL [reg_p1], [rip+p434p1+24], r8, r9, r10, r11, r12, r13, rcx     
 
     xor    rcx, rcx
@@ -696,7 +696,7 @@ rdc434_asm:
     mov    [reg_p1+96], r10
     mov    [reg_p1+104], r11
 
-    // a[2-3] x p434p1_nz --> result: r8:r13
+    // a[2-3] x p434p1 --> result: r8:r13
     MUL128x256_SCHOOL [reg_p1+16], [rip+p434p1+24], r8, r9, r10, r11, r12, r13, rcx 
 
     xor    rcx, rcx
@@ -721,7 +721,7 @@ rdc434_asm:
     mov    [reg_p1+96], r8  
     mov    [reg_p1+104], r9
 
-    // a[4-5] x p434p1_nz --> result: r8:r13
+    // a[4-5] x p434p1 --> result: r8:r13
     MUL128x256_SCHOOL [reg_p1+32], [rip+p434p1+24], r8, r9, r10, r11, r12, r13, rcx  
 
     xor    rcx, rcx
@@ -740,7 +740,7 @@ rdc434_asm:
     mov    [reg_p1+96], r13  
     mov    [reg_p1+104], rcx
 
-    // a[6-7] x p434p1_nz --> result: r8:r12
+    // a[6-7] x p434p1 --> result: r8:r12
     MUL64x256_SCHOOL [reg_p1+48], [rip+p434p1+24], r8, r9, r10, r11, r12, r13  
     
     // Final result c2:c6
