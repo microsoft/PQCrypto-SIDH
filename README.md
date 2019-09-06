@@ -1,7 +1,7 @@
-# SIDH v3.1 (C Edition)
+# SIDH v3.2 (C Edition)
 
 The **SIDH** library is an efficient supersingular isogeny-based cryptography library written in C language.
-**Version v3.1** of the library includes the ephemeral Diffie-Hellman key exchange scheme "SIDH" [1,2], and the CCA-secure
+**Version v3.2** of the library includes the ephemeral Diffie-Hellman key exchange scheme "SIDH" [1,2], and the CCA-secure
 key encapsulation mechanism "SIKE" [3]. These schemes are conjectured to be secure against quantum computer attacks.
 
 Concretely, the SIDH library includes the following KEM schemes:
@@ -17,6 +17,25 @@ And the following ephemeral key exchange schemes:
 * SIDHp503: matching the post-quantum security of SHA3-256 (level 2).
 * SIDHp610: matching the post-quantum security of AES192 (level 3).
 * SIDHp751: matching the post-quantum security of AES256 (level 5).
+
+It also includes the following compressed KEM schemes:
+
+* SIKEp434_compressed: matching the post-quantum security of AES128 (level 1).
+* SIKEp503_compressed: matching the post-quantum security of SHA3-256 (level 2).
+* SIKEp610_compressed: matching the post-quantum security of AES192 (level 3).
+* SIKEp751_compressed: matching the post-quantum security of AES256 (level 5).
+
+And the following compressed ephemeral key exchange schemes:
+
+* SIDHp434_compressed: matching the post-quantum security of AES128 (level 1).
+* SIDHp503_compressed: matching the post-quantum security of SHA3-256 (level 2).
+* SIDHp610_compressed: matching the post-quantum security of AES192 (level 3).
+* SIDHp751_compressed: matching the post-quantum security of AES256 (level 5).
+
+The compressed schemes exhibit reduced public keys at the expense of longer computing times.
+Their implementation is based on [11], which in turn is based on and improves upon [9] and [10].
+Note that the supported compressed schemes are not compatible with the compressed variants submitted to the NIST PQC
+standardization process (round 2), which are based on [10].
 
 The library was developed by [Microsoft Research](http://research.microsoft.com/) for experimentation purposes.
 
@@ -34,6 +53,7 @@ The library was developed by [Microsoft Research](http://research.microsoft.com/
 * [`Generic implementation for p503`](src/P503/generic/): implementation of the field arithmetic over the prime p503 in portable C.
 * [`Generic implementation for p610`](src/P610/generic/): implementation of the field arithmetic over the prime p610 in portable C.
 * [`Generic implementation for p751`](src/P751/generic/): implementation of the field arithmetic over the prime p751 in portable C.
+* [`compression folder`](src/compression/): main C files of the compressed variants.
 * [`random folder`](src/random/): randombytes function using the system random number generator.
 * [`sha3 folder`](src/sha3/): SHAKE256 implementation.  
 * [`Test folder`](tests/): test files.   
@@ -58,16 +78,13 @@ The library was developed by [Microsoft Research](http://research.microsoft.com/
   assembly for Linux.
 - Includes Known Answer Tests (KATs), and testing/benchmarking code.
 
-## New in Version 3.1
-
-- Updated with the round 2 submission to NIST's post-quantum crypto standardization process [4].   
-- Added two new parameter sets over the primes p434 and p610 that match the post-quantum security of AES128 
-  and AES192, respectively [6,7,8]. Security categories for parameter sets have been adjusted upward [4].
-- The starting curve has been changed from A = 0 to A = 6 [4].
+## New in Version 3.2
+ 
+- Added four new parameter sets of compressed SIDH and four new parameter sets of compressed SIKE based on [11]. 
 
 ## Supported Platforms
 
-**SIDH v3.1** is supported on a wide range of platforms including x64, x86 and ARM devices running Windows 
+**SIDH v3.2** is supported on a wide range of platforms including x64, x86 and ARM devices running Windows 
 or Linux OS. We have tested the library with Microsoft Visual Studio 2015, GNU GCC v5.4, and clang v3.8.
 See instructions below to choose an implementation option and compile on one of the supported platforms.
 
@@ -132,6 +149,14 @@ $ ./sidh434/test_SIDH
 $ ./sidh503/test_SIDH
 $ ./sidh610/test_SIDH
 $ ./sidh751/test_SIDH
+$ ./sike434_compressed/test_SIKE
+$ ./sike503_compressed/test_SIKE
+$ ./sike610_compressed/test_SIKE
+$ ./sike751_compressed/test_SIKE
+$ ./sidh434_compressed/test_SIDH
+$ ./sidh503_compressed/test_SIDH
+$ ./sidh610_compressed/test_SIDH
+$ ./sidh751_compressed/test_SIDH
 ```
 
 To run the KEM implementations against the KATs, execute:
@@ -141,6 +166,10 @@ $ ./sike434/PQCtestKAT_kem
 $ ./sike503/PQCtestKAT_kem
 $ ./sike610/PQCtestKAT_kem
 $ ./sike751/PQCtestKAT_kem
+$ ./sike434_compressed/PQCtestKAT_kem
+$ ./sike503_compressed/PQCtestKAT_kem
+$ ./sike610_compressed/PQCtestKAT_kem
+$ ./sike751_compressed/PQCtestKAT_kem
 ```
 
 The program tries its best at auto-correcting unsupported configurations. For example, since the `FAST` implementation is currently only available for x64 and ARMv8 doing `make ARCH=x86 OPT_LEVEL=FAST` is actually processed using `ARCH=x86 OPT_LEVEL=GENERIC`.
@@ -153,11 +182,11 @@ Open the solution file [`SIDH.sln`](Visual%20Studio/SIDH/SIDH.sln) in Visual Stu
 
 ### Running the tests:
 
-After building the solution file, there should be the following executable files: `arith_tests-P434.exe`, `arith_tests-P503.exe`, `arith_tests-P610.exe` and `arith_tests-P751.exe`, to run tests for the underlying arithmetic, `test-SIDHp434.exe`, `test-SIDHp503.exe`, `test-SIDHp610.exe` and `test-SIDHp751.exe`, to run tests for the key exchange, and `test-SIKEp434.exe`, `test-SIKEp503.exe`, `test-SIKEp610.exe` and `test-SIKEp751.exe`, to run tests for the KEM. 
+After building the solution file, there should be the following executable files: `arith_tests-P434.exe`, `arith_tests-P503.exe`, `arith_tests-P610.exe` and `arith_tests-P751.exe`, to run tests for the underlying arithmetic, `test-SIDHp[SET].exe` to run tests for the key exchange, and `test-SIKEp[SET].exe` to run tests for the KEM, where SET = {434, 503, 610, 751, 434_compressed, 503_compressed, 610_compressed, 751_compressed}.
 
 ### Using the library:
 
-After building the solution file, add the generated `P434.lib`, `P503.lib`, `P610.lib` and `P751.lib` library files to the set of References for a project, and add [`P434_api.h`](src/P434/P434_api.h), [`P503_api.h`](src/P503/P503_api.h), [`P610_api.h`](src/P610/P610_api.h) and [`P751_api.h`](src/P751/P751_api.h) to the list of header files of a project.
+After building the solution file, add the generated `P434.lib`, `P503.lib`, `P610.lib` and `P751.lib` library files to the set of References for a project, and add [`P434_api.h`](src/P434/P434_api.h), [`P503_api.h`](src/P503/P503_api.h), [`P610_api.h`](src/P610/P610_api.h), [`P751_api.h`](src/P751/P751_api.h), [`P434_compressed_api.h`](src/P434/P434_compressed_api.h), [`P503_compressed_api.h`](src/P503/P503_compressed_api.h), [`P610_compressed_api.h`](src/P610/P610_compressed_api.h) and [`P751_compressed_api.h`](src/P751/P751_compressed_api.h) to the list of header files of a project.
 
 ## License
 
@@ -172,7 +201,8 @@ The library includes some third party modules that are licensed differently. In 
 
 ## Contributors
 
-- Joost Renes, while he was an intern with Microsoft Research.
+- Geovandro Pereira.
+- Joost Renes.
 
 # References
 
@@ -188,17 +218,26 @@ The round 2 submission package is available [`here`](https://csrc.nist.gov/CSRC/
 [4]  Craig Costello, and Huseyin Hisil, "A simple and compact algorithm for SIDH with arbitrary degree isogenies". Advances in Cryptology - ASIACRYPT 2017, LNCS 10625, pp. 303-329, 2017. 
 The preprint version is available [`here`](https://eprint.iacr.org/2017/504). 
 
-[5]  Armando Faz-Hernández, Julio López, Eduardo Ochoa-Jiménez, and Francisco Rodríguez-Henríquez, "A faster software implementation of the supersingular isogeny Diffie-Hellman key exchange protocol". IEEE Transactions on Computers (to appear). 
+[5]  Armando Faz-Hernández, Julio López, Eduardo Ochoa-Jiménez, and Francisco Rodríguez-Henríquez, "A faster software implementation of the supersingular isogeny Diffie-Hellman key exchange protocol". IEEE Transactions on Computers, Vol. 67(11), 2018. 
 The preprint version is available [`here`](https://eprint.iacr.org/2017/1015). 
 
 [6]  Gora Adj, Daniel Cervantes-Vázquez, Jesús-Javier Chi-Domínguez, Alfred Menezes and Francisco Rodríguez-Henríquez, "On the cost of computing isogenies between supersingular elliptic curves". SAC 2018, LCNS 11349, pp. 322-343, 2018. 
 The preprint version is available [`here`](https://eprint.iacr.org/2018/313). 
 
-[7]  Samuel Jaques and John M. Schanck, "Quantum cryptanalysis in the RAM model: Claw-finding attacks on SIKE", 2019. 
+[7]  Samuel Jaques and John M. Schanck, "Quantum cryptanalysis in the RAM model: Claw-finding attacks on SIKE". Advances in Cryptology - CRYPTO 2019 (to appear), 2019. 
 The preprint version is available [`here`](https://eprint.iacr.org/2019/103).   
 
 [8]  Craig Costello, Patrick Longa, Michael Naehrig, Joost Renes and Fernando Virdia, "Improved Classical Cryptanalysis of the Computational Supersingular Isogeny Problem", 2019. 
-The preprint version is available [`here`](https://eprint.iacr.org/2019/298).  
+The preprint version is available [`here`](https://eprint.iacr.org/2019/298). 
+
+[9]  Craig Costello, David Jao, Patrick Longa, Michael Naehrig, Joost Renes and David Urbanik, "Efficient compression of SIDH public keys". Advances in Cryptology - EUROCRYPT 2017, LNCS 10210, pp. 679-706, 2017. 
+The preprint version is available [`here`](https://eprint.iacr.org/2016/963). 
+
+[10]  Gustavo H.M. Zanon, Marcos A. Simplicio Jr, Geovandro C.C.F. Pereira, Javad Doliskani and Paulo S.L.M. Barreto, "Faster key compression for isogeny-based cryptosystems". IEEE Transactions on Computers, Vol. 68(5), 2019. 
+The preprint version is available [`here`](https://eprint.iacr.org/2017/1143).  
+
+[11]  Michael Naehrig and Joost Renes, "Dual Isogenies and Their Application to Public-key Compression for Isogeny-based Cryptography". Advances in Cryptology - ASIACRYPT 2019 (to appear), 2019.
+The preprint version is available [`here`](https://eprint.iacr.org/2019/499).
 
 # Contributing
 
