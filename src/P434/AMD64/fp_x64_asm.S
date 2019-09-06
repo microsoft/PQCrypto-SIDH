@@ -465,7 +465,7 @@ mul434_asm:
     and    r10, rbx
     and    r11, rbx
 
-    // r8-r11 <- masked (AH + AL) + masked (AH + AL)
+    // r8-r11 <- masked (AH + AL) + masked (BH + BL)
     add    r8, r12
     adc    r9, r13
     adc    r10, r14
@@ -481,7 +481,7 @@ mul434_asm:
     // [rcx] <- AL x BL
     MUL256_SCHOOL  [reg_p1], [reg_p2], [rcx], r8, r9, r10, r11, r12, r13, r14, r15, rbx, rbp     // Result C0-C3
 
-    // [rsp] <- AH x BH 
+    // [rcx+64] <- AH x BH
     MUL192_SCHOOL  [reg_p1+32], [reg_p2+32], [rcx+64], r8, r9, r10, r11, r12, r13, r14
     
     // r8-r11 <- (AH+AL) x (BH+BL), final step
