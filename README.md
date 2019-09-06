@@ -34,8 +34,8 @@ And the following compressed ephemeral key exchange schemes:
 
 The compressed schemes exhibit reduced public keys at the expense of longer computing times.
 Their implementation is based on [11], which in turn is based on and improves upon [9] and [10].
-Note that the supported compressed schemes are not compatible with the compressed variants submitted to the NIST PQC
-standardization process (round 2), which are based on [10].
+Note that the supported compressed schemes are not compatible with the compression variant submitted to the NIST PQC
+standardization process (round 2), which is based on [10].
 
 The library was developed by [Microsoft Research](http://research.microsoft.com/) for experimentation purposes.
 
@@ -66,6 +66,7 @@ The library was developed by [Microsoft Research](http://research.microsoft.com/
 
 - Supports IND-CCA secure key encapsulation mechanism.
 - Supports ephemeral Diffie-Hellman key exchange.
+- Includes compressed variants that feature reduced public key sizes.
 - Supports four security levels matching the post-quantum security of AES128, SHA3-256, AES192 and AES256.
 - Protected against timing and cache-timing attacks through regular, constant-time implementation of 
   all operations on secret key material.
@@ -80,7 +81,7 @@ The library was developed by [Microsoft Research](http://research.microsoft.com/
 
 ## New in Version 3.2
  
-- Added four new parameter sets of compressed SIDH and four new parameter sets of compressed SIKE based on [11]. 
+- Added four new parameter sets for compressed SIDH and four new parameter sets for compressed SIKE [11]. 
 
 ## Supported Platforms
 
