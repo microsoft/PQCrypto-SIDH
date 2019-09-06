@@ -364,3 +364,174 @@ static void LADDER3PT(const f2elm_t xP, const f2elm_t xQ, const f2elm_t xPQ, con
     mask = 0 - (digit_t)swap;
     swap_points(R, R2, mask);
 }
+
+#ifdef COMPRESS
+
+void Double(point_proj_t P, point_proj_t Q, f2elm_t A24, const int k)
+{ // Doubling of a Montgomery point in projective coordinates (X:Z) over affine curve coefficient A. 
+  // Input: projective Montgomery x-coordinates P = (X1:Z1), where x1=X1/Z1 and Montgomery curve constants (A+2)/4.
+  // Output: projective Montgomery x-coordinates Q = 2*P = (X2:Z2). 
+    f2elm_t temp, a, b, c, aa, bb;    
+    
+    fp2copy(P->X, Q->X);
+    fp2copy(P->Z, Q->Z);
+    
+    for (int j = 0; j < k; j++) {
+        fp2add(Q->X, Q->Z, a);
+        fp2sub(Q->X, Q->Z, b);
+        fp2sqr_mont(a, aa);
+        fp2sqr_mont(b, bb);
+        fp2sub(aa, bb, c);
+        fp2mul_mont(aa, bb, Q->X);
+        fp2mul_mont(A24, c, temp);
+        fp2add(temp, bb, temp);
+        fp2mul_mont(c, temp, Q->Z);
+    }
+}
+
+
+void xTPL_fast(const point_proj_t P, point_proj_t Q, const f2elm_t A2)
+{ // Montgomery curve (E: y^2 = x^3 + A*x^2 + x) x-only tripling at a cost 5M + 6S + 9A = 27p + 61a.
+  // Input : projective Montgomery x-coordinates P = (X:Z), where x=X/Z and Montgomery curve constant A/2. 
+  // Output: projective Montgomery x-coordinates Q = 3*P = (X3:Z3).
+       f2elm_t t1, t2, t3, t4;
+       
+       fp2sqr_mont(P->X, t1);        // t1 = x^2
+       fp2sqr_mont(P->Z, t2);        // t2 = z^2
+       fp2add(t1, t2, t3);           // t3 = t1 + t2
+       fp2add(P->X, P->Z, t4);       // t4 = x + z
+       fp2sqr_mont(t4, t4);          // t4 = t4^2
+       fp2sub(t4, t3, t4);           // t4 = t4 - t3
+       fp2mul_mont(A2, t4, t4);      // t4 = t4*A2
+       fp2add(t3, t4, t4);           // t4 = t4 + t3
+       fp2sub(t1, t2, t3);           // t3 = t1 - t2
+       fp2sqr_mont(t3, t3);          // t3 = t3^2
+       fp2mul_mont(t1, t4, t1);      // t1 = t1*t4
+       fp2shl(t1, 2, t1);            // t1 = 4*t1
+       fp2sub(t1, t3, t1);           // t1 = t1 - t3
+       fp2sqr_mont(t1, t1);          // t1 = t1^2
+       fp2mul_mont(t2, t4, t2);      // t2 = t2*t4
+       fp2shl(t2, 2, t2);            // t2 = 4*t2
+       fp2sub(t2, t3, t2);           // t2 = t2 - t3
+       fp2sqr_mont(t2, t2);          // t2 = t2^2
+       fp2mul_mont(P->X, t2, Q->X);  // x = x*t2
+       fp2mul_mont(P->Z, t1, Q->Z);  // z = z*t1    
+}
+
+
+void xTPLe_fast(point_proj_t P, point_proj_t Q, const f2elm_t A2, int e)
+{ // Computes [3^e](X:Z) on Montgomery curve with projective constant via e repeated triplings. e triplings in E costs k*(5M + 6S + 9A)
+  // Input: projective Montgomery x-coordinates P = (X:Z), where x=X/Z, Montgomery curve constant A2 = A/2 and the number of triplings e.
+  // Output: projective Montgomery x-coordinates Q <- [3^e]P.    
+    point_proj_t T;
+    copy_words((digit_t*)P, (digit_t*)T, 2*2*NWORDS_FIELD);
+
+    for (int j = 0; j < e; j++) { 
+        xTPL_fast(T, T, A2);
+    }
+    copy_words((digit_t*)T, (digit_t*)Q, 2*2*NWORDS_FIELD);
+}
+
+
+void ADD(const point_full_proj_t P, const f2elm_t QX, const f2elm_t QY, const f2elm_t QZ, const f2elm_t A, point_full_proj_t R)
+{ // General addition.
+  // Input: projective Montgomery points P=(XP:YP:ZP) and Q=(XQ:YQ:ZQ).
+  // Output: projective Montgomery point R <- P+Q = (XQP:YQP:ZQP). 
+    f2elm_t t0 = {0}, t1 = {0}, t2 = {0}, t3 = {0}, t4 = {0}, t5 = {0}, t6 = {0}, t7 = {0};
+
+    fp2mul_mont(QX, P->Z, t0);            // t0 = x2*Z1    
+    fp2mul_mont(P->X, QZ, t1);            // t1 = X1*z2    
+    fp2add(t0, t1, t2);                   // t2 = t0 + t1
+    fp2sub(t1, t0, t3);                   // t3 = t1 - t0
+    fp2mul_mont(QX, P->X, t0);            // t0 = x2*X1    
+    fp2mul_mont(P->Z, QZ, t1);            // t1 = Z1*z2
+    fp2add(t0, t1, t4);                   // t4 = t0 + t1
+    fp2mul_mont(t0, A, t0);               // t0 = t0*A
+    fp2mul_mont(QY, P->Y, t5);            // t5 = y2*Y1
+    fp2sub(t0, t5, t0);                   // t0 = t0 - t5
+    fp2mul_mont(t0, t1, t0);              // t0 = t0*t1
+    fp2add(t0, t0, t0);                   // t0 = t0 + t0
+    fp2mul_mont(t2, t4, t5);              // t5 = t2*t4
+    fp2add(t5, t0, t5);                   // t5 = t5 + t0
+    fp2sqr_mont(P->X, t0);                // t0 = X1 ^ 2
+    fp2sqr_mont(P->Z, t6);                // t6 = Z1 ^ 2
+    fp2add(t0, t6, t0);                   // t0 = t0 + t6    
+    fp2add(t1, t1, t1);                   // t1 = t1 + t1
+    fp2mul_mont(QY, P->X, t7);            // t7 = y2*X1
+    fp2mul_mont(QX, P->Y, t6);            // t6 = x2*Y1
+    fp2sub(t7, t6, t7);                   // t7 = t7 - t6
+    fp2mul_mont(t1, t7, t1);              // t1 = t1*t7
+    fp2mul_mont(A, t2, t7);               // t7 = A*t2
+    fp2add(t7, t4, t4);                   // t4 = t4 + t7
+    fp2mul_mont(t1, t4, t4);              // t4 = t1*t4
+    fp2mul_mont(QY, QZ, t1);              // t1 = y2*z2
+    fp2mul_mont(t0, t1, t0);              // t0 = t0*t1
+    fp2sqr_mont(QZ, t1);                  // t1 = z2 ^ 2
+    fp2sqr_mont(QX, t6);                  // t6 = x2 ^ 2
+    fp2add(t1, t6, t1);                   // t1 = t1 + t6
+    fp2mul_mont(P->Z, P->Y, t6);          // t6 = Z1*Y1
+    fp2mul_mont(t1, t6, t1);              // t1 = t1*t6
+    fp2sub(t0, t1, t0);                   // t0 = t0 - t1
+    fp2mul_mont(t2, t0, t0);              // t0 = t2*t0
+    fp2mul_mont(t5, t3, R->X);            // X3 = t5*t3    
+    fp2add(t4, t0, R->Y);                 // Y3 = t4 + t0
+    fp2sqr_mont(t3, t0);                  // t0 = t3 ^ 2
+    fp2mul_mont(t3, t0, R->Z);            // Z3 = t3*t0
+}
+
+
+void Mont_ladder(const f2elm_t x, const digit_t* m, point_proj_t P, point_proj_t Q, const f2elm_t A24, const unsigned int order_bits, const unsigned int order_fullbits)
+{ // The Montgomery ladder
+  // Inputs: the affine x-coordinate of a point P on E: B*y^2=x^3+A*x^2+x, 
+  //         scalar m
+  //         curve constant A24 = (A+2)/4
+  //         order_bits = subgroup order bitlength
+  //         order_fullbits = smallest multiple of 32 larger than the order bitlength
+  // Output: P = m*(x:1)
+    unsigned int bit = 0, owords = NBITS_TO_NWORDS(order_fullbits);
+    digit_t mask, scalar[NWORDS_ORDER];
+    int i;
+    
+    // Initializing with the points (1:0) and (x:1)
+    fpcopy((digit_t*)&Montgomery_one, (digit_t*)P->X[0]);
+    fpzero(P->X[1]);
+    fp2zero(P->Z);
+    
+    fp2copy(x, Q->X);    
+    fpcopy((digit_t*)&Montgomery_one, (digit_t*)Q->Z[0]);    
+    fpzero(Q->Z[1]);
+
+    for (i = NWORDS_ORDER-1; i >= 0; i--) {
+        scalar[i] = m[i];
+    }
+    
+    for (i = order_fullbits-order_bits; i > 0; i--) {
+        mp_shiftl1(scalar, owords);
+    }    
+    
+    for (i = order_bits; i > 0; i--) {
+        bit = (unsigned int)(scalar[owords-1] >> (RADIX-1));
+        mp_shiftl1(scalar, owords);
+        mask = 0-(digit_t)bit;
+
+        swap_points(P, Q, mask);        
+        xDBLADD(P, Q, x, A24);                     // If bit=0 then P <- 2*P and Q <- P+Q, 
+        swap_points(P, Q, mask);                   // else if bit=1 then Q <- 2*Q and P <- P+Q
+    }
+}
+
+
+void mont_twodim_scalarmult(digit_t* a, const point_t R, const point_t S, const f2elm_t A, const f2elm_t A24, point_full_proj_t P, const unsigned int order_bits)
+{ // Computes P = R + [a]S  
+    point_proj_t P0 = {0}, P1 = {0};
+    point_full_proj_t P2 = {0};
+    f2elm_t one = {0};    
+
+    fpcopy((digit_t*)&Montgomery_one, one[0]);        
+    
+    Mont_ladder(S->x, a, P0, P1, A24, order_bits, MAXBITS_ORDER);    
+    recover_os(P0->X, P0->Z, P1->X, P1->Z, S->x, S->y, A, P2->X, P2->Y, P2->Z);     
+    ADD(P2, R->x, R->y, one, A, P);       
+}
+
+#endif

@@ -1,0 +1,93 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Source Files\generic">
+      <UniqueIdentifier>{c12e408e-2171-41d7-8815-33244cd7b1db}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\x64">
+      <UniqueIdentifier>{e81738a2-8bd8-449a-8918-07266c29f2b7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\random">
+      <UniqueIdentifier>{41f562a7-d335-4517-9c95-c6a4ce94c2f0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\random">
+      <UniqueIdentifier>{d2fd7e3f-38db-40e6-9994-0c979863e36b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\sha3">
+      <UniqueIdentifier>{597545a3-c4e5-4065-9d91-c7bec60b6da4}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\src\random\random.c">
+      <Filter>Source Files\random</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ec_isogeny.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\fpx.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\sha3\fips202.c">
+      <Filter>Source Files\sha3</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\P610\AMD64\fp_x64.c">
+      <Filter>Source Files\x64</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\P610\generic\fp_generic.c">
+      <Filter>Source Files\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\compression\dlog.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\compression\pairing.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\compression\sidh_compressed.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\compression\sike_compressed.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\compression\torsion_basis.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\P610\P610_compressed.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\P610\P610_compressed_dlog_tables.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\P610\P610_compressed_pair_tables.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\src\random\random.h">
+      <Filter>Header Files\random</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\sha3\fips202.h">
+      <Filter>Source Files\sha3</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\config.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\P610\P610_internal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\P610\P610_compressed_api.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

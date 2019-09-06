@@ -55,6 +55,35 @@
 #define SECRETKEY_B_BYTES       ((OBOB_BITS - 1 + 7) / 8)
 #define FP2_ENCODED_BYTES       2*((NBITS_FIELD + 7) / 8)
 
+#ifdef COMPRESS
+    #define MASK2_BOB               0x00  
+    #define MASK3_BOB               0xFF
+    #define ORDER_A_ENCODED_BYTES   SECRETKEY_A_BYTES
+    #define ORDER_B_ENCODED_BYTES   SECRETKEY_B_BYTES
+    #define COMPRESSED_CHUNK_CT     (3*ORDER_A_ENCODED_BYTES + FP2_ENCODED_BYTES + 2)
+    #define UNCOMPRESSEDPK_BYTES    564
+    // Table sizes used by the Entangled basis generation
+    #define TABLE_R_LEN 17
+    #define TABLE_V_LEN 34
+    // Parameters for discrete log computations
+    // Binary Pohlig-Hellman reduced to smaller logs of order ell^W
+    #define W_2 4
+    #define W_3 5
+    // ell^w    
+    #define ELL2_W (1 << W_2)    
+    #define ELL3_W 243 // W_3 = 5
+    // ell^(e mod w) 
+    #define ELL2_EMODW (1 << (OALICE_BITS % W_2))    
+    #define ELL3_EMODW 81
+    // # of digits in the discrete log    
+    #define DLEN_2 93 // ceil(eA/W_2)
+    #define DLEN_3 48 // ceil(eB/W_3)
+    // Length of the optimal strategy path for Pohlig-Hellman
+    #define PLEN_2 94   
+    #define PLEN_3 49 
+#endif
+
+
 // SIDH's basic element definitions and point representations
 
 typedef digit_t felm_t[NWORDS_FIELD];                                 // Datatype for representing 751-bit field elements (768-bit max.)
@@ -63,6 +92,16 @@ typedef felm_t  f2elm_t[2];                                           // Datatyp
         
 typedef struct { f2elm_t X; f2elm_t Z; } point_proj;                  // Point representation in projective XZ Montgomery coordinates.
 typedef point_proj point_proj_t[1]; 
+
+#ifdef COMPRESS
+    typedef struct { f2elm_t X; f2elm_t Y; f2elm_t Z; } point_full_proj;  // Point representation in full projective XYZ Montgomery coordinates 
+    typedef point_full_proj point_full_proj_t[1];
+
+    typedef struct { f2elm_t x; f2elm_t y; } point_affine;                // Point representation in affine coordinates.
+    typedef point_affine point_t[1];
+
+    typedef f2elm_t publickey_t[3];
+#endif 
 
 
 
@@ -81,7 +120,10 @@ void mp_add751_asm(const digit_t* a, const digit_t* b, digit_t* c);
 
 // Multiprecision subtraction, c = a-b, where lng(a) = lng(b) = nwords. Returns the borrow bit 
 unsigned int mp_sub(const digit_t* a, const digit_t* b, digit_t* c, const unsigned int nwords);
-digit_t mp_sub751x2_asm(const digit_t* a, const digit_t* b, digit_t* c);
+
+// 2x751-bit multiprecision subtraction followed by addition with p751*2^768, c = a-b+(p751*2^768) if a-b < 0, otherwise c=a-b 
+void mp_subaddx2_asm(const digit_t* a, const digit_t* b, digit_t* c);
+void mp_subadd751x2_asm(const digit_t* a, const digit_t* b, digit_t* c);
 
 // Double 2x751-bit multiprecision subtraction, c = c-a-b, where c > a and c > b
 void mp_dblsub751x2_asm(const digit_t* a, const digit_t* b, digit_t* c);
