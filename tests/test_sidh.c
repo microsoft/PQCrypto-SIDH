@@ -18,7 +18,7 @@
 int cryptotest_kex()
 { // Testing key exchange
     unsigned int i;
-    unsigned char PrivateKeyA[SIDH_SECRETKEYBYTES], PrivateKeyB[SIDH_SECRETKEYBYTES];
+    unsigned char PrivateKeyA[SIDH_SECRETKEYBYTES_A], PrivateKeyB[SIDH_SECRETKEYBYTES_B];
     unsigned char PublicKeyA[SIDH_PUBLICKEYBYTES], PublicKeyB[SIDH_PUBLICKEYBYTES];
     unsigned char SharedSecretA[SIDH_BYTES], SharedSecretB[SIDH_BYTES];
     bool passed = true;
@@ -53,13 +53,16 @@ int cryptotest_kex()
 int cryptorun_kex()
 { // Benchmarking key exchange
     unsigned int n;
-    unsigned char PrivateKeyA[SIDH_SECRETKEYBYTES], PrivateKeyB[SIDH_SECRETKEYBYTES];
+    unsigned char PrivateKeyA[SIDH_SECRETKEYBYTES_A], PrivateKeyB[SIDH_SECRETKEYBYTES_B];
     unsigned char PublicKeyA[SIDH_PUBLICKEYBYTES], PublicKeyB[SIDH_PUBLICKEYBYTES];
     unsigned char SharedSecretA[SIDH_BYTES], SharedSecretB[SIDH_BYTES];
     unsigned long long cycles, cycles1, cycles2;
 
     printf("\n\nBENCHMARKING EPHEMERAL ISOGENY-BASED KEY EXCHANGE SYSTEM %s\n", SCHEME_NAME);
     printf("--------------------------------------------------------------------------------------------------------\n\n");
+
+    random_mod_order_A(PrivateKeyA);
+    random_mod_order_B(PrivateKeyB);
 
     // Benchmarking Alice's key generation
     cycles = 0;

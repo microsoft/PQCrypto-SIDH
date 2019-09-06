@@ -83,8 +83,12 @@ OBJECTS_434=objs434/P434.o $(EXTRA_OBJECTS_434) objs/random.o objs/fips202.o
 OBJECTS_503=objs503/P503.o $(EXTRA_OBJECTS_503) objs/random.o objs/fips202.o
 OBJECTS_610=objs610/P610.o $(EXTRA_OBJECTS_610) objs/random.o objs/fips202.o
 OBJECTS_751=objs751/P751.o $(EXTRA_OBJECTS_751) objs/random.o objs/fips202.o
+OBJECTS_434_COMP=objs434comp/P434_compressed.o $(EXTRA_OBJECTS_434) objs/random.o objs/fips202.o
+OBJECTS_503_COMP=objs503comp/P503_compressed.o $(EXTRA_OBJECTS_503) objs/random.o objs/fips202.o
+OBJECTS_610_COMP=objs610comp/P610_compressed.o $(EXTRA_OBJECTS_610) objs/random.o objs/fips202.o
+OBJECTS_751_COMP=objs751comp/P751_compressed.o $(EXTRA_OBJECTS_751) objs/random.o objs/fips202.o
 
-all: lib434 lib503 lib610 lib751 tests KATS
+all: lib434 lib503 lib610 lib751 lib434comp lib503comp lib610comp lib751comp tests KATS
 
 objs434/%.o: src/P434/%.c
 	@mkdir -p $(@D)
@@ -99,6 +103,22 @@ objs610/%.o: src/P610/%.c
 	$(CC) -c $(CFLAGS) $< -o $@
 
 objs751/%.o: src/P751/%.c
+	@mkdir -p $(@D)
+	$(CC) -c $(CFLAGS) $< -o $@
+
+objs434comp/%.o: src/P434/%.c
+	@mkdir -p $(@D)
+	$(CC) -c $(CFLAGS) $< -o $@
+
+objs503comp/%.o: src/P503/%.c
+	@mkdir -p $(@D)
+	$(CC) -c $(CFLAGS) $< -o $@
+
+objs610comp/%.o: src/P610/%.c
+	@mkdir -p $(@D)
+	$(CC) -c $(CFLAGS) $< -o $@
+
+objs751comp/%.o: src/P751/%.c
 	@mkdir -p $(@D)
 	$(CC) -c $(CFLAGS) $< -o $@
 
@@ -139,7 +159,7 @@ ifeq "$(ARCHITECTURE)" "_AMD64_"
 
     objs751/fp_x64_asm.o: src/P751/AMD64/fp_x64_asm.S
 	    $(CC) -c $(CFLAGS) src/P751/AMD64/fp_x64_asm.S -o objs751/fp_x64_asm.o
-else ifeq "$(ARCHITECTURE)" "_ARM64_"		
+else ifeq "$(ARCHITECTURE)" "_ARM64_"
     objs434/fp_generic.o: src/P434/generic/fp_generic.c
 	    $(CC) -c $(CFLAGS) src/P434/generic/fp_generic.c -o objs434/fp_generic.o
 
@@ -191,7 +211,31 @@ lib751: $(OBJECTS_751)
 	$(AR) lib751/libsidh.a $^
 	$(RANLIB) lib751/libsidh.a
 
-tests: lib434 lib503 lib610 lib751
+lib434comp: $(OBJECTS_434_COMP)
+	rm -rf lib434comp sike434_compressed sidh434_compressed
+	mkdir lib434comp sike434_compressed sidh434_compressed
+	$(AR) lib434comp/libsidh.a $^
+	$(RANLIB) lib434comp/libsidh.a
+
+lib503comp: $(OBJECTS_503_COMP)
+	rm -rf lib503comp sike503_compressed sidh503_compressed
+	mkdir lib503comp sike503_compressed sidh503_compressed
+	$(AR) lib503comp/libsidh.a $^
+	$(RANLIB) lib503comp/libsidh.a
+
+lib610comp: $(OBJECTS_610_COMP)
+	rm -rf lib610comp sike610_compressed sidh610_compressed
+	mkdir lib610comp sike610_compressed sidh610_compressed
+	$(AR) lib610comp/libsidh.a $^
+	$(RANLIB) lib610comp/libsidh.a
+
+lib751comp: $(OBJECTS_751_COMP)
+	rm -rf lib751comp sike751_compressed sidh751_compressed
+	mkdir lib751comp sike751_compressed sidh751_compressed
+	$(AR) lib751comp/libsidh.a $^
+	$(RANLIB) lib751comp/libsidh.a
+
+tests: lib434 lib434comp lib503 lib503comp lib610 lib610comp lib751 lib751comp
 	$(CC) $(CFLAGS) -L./lib434 tests/arith_tests-p434.c tests/test_extras.c -lsidh $(LDFLAGS) -o arith_tests-p434 $(ARM_SETTING)
 	$(CC) $(CFLAGS) -L./lib503 tests/arith_tests-p503.c tests/test_extras.c -lsidh $(LDFLAGS) -o arith_tests-p503 $(ARM_SETTING)
 	$(CC) $(CFLAGS) -L./lib610 tests/arith_tests-p610.c tests/test_extras.c -lsidh $(LDFLAGS) -o arith_tests-p610 $(ARM_SETTING)
@@ -204,6 +248,14 @@ tests: lib434 lib503 lib610 lib751
 	$(CC) $(CFLAGS) -L./lib503 tests/test_SIKEp503.c tests/test_extras.c -lsidh $(LDFLAGS) -o sike503/test_SIKE $(ARM_SETTING)
 	$(CC) $(CFLAGS) -L./lib610 tests/test_SIKEp610.c tests/test_extras.c -lsidh $(LDFLAGS) -o sike610/test_SIKE $(ARM_SETTING)
 	$(CC) $(CFLAGS) -L./lib751 tests/test_SIKEp751.c tests/test_extras.c -lsidh $(LDFLAGS) -o sike751/test_SIKE $(ARM_SETTING)
+	$(CC) $(CFLAGS) -L./lib434comp tests/test_SIDHp434_compressed.c tests/test_extras.c -lsidh $(LDFLAGS) -o sidh434_compressed/test_SIDH $(ARM_SETTING)
+	$(CC) $(CFLAGS) -L./lib503comp tests/test_SIDHp503_compressed.c tests/test_extras.c -lsidh $(LDFLAGS) -o sidh503_compressed/test_SIDH $(ARM_SETTING)
+	$(CC) $(CFLAGS) -L./lib610comp tests/test_SIDHp610_compressed.c tests/test_extras.c -lsidh $(LDFLAGS) -o sidh610_compressed/test_SIDH $(ARM_SETTING)
+	$(CC) $(CFLAGS) -L./lib751comp tests/test_SIDHp751_compressed.c tests/test_extras.c -lsidh $(LDFLAGS) -o sidh751_compressed/test_SIDH $(ARM_SETTING)
+	$(CC) $(CFLAGS) -L./lib434comp tests/test_SIKEp434_compressed.c tests/test_extras.c -lsidh $(LDFLAGS) -o sike434_compressed/test_SIKE $(ARM_SETTING)
+	$(CC) $(CFLAGS) -L./lib503comp tests/test_SIKEp503_compressed.c tests/test_extras.c -lsidh $(LDFLAGS) -o sike503_compressed/test_SIKE $(ARM_SETTING)
+	$(CC) $(CFLAGS) -L./lib610comp tests/test_SIKEp610_compressed.c tests/test_extras.c -lsidh $(LDFLAGS) -o sike610_compressed/test_SIKE $(ARM_SETTING)
+	$(CC) $(CFLAGS) -L./lib751comp tests/test_SIKEp751_compressed.c tests/test_extras.c -lsidh $(LDFLAGS) -o sike751_compressed/test_SIKE $(ARM_SETTING)
 
 # AES
 AES_OBJS=objs/aes.o objs/aes_c.o
@@ -228,16 +280,36 @@ lib751_for_KATs: $(OBJECTS_751) $(AES_OBJS)
 	$(AR) lib751/libsidh_for_testing.a $^
 	$(RANLIB) lib751/libsidh_for_testing.a
 
-KATS: lib434_for_KATs lib503_for_KATs lib610_for_KATs lib751_for_KATs
+lib434comp_for_KATs: $(OBJECTS_434_COMP) $(AES_OBJS)
+	$(AR) lib434comp/libsidh_for_testing.a $^
+	$(RANLIB) lib434comp/libsidh_for_testing.a
+
+lib503comp_for_KATs: $(OBJECTS_503_COMP) $(AES_OBJS)
+	$(AR) lib503comp/libsidh_for_testing.a $^
+	$(RANLIB) lib503comp/libsidh_for_testing.a
+
+lib610comp_for_KATs: $(OBJECTS_610_COMP) $(AES_OBJS)
+	$(AR) lib610comp/libsidh_for_testing.a $^
+	$(RANLIB) lib610comp/libsidh_for_testing.a
+
+lib751comp_for_KATs: $(OBJECTS_751_COMP) $(AES_OBJS)
+	$(AR) lib751comp/libsidh_for_testing.a $^
+	$(RANLIB) lib751comp/libsidh_for_testing.a
+
+KATS: lib434_for_KATs lib503_for_KATs lib610_for_KATs lib751_for_KATs lib434comp_for_KATs lib503comp_for_KATs lib610comp_for_KATs lib751comp_for_KATs
 	$(CC) $(CFLAGS) -L./lib434 tests/PQCtestKAT_kem434.c tests/rng/rng.c -lsidh_for_testing $(LDFLAGS) -o sike434/PQCtestKAT_kem $(ARM_SETTING)
 	$(CC) $(CFLAGS) -L./lib503 tests/PQCtestKAT_kem503.c tests/rng/rng.c -lsidh_for_testing $(LDFLAGS) -o sike503/PQCtestKAT_kem $(ARM_SETTING)
 	$(CC) $(CFLAGS) -L./lib610 tests/PQCtestKAT_kem610.c tests/rng/rng.c -lsidh_for_testing $(LDFLAGS) -o sike610/PQCtestKAT_kem $(ARM_SETTING)
 	$(CC) $(CFLAGS) -L./lib751 tests/PQCtestKAT_kem751.c tests/rng/rng.c -lsidh_for_testing $(LDFLAGS) -o sike751/PQCtestKAT_kem $(ARM_SETTING)
+	$(CC) $(CFLAGS) -L./lib434comp tests/PQCtestKAT_kem434_compressed.c tests/rng/rng.c -lsidh_for_testing $(LDFLAGS) -o sike434_compressed/PQCtestKAT_kem $(ARM_SETTING)
+	$(CC) $(CFLAGS) -L./lib503comp tests/PQCtestKAT_kem503_compressed.c tests/rng/rng.c -lsidh_for_testing $(LDFLAGS) -o sike503_compressed/PQCtestKAT_kem $(ARM_SETTING)
+	$(CC) $(CFLAGS) -L./lib610comp tests/PQCtestKAT_kem610_compressed.c tests/rng/rng.c -lsidh_for_testing $(LDFLAGS) -o sike610_compressed/PQCtestKAT_kem $(ARM_SETTING)
+	$(CC) $(CFLAGS) -L./lib751comp tests/PQCtestKAT_kem751_compressed.c tests/rng/rng.c -lsidh_for_testing $(LDFLAGS) -o sike751_compressed/PQCtestKAT_kem $(ARM_SETTING)
 
 check: tests
 
 .PHONY: clean
 
 clean:
-	rm -rf *.req objs434 objs503 objs610 objs751 objs lib434 lib503 lib610 lib751 sidh434 sidh503 sidh610 sidh751 sike434 sike503 sike610 sike751 arith_tests-*
+	rm -rf *.req objs434* objs503* objs610* objs751* objs lib434* lib503* lib610* lib751* sidh434* sidh503* sidh610* sidh751* sike434* sike503* sike610* sike751* arith_tests-*
 

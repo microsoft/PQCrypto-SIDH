@@ -107,8 +107,7 @@ bool fp_test()
         to_mont(a, ma);
         fpcopy503(ma, mc);
         from_mont(mc, c);
-        if (compare_words(a, c, NWORDS_FIELD)!=0) { 
-        passed=0; break; }
+        if (compare_words(a, c, NWORDS_FIELD)!=0) { passed=0; break; }
         
         to_mont(a, ma); to_mont(b, mb); to_mont(c, mc); 
         fpmul503_mont(ma, mb, md); fpmul503_mont(md, mc, me);                          // e = (a*b)*c
