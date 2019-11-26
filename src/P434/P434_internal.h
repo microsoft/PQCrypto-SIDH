@@ -87,7 +87,7 @@
 // SIDH's basic element definitions and point representations
 
 typedef digit_t felm_t[NWORDS_FIELD];                                 // Datatype for representing 434-bit field elements (448-bit max.)
-typedef digit_t dfelm_t[2*NWORDS_FIELD];                              // Datatype for representing double-precision 2x434-bit field elements (448-bit max.) 
+typedef digit_t dfelm_t[2*NWORDS_FIELD];                              // Datatype for representing double-precision 2x434-bit field elements (2x448-bit max.) 
 typedef felm_t  f2elm_t[2];                                           // Datatype for representing quadratic extension field elements GF(p434^2)
         
 typedef struct { f2elm_t X; f2elm_t Z; } point_proj;                  // Point representation in projective XZ Montgomery coordinates.
