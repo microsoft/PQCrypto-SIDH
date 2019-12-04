@@ -128,16 +128,16 @@ void xTPL(const point_proj_t P, point_proj_t Q, const f2elm_t A24minus, const f2
     fp2sub(t1, t3, t1);                             // t1 = 4*X^2 - (X+Z)^2 
     fp2sub(t1, t2, t1);                             // t1 = 4*X^2 - (X+Z)^2 - (X-Z)^2
     fp2mul_mont(A24plus, t3, t5);                   // t5 = A24plus*(X+Z)^2 
-    fp2mul_mont(t3, t5, t3);                        // t3 = A24plus*(X+Z)^3
+    fp2mul_mont(t3, t5, t3);                        // t3 = A24plus*(X+Z)^4
     fp2mul_mont(A24minus, t2, t6);                  // t6 = A24minus*(X-Z)^2
-    fp2mul_mont(t2, t6, t2);                        // t2 = A24minus*(X-Z)^3
-    fp2sub(t2, t3, t3);                             // t3 = A24minus*(X-Z)^3 - A24plus*(X+Z)^3
+    fp2mul_mont(t2, t6, t2);                        // t2 = A24minus*(X-Z)^4
+    fp2sub(t2, t3, t3);                             // t3 = A24minus*(X-Z)^4 - A24plus*(X+Z)^4
     fp2sub(t5, t6, t2);                             // t2 = A24plus*(X+Z)^2 - A24minus*(X-Z)^2
     fp2mul_mont(t1, t2, t1);                        // t1 = [4*X^2 - (X+Z)^2 - (X-Z)^2]*[A24plus*(X+Z)^2 - A24minus*(X-Z)^2]
-    fp2add(t3, t1, t2);                             // t2 = [4*X^2 - (X+Z)^2 - (X-Z)^2]*[A24plus*(X+Z)^2 - A24minus*(X-Z)^2] + A24minus*(X-Z)^3 - A24plus*(X+Z)^3
+    fp2add(t3, t1, t2);                             // t2 = [4*X^2 - (X+Z)^2 - (X-Z)^2]*[A24plus*(X+Z)^2 - A24minus*(X-Z)^2] + A24minus*(X-Z)^4 - A24plus*(X+Z)^4
     fp2sqr_mont(t2, t2);                            // t2 = t2^2
     fp2mul_mont(t4, t2, Q->X);                      // X3 = 2*X*t2
-    fp2sub(t3, t1, t1);                             // t1 = A24minus*(X-Z)^3 - A24plus*(X+Z)^3 - [4*X^2 - (X+Z)^2 - (X-Z)^2]*[A24plus*(X+Z)^2 - A24minus*(X-Z)^2]
+    fp2sub(t3, t1, t1);                             // t1 = A24minus*(X-Z)^4 - A24plus*(X+Z)^4 - [4*X^2 - (X+Z)^2 - (X-Z)^2]*[A24plus*(X+Z)^2 - A24minus*(X-Z)^2]
     fp2sqr_mont(t1, t1);                            // t1 = t1^2
     fp2mul_mont(t0, t1, Q->Z);                      // Z3 = 2*Z*t1
 }
