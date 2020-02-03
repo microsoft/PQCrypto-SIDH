@@ -425,7 +425,7 @@ void mp_mul(const digit_t* a, const digit_t* b, digit_t* c, const unsigned int n
 }
 
 
-void rdc_mont(const digit_t* ma, digit_t* mc)
+void rdc_mont(digit_t* ma, digit_t* mc)
 { // Montgomery reduction exploiting special form of the prime.
   // mc = ma*R^-1 mod p610x2, where R = 2^640.
   // If ma < 2^640*p610, the output mc is in the range [0, 2*p610-1].
