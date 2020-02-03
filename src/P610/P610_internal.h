@@ -172,12 +172,12 @@ void fpdiv2_610(const digit_t* a, digit_t* c);
 void fpcorrection610(digit_t* a);
 
 // 610-bit Montgomery reduction, c = a mod p
-void rdc_mont(const digit_t* a, digit_t* c);
+void rdc_mont(digit_t* a, digit_t* c);
+void rdc610_asm(digit_t* ma, digit_t* mc);
             
 // Field multiplication using Montgomery arithmetic, c = a*b*R^-1 mod p610, where R=2^640
 void fpmul610_mont(const digit_t* a, const digit_t* b, digit_t* c);
 void mul610_asm(const digit_t* a, const digit_t* b, digit_t* c);
-void rdc610_asm(const digit_t* ma, digit_t* mc);
    
 // Field squaring using Montgomery arithmetic, c = a*b*R^-1 mod p610, where R=2^640
 void fpsqr610_mont(const digit_t* ma, digit_t* mc);
