@@ -172,12 +172,12 @@ void fpdiv2_751(const digit_t* a, digit_t* c);
 void fpcorrection751(digit_t* a);
 
 // 751-bit Montgomery reduction, c = a mod p
-void rdc_mont(const digit_t* a, digit_t* c);
+void rdc_mont(digit_t* a, digit_t* c);
+void rdc751_asm(digit_t* ma, digit_t* mc);
             
 // Field multiplication using Montgomery arithmetic, c = a*b*R^-1 mod p751, where R=2^768
 void fpmul751_mont(const digit_t* a, const digit_t* b, digit_t* c);
 void mul751_asm(const digit_t* a, const digit_t* b, digit_t* c);
-void rdc751_asm(const digit_t* ma, digit_t* mc);
    
 // Field squaring using Montgomery arithmetic, c = a*b*R^-1 mod p751, where R=2^768
 void fpsqr751_mont(const digit_t* ma, digit_t* mc);
