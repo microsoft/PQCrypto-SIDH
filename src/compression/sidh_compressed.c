@@ -540,7 +540,7 @@ static void FullIsogeny_A_dual(const unsigned char* PrivateKeyA, f2elm_t As[][5]
     fp2add(C24, C24, A24);
     
     // Retrieve kernel point
-    memcpy((unsigned char*)SecretKeyA, PrivateKeyA, SECRETKEY_A_BYTES);
+    digits_decode(PrivateKeyA, SecretKeyA, SECRETKEY_A_BYTES, NWORDS_ORDER);
     LADDER3PT(XPA, XQA, XRA, SecretKeyA, ALICE, R, A);
     
 #if (OALICE_BITS % 2 == 1)
@@ -610,7 +610,6 @@ static void BuildOrdinary3nBasis_Decomp_dual(const f2elm_t A24, point_proj_t *Rs
     BiQuad_affine(A24, Rs[0]->X, Rs[1]->X, Rs[2]);
 }
 
-
 static void PKADecompression_dual(const unsigned char* SecretKeyB, const unsigned char* CompressedPKA, point_proj_t R, f2elm_t A)
 {
     unsigned char bit, rs[2];
@@ -638,14 +637,15 @@ static void PKADecompression_dual(const unsigned char* SecretKeyB, const unsigne
     fpcopy((digit_t*)Montgomery_one, (Rs[1]->Z)[0]);
 
     swap_points(Rs[0], Rs[1], 0-(digit_t)bit);
-    memcpy((unsigned char*)SKin, SecretKeyB, SECRETKEY_B_BYTES);
+    digits_decode(SecretKeyB, SKin, SECRETKEY_B_BYTES, NWORDS_ORDER);
     to_Montgomery_mod_order(SKin, t1, (digit_t*)Bob_order, (digit_t*)&Montgomery_RB2, (digit_t*)&Montgomery_RB1);    // Converting to Montgomery representation 
-    memcpy((unsigned char*)&temp, &CompressedPKA[0], ORDER_B_ENCODED_BYTES);
+    digits_decode(&CompressedPKA[0], temp, ORDER_B_ENCODED_BYTES, NWORDS_ORDER);
     to_Montgomery_mod_order(temp, t2, (digit_t*)Bob_order, (digit_t*)&Montgomery_RB2, (digit_t*)&Montgomery_RB1);
-    memcpy((unsigned char*)&temp, &CompressedPKA[ORDER_B_ENCODED_BYTES], ORDER_B_ENCODED_BYTES);
+    digits_decode(&CompressedPKA[ORDER_B_ENCODED_BYTES], temp, ORDER_B_ENCODED_BYTES, NWORDS_ORDER);
     to_Montgomery_mod_order(temp, t3, (digit_t*)Bob_order, (digit_t*)&Montgomery_RB2, (digit_t*)&Montgomery_RB1);
-    memcpy((unsigned char*)&temp, &CompressedPKA[2*ORDER_B_ENCODED_BYTES], ORDER_B_ENCODED_BYTES);
+    digits_decode(&CompressedPKA[2*ORDER_B_ENCODED_BYTES], temp, ORDER_B_ENCODED_BYTES, NWORDS_ORDER);
     to_Montgomery_mod_order(temp, t4, (digit_t*)Bob_order, (digit_t*)&Montgomery_RB2, (digit_t*)&Montgomery_RB1);
+
     if (bit == 0) {    
         Montgomery_multiply_mod_order(t1, t3, t3, (digit_t*)Bob_order, (digit_t*)&Montgomery_RB2);
         mp_add(t3, vone, t3, NWORDS_ORDER);
@@ -693,16 +693,16 @@ static void Compress_PKA_dual(digit_t *d0, digit_t *c0, digit_t *d1, digit_t *c1
         Montgomery_neg(d0, (digit_t*)&Bob_order);
         Montgomery_multiply_mod_order(d0, inv, temp, (digit_t*)Bob_order, (digit_t*)&Montgomery_RB2);
         from_Montgomery_mod_order(temp, temp, (digit_t*)Bob_order, (digit_t*)&Montgomery_RB2);                    // Converting back from Montgomery representation
-        memcpy(&CompressedPKA[0], temp, ORDER_B_ENCODED_BYTES);
+        digits_encode(temp, &CompressedPKA[0], NWORDS_ORDER, ORDER_B_ENCODED_BYTES);
         CompressedPKA[ORDER_B_ENCODED_BYTES-1] &= mask;
         Montgomery_neg(c1, (digit_t*)&Bob_order);
         Montgomery_multiply_mod_order(c1, inv, temp, (digit_t*)Bob_order, (digit_t*)&Montgomery_RB2);
         from_Montgomery_mod_order(temp, temp, (digit_t*)Bob_order, (digit_t*)&Montgomery_RB2);
-        memcpy(&CompressedPKA[ORDER_B_ENCODED_BYTES], temp, ORDER_B_ENCODED_BYTES);
+        digits_encode(temp, &CompressedPKA[ORDER_B_ENCODED_BYTES], NWORDS_ORDER, ORDER_B_ENCODED_BYTES);
         CompressedPKA[2*ORDER_B_ENCODED_BYTES-1] &= mask;
         Montgomery_multiply_mod_order(c0, inv, temp, (digit_t*)Bob_order, (digit_t*)&Montgomery_RB2);
         from_Montgomery_mod_order(temp, temp, (digit_t*)Bob_order, (digit_t*)&Montgomery_RB2);
-        memcpy(&CompressedPKA[2*ORDER_B_ENCODED_BYTES], temp, ORDER_B_ENCODED_BYTES);
+        digits_encode(temp, &CompressedPKA[2*ORDER_B_ENCODED_BYTES], NWORDS_ORDER, ORDER_B_ENCODED_BYTES);
         CompressedPKA[3*ORDER_B_ENCODED_BYTES-1] &= mask;
         CompressedPKA[3*ORDER_B_ENCODED_BYTES + FP2_ENCODED_BYTES] = 0x00;
     } else {  // Storing [d1*d0inv, c1*d0inv, c0*d0inv] and setting bit "NBITS_ORDER" to 1
@@ -710,16 +710,16 @@ static void Compress_PKA_dual(digit_t *d0, digit_t *c0, digit_t *d1, digit_t *c1
         Montgomery_neg(d1, (digit_t*)&Bob_order);
         Montgomery_multiply_mod_order(d1, inv, temp, (digit_t*)Bob_order, (digit_t*)&Montgomery_RB2);
         from_Montgomery_mod_order(temp, temp, (digit_t*)Bob_order, (digit_t*)&Montgomery_RB2);                     // Converting back from Montgomery representation         
-        memcpy(&CompressedPKA[0], temp, ORDER_B_ENCODED_BYTES);
+        digits_encode(temp, &CompressedPKA[0], NWORDS_ORDER, ORDER_B_ENCODED_BYTES);
         CompressedPKA[ORDER_B_ENCODED_BYTES-1] &= mask;
         Montgomery_multiply_mod_order(c1, inv, temp, (digit_t*)Bob_order, (digit_t*)&Montgomery_RB2);
         from_Montgomery_mod_order(temp, temp, (digit_t*)Bob_order, (digit_t*)&Montgomery_RB2);
-        memcpy(&CompressedPKA[ORDER_B_ENCODED_BYTES], temp, ORDER_B_ENCODED_BYTES);
+        digits_encode(temp, &CompressedPKA[ORDER_B_ENCODED_BYTES], NWORDS_ORDER, ORDER_B_ENCODED_BYTES);
         CompressedPKA[2*ORDER_B_ENCODED_BYTES-1] &= mask;
         Montgomery_neg(c0, (digit_t*)&Bob_order);
         Montgomery_multiply_mod_order(c0, inv, temp, (digit_t*)Bob_order, (digit_t*)&Montgomery_RB2);
         from_Montgomery_mod_order(temp, temp, (digit_t*)Bob_order, (digit_t*)&Montgomery_RB2);
-        memcpy(&CompressedPKA[2*ORDER_B_ENCODED_BYTES], temp, ORDER_B_ENCODED_BYTES);
+        digits_encode(temp, &CompressedPKA[2*ORDER_B_ENCODED_BYTES], NWORDS_ORDER, ORDER_B_ENCODED_BYTES);
         CompressedPKA[3*ORDER_B_ENCODED_BYTES-1] &= mask;
         CompressedPKA[3*ORDER_B_ENCODED_BYTES + FP2_ENCODED_BYTES] = 0x80;
     }
@@ -938,7 +938,7 @@ static void FullIsogeny_B_dual(const unsigned char* PrivateKeyB, f2elm_t Ds[][2]
     fp2add(A24minus, A24minus, A24plus);
     
     // Retrieve kernel point
-    memcpy((unsigned char*)SecretKeyB, PrivateKeyB, SECRETKEY_B_BYTES);
+    digits_decode(PrivateKeyB, SecretKeyB, SECRETKEY_B_BYTES, NWORDS_ORDER);
     LADDER3PT(XPB, XQB, XRB, SecretKeyB, BOB, R, A);
     
     // Traverse tree
@@ -1055,30 +1055,30 @@ static void PKBDecompression_dual(const unsigned char* SecretKeyA, const unsigne
     fp2div2(A24, A24);
     fp2div2(A24, A24);
        
-    memcpy((unsigned char*)SKin, SecretKeyA, SECRETKEY_A_BYTES);
+    digits_decode(SecretKeyA, SKin, SECRETKEY_A_BYTES, NWORDS_ORDER);
     swap_points(Rs[0], Rs[1], 0-(digit_t)bit);
     if (bit == 0) {
-        memcpy((unsigned char*)&comp_temp, &CompressedPKB[ORDER_A_ENCODED_BYTES], ORDER_A_ENCODED_BYTES);
+        digits_decode(&CompressedPKB[ORDER_A_ENCODED_BYTES], comp_temp, ORDER_A_ENCODED_BYTES, NWORDS_ORDER);
         multiply((digit_t*)SKin, comp_temp, tmp1, NWORDS_ORDER);
         mp_add(tmp1, vone, tmp1, NWORDS_ORDER);
         tmp1[NWORDS_ORDER-1] &= (digit_t)mask;
         inv_mod_orderA(tmp1, tmp2);
-        memcpy((unsigned char*)&comp_temp, &CompressedPKB[2*ORDER_A_ENCODED_BYTES], ORDER_A_ENCODED_BYTES);
+        digits_decode(&CompressedPKB[2*ORDER_A_ENCODED_BYTES], comp_temp, ORDER_A_ENCODED_BYTES, NWORDS_ORDER);
         multiply((digit_t*)SKin, comp_temp, tmp1, NWORDS_ORDER);
-        memcpy((unsigned char*)&comp_temp, &CompressedPKB[0], ORDER_A_ENCODED_BYTES);
+        digits_decode(&CompressedPKB[0], comp_temp, ORDER_A_ENCODED_BYTES, NWORDS_ORDER);
         mp_add(&comp_temp[0], tmp1, tmp1, NWORDS_ORDER);
         multiply(tmp1, tmp2, vone, NWORDS_ORDER);
         vone[NWORDS_ORDER-1] &= (digit_t)mask;
         Ladder3pt_dual(Rs,vone,ALICE,R,A24);
     } else {
-        memcpy((unsigned char*)&comp_temp, &CompressedPKB[2*ORDER_A_ENCODED_BYTES], ORDER_A_ENCODED_BYTES);
+        digits_decode(&CompressedPKB[2*ORDER_A_ENCODED_BYTES], comp_temp, ORDER_A_ENCODED_BYTES, NWORDS_ORDER);
         multiply((digit_t*)SKin, comp_temp, tmp1, NWORDS_ORDER);
         mp_add(tmp1, vone, tmp1, NWORDS_ORDER);
         tmp1[NWORDS_ORDER-1] &= (digit_t)mask;
         inv_mod_orderA(tmp1, tmp2);
-        memcpy((unsigned char*)&comp_temp, &CompressedPKB[ORDER_A_ENCODED_BYTES], ORDER_A_ENCODED_BYTES);
+        digits_decode(&CompressedPKB[ORDER_A_ENCODED_BYTES], comp_temp, ORDER_A_ENCODED_BYTES, NWORDS_ORDER);
         multiply((digit_t*)SKin, comp_temp, tmp1, NWORDS_ORDER);
-        memcpy((unsigned char*)&comp_temp, &CompressedPKB[0], ORDER_A_ENCODED_BYTES);
+        digits_decode(&CompressedPKB[0], comp_temp, ORDER_A_ENCODED_BYTES, NWORDS_ORDER);
         mp_add(&comp_temp[0], tmp1, tmp1, NWORDS_ORDER);
         multiply(tmp1, tmp2, vone, NWORDS_ORDER);
         vone[NWORDS_ORDER-1] &= (digit_t)mask;
@@ -1096,28 +1096,28 @@ static void Compress_PKB_dual(digit_t *d0, digit_t *c0, digit_t *d1, digit_t *c1
         inv_mod_orderA(d1, inv);
         Montgomery_neg(d0, (digit_t*)Alice_order);
         multiply(d0, inv, tmp, NWORDS_ORDER);
-        memcpy(&CompressedPKB[0], (unsigned char *)&tmp, ORDER_A_ENCODED_BYTES);
+        digits_encode(tmp, &CompressedPKB[0], NWORDS_ORDER, ORDER_A_ENCODED_BYTES);
         CompressedPKB[ORDER_A_ENCODED_BYTES-1] &= MASK_ALICE;
         Montgomery_neg(c1, (digit_t*)Alice_order);
         multiply(c1, inv, tmp, NWORDS_ORDER);
-        memcpy(&CompressedPKB[ORDER_A_ENCODED_BYTES], (unsigned char *)&tmp, ORDER_A_ENCODED_BYTES);
+        digits_encode(tmp, &CompressedPKB[ORDER_A_ENCODED_BYTES], NWORDS_ORDER, ORDER_A_ENCODED_BYTES);
         CompressedPKB[2*ORDER_A_ENCODED_BYTES-1] &= MASK_ALICE;
         multiply(c0, inv, tmp, NWORDS_ORDER);
-        memcpy(&CompressedPKB[2*ORDER_A_ENCODED_BYTES], (unsigned char *)&tmp, ORDER_A_ENCODED_BYTES);
+        digits_encode(tmp, &CompressedPKB[2*ORDER_A_ENCODED_BYTES], NWORDS_ORDER, ORDER_A_ENCODED_BYTES);
         CompressedPKB[3*ORDER_A_ENCODED_BYTES-1] &= MASK_ALICE;
         CompressedPKB[3*ORDER_A_ENCODED_BYTES + FP2_ENCODED_BYTES] = 0x00;
     } else {  // Storing [ -d1*d0^-1 = b1*b0inv, c1*d0^-1 = a1*b0inv, -c0*d0^-1 = a0*b0inv] and setting bit384 to 1
         inv_mod_orderA(d0, inv);
         Montgomery_neg(d1, (digit_t*)Alice_order);
         multiply(d1, inv, tmp, NWORDS_ORDER);
-        memcpy(&CompressedPKB[0], (unsigned char *)&tmp, ORDER_A_ENCODED_BYTES);
+        digits_encode(tmp, &CompressedPKB[0], NWORDS_ORDER, ORDER_A_ENCODED_BYTES);
         CompressedPKB[ORDER_A_ENCODED_BYTES - 1] &= MASK_ALICE;
         multiply(c1, inv, tmp, NWORDS_ORDER);
-        memcpy(&CompressedPKB[ORDER_A_ENCODED_BYTES], (unsigned char *)&tmp, ORDER_A_ENCODED_BYTES);
+        digits_encode(tmp, &CompressedPKB[ORDER_A_ENCODED_BYTES], NWORDS_ORDER, ORDER_A_ENCODED_BYTES);
         CompressedPKB[2*ORDER_A_ENCODED_BYTES-1] &= MASK_ALICE;
         Montgomery_neg(c0, (digit_t*)Alice_order);
         multiply(c0, inv, tmp, NWORDS_ORDER);
-        memcpy(&CompressedPKB[2*ORDER_A_ENCODED_BYTES], (unsigned char *)&tmp, ORDER_A_ENCODED_BYTES);
+        digits_encode(tmp, &CompressedPKB[2*ORDER_A_ENCODED_BYTES], NWORDS_ORDER, ORDER_A_ENCODED_BYTES);
         CompressedPKB[3*ORDER_A_ENCODED_BYTES-1] &= MASK_ALICE;
         CompressedPKB[3*ORDER_A_ENCODED_BYTES + FP2_ENCODED_BYTES] = 0x80;
     }
