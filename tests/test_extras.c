@@ -42,7 +42,7 @@ int64_t cpucycles(void)
     return (int64_t)(time.tv_sec*1e9 + time.tv_nsec);
 #elif (OS_TARGET == OS_LINUX && TARGET == TARGET_S390X)
     uint64_t tod;
-    __asm__ volatile("stck %0\n" : "=Q" (tod) : : "cc");
+    __asm__ volatile("stckf %0\n" : "=Q" (tod) : : "cc");
     return (tod);
 #else
     return 0;            
