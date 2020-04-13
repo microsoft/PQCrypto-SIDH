@@ -4,6 +4,33 @@
 * Abstract: core functions over GF(p) and GF(p^2)
 *********************************************************************************************/
 
+#include <string.h>
+
+static void digits_decode(const unsigned char* os, digit_t* digits, int osLen, int digitsLen)
+{
+    digits[digitsLen - 1] = 0;
+    memcpy((unsigned char*)digits, os, osLen);
+#ifdef _BIG_ENDIAN_
+    for (int i = 0, pos = 0; i < digitsLen; ++i)
+        digits[i] = BSWAP_DIGIT(digits[i]);
+#endif
+}
+
+static void digits_encode(const digit_t* digits, unsigned char* os, int digitsLen, int osLen)
+{
+#ifdef _LITTLE_ENDIAN_
+    memcpy(os, (const unsigned char*)digits, osLen);
+#else
+    int fd = osLen / sizeof(digit_t);
+    int rem = osLen % sizeof(digit_t);
+    for (int i = 0; i < fd; ++i)
+        ((digit_t*) os)[i] = BSWAP_DIGIT(digits[i]);
+    if (rem) {
+        digit_t ld = BSWAP_DIGIT(digits[fd]);
+        memcpy(os + fd*sizeof(digit_t), (unsigned char*) &ld, rem);
+    }
+#endif
+}
 
 void clear_words(void* mem, digit_t nwords)
 { // Clear digits from memory. "nwords" indicates the number of digits to be zeroed.
@@ -23,10 +50,8 @@ static void fp2_encode(const f2elm_t x, unsigned char *enc)
     f2elm_t t;
 
     from_fp2mont(x, t);
-    for (i = 0; i < FP2_ENCODED_BYTES / 2; i++) {
-        enc[i] = ((unsigned char*)t)[i];
-        enc[i + FP2_ENCODED_BYTES / 2] = ((unsigned char*)t)[i + MAXBITS_FIELD / 8];
-    }
+    digits_encode(t[0], enc, NWORDS_FIELD, FP2_ENCODED_BYTES / 2);
+    digits_encode(t[1], enc + FP2_ENCODED_BYTES / 2, NWORDS_FIELD, FP2_ENCODED_BYTES / 2);
 }
 
 
@@ -35,10 +60,9 @@ static void fp2_decode(const unsigned char *enc, f2elm_t x)
     unsigned int i;
 
     for (i = 0; i < 2*(MAXBITS_FIELD / 8); i++) ((unsigned char *)x)[i] = 0;
-    for (i = 0; i < FP2_ENCODED_BYTES / 2; i++) {
-        ((unsigned char*)x)[i] = enc[i];
-        ((unsigned char*)x)[i + MAXBITS_FIELD / 8] = enc[i + FP2_ENCODED_BYTES / 2];
-    }
+
+    digits_decode(enc, x[0], FP2_ENCODED_BYTES / 2, NWORDS_FIELD);
+    digits_decode(enc + FP2_ENCODED_BYTES / 2, x[1], FP2_ENCODED_BYTES / 2, NWORDS_FIELD);
     to_fp2mont(x, x);
 }
 
@@ -785,11 +809,11 @@ void mul3(unsigned char *a)
 { // Computes a = 3*a
   // The input is assumed to be OBOB_BITS-2 bits long and stored in SECRETKEY_B_BYTES
     digit_t temp1[NWORDS_ORDER] = {0}, temp2[NWORDS_ORDER] = {0};
-        
-    memcpy((unsigned char*)temp1, a, SECRETKEY_B_BYTES);
+    
+    digits_decode(a, temp1, SECRETKEY_B_BYTES, NWORDS_ORDER); // const unsigned char* os, digit_t* digits, int osLen, int digitsLen)
     mp_add(temp1, temp1, temp2, NWORDS_ORDER);               // temp2 = 2*a
     mp_add(temp1, temp2, temp1, NWORDS_ORDER);               // temp1 = 3*a
-    memcpy(a, (unsigned char*)temp1, SECRETKEY_B_BYTES);
+    digits_encode(temp1, a, NWORDS_ORDER, SECRETKEY_B_BYTES);
     
     clear_words((void*)temp1, NWORDS_ORDER);
     clear_words((void*)temp2, NWORDS_ORDER);

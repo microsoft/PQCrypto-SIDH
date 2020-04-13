@@ -7,7 +7,6 @@
 #include "random/random.h"
 #include <string.h>
 
-
 static void init_basis(digit_t *gen, f2elm_t XP, f2elm_t XQ, f2elm_t XR)
 { // Initialization of basis points
     
@@ -23,7 +22,6 @@ static void init_basis(digit_t *gen, f2elm_t XP, f2elm_t XQ, f2elm_t XR)
 void random_mod_order_A(unsigned char* random_digits)
 {  // Generation of Alice's secret key  
    // Outputs random value in [0, 2^eA - 1]
-
     randombytes(random_digits, SECRETKEY_A_BYTES);
     random_digits[SECRETKEY_A_BYTES-1] &= MASK_ALICE;    // Masking last byte 
 }
@@ -32,7 +30,6 @@ void random_mod_order_A(unsigned char* random_digits)
 void random_mod_order_B(unsigned char* random_digits)
 {  // Generation of Bob's secret key  
    // Outputs random value in [0, 2^Floor(Log(2, oB)) - 1]
-
     randombytes(random_digits, SECRETKEY_B_BYTES);
     random_digits[SECRETKEY_B_BYTES-1] &= MASK_BOB;     // Masking last byte 
 }
@@ -62,7 +59,7 @@ int EphemeralKeyGeneration_A(const unsigned char* PrivateKeyA, unsigned char* Pu
     fp2add(C24, C24, A24plus);
 
     // Retrieve kernel point
-    memcpy((unsigned char*)SecretKeyA, PrivateKeyA, SECRETKEY_A_BYTES);
+    digits_decode(PrivateKeyA, SecretKeyA, SECRETKEY_A_BYTES, NWORDS_ORDER);
     LADDER3PT(XPA, XQA, XRA, SecretKeyA, ALICE, R, A);    
 
 #if (OALICE_BITS % 2 == 1)
@@ -145,7 +142,7 @@ int EphemeralKeyGeneration_B(const unsigned char* PrivateKeyB, unsigned char* Pu
     fp2add(A24minus, A24minus, A24plus);
 
     // Retrieve kernel point
-    memcpy((unsigned char*)SecretKeyB, PrivateKeyB, SECRETKEY_B_BYTES);
+    digits_decode(PrivateKeyB, SecretKeyB, SECRETKEY_B_BYTES, NWORDS_ORDER);
     LADDER3PT(XPB, XQB, XRB, SecretKeyB, BOB, R, A);
     
     // Traverse tree
@@ -217,7 +214,7 @@ int EphemeralSecretAgreement_A(const unsigned char* PrivateKeyA, const unsigned 
     fpadd(C24[0], C24[0], C24[0]);
 
     // Retrieve kernel point
-    memcpy((unsigned char*)SecretKeyA, PrivateKeyA, SECRETKEY_A_BYTES);
+    digits_decode(PrivateKeyA, SecretKeyA, SECRETKEY_A_BYTES, NWORDS_ORDER);
     LADDER3PT(PKB[0], PKB[1], PKB[2], SecretKeyA, ALICE, R, A);   
 
 #if (OALICE_BITS % 2 == 1)
@@ -286,7 +283,7 @@ int EphemeralSecretAgreement_B(const unsigned char* PrivateKeyB, const unsigned 
     fp2sub(A, A24minus, A24minus);
 
     // Retrieve kernel point
-    memcpy((unsigned char*)SecretKeyB, PrivateKeyB, SECRETKEY_B_BYTES);
+    digits_decode(PrivateKeyB, SecretKeyB, SECRETKEY_B_BYTES, NWORDS_ORDER);
     LADDER3PT(PKB[0], PKB[1], PKB[2], SecretKeyB, BOB, R, A);
     
     // Traverse tree

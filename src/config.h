@@ -49,6 +49,7 @@
 #define TARGET_x86          2
 #define TARGET_ARM          3
 #define TARGET_ARM64        4
+#define TARGET_S390X        5
 
 #if defined(_AMD64_)
     #define TARGET TARGET_AMD64
@@ -72,6 +73,12 @@
     #define TARGET TARGET_ARM64
     #define RADIX           64
     #define LOG2RADIX       6  
+    typedef uint64_t        digit_t;        // Unsigned 64-bit digit
+    typedef uint32_t        hdigit_t;       // Unsigned 32-bit digit
+#elif defined(_S390X_)
+    #define TARGET          TARGET_S390X
+    #define RADIX           64
+    #define LOG2RADIX       6
     typedef uint64_t        digit_t;        // Unsigned 64-bit digit
     typedef uint32_t        hdigit_t;       // Unsigned 32-bit digit
 #else
@@ -228,5 +235,35 @@ static __inline unsigned int is_digit_lessthan_ct(digit_t x, digit_t y)
 
 #endif
 
+// 32 bit byte swap
+#ifdef COMPILER_GCC
+#  define BSWAP32(i) __builtin_bswap32((i))
+#else
+#  define BSWAP32(i) \
+    ((((i) >> 24) & 0xff) | (((i) >> 8) & 0xff00) | (((i)&0xff00) << 8) | ((i) << 24))
+#endif
+
+// 64 bit byte swap
+#ifdef COMPILER_GCC
+#  define BSWAP64(i) __builtin_bswap64((i))
+#else
+#  define BSWAP64(i) \
+    ((BSWAP32((i) >> 32) & 0xffffffff) | (BSWAP32(i) << 32))
+#endif
+
+#if RADIX == 32
+#  define BSWAP_DIGIT(i) BSWAP32((i))
+#elif RADIX == 64
+#  define BSWAP_DIGIT(i) BSWAP64((i))
+#endif
+
+// Host to little endian, little endian to host
+#ifdef _BIG_ENDIAN_
+#  define HTOLE_64(i) BSWAP64((i))
+#  define LETOH_64(i) BSWAP64((i))
+#else
+#  define HTOLE_64(i) (i)
+#  define LETOH_64(i) (i)
+#endif
 
 #endif

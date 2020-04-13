@@ -22,6 +22,9 @@
 #elif (TARGET == TARGET_ARM64)
     #define NWORDS_FIELD    12
     #define p751_ZERO_WORDS 5
+#elif (TARGET == TARGET_S390X)
+    #define NWORDS_FIELD    12
+    #define p751_ZERO_WORDS 5
 #endif 
     
 

@@ -72,7 +72,7 @@ The library was developed by [Microsoft Research](http://research.microsoft.com/
   all operations on secret key material.
 - Support for Windows OS using Microsoft Visual Studio and Linux OS using GNU GCC and clang.     
 - Provides basic implementation of the underlying arithmetic functions using portable C to enable support
-  on a wide range of platforms including x64, x86 and ARM. 
+  on a wide range of platforms including x64, x86, ARM and S390X. 
 - Provides optimized implementations of the underlying arithmetic functions for x64 platforms with optional, 
   high-performance x64 assembly for Linux. 
 - Provides an optimized implementation of the underlying arithmetic functions for 64-bit ARM platforms using 
@@ -121,10 +121,10 @@ according to the targeted platform (for example, MULX/ADX are not supported on S
 is supported on Haswell, and both MULX and ADX are supported on Broadwell, Skylake and Kaby Lake architectures). 
 Note that USE_ADX can only be set to `TRUE` if `USE_MULX=TRUE`.
 
-Options for x86/ARM:
+Options for x86/ARM/S390X:
 
 ```sh
-$ make ARCH=[x86/ARM] CC=[gcc/clang]
+$ make ARCH=[x86/ARM/S390X] CC=[gcc/clang]
 ```
 
 Options for ARM64:

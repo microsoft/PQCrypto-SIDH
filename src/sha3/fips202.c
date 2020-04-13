@@ -14,30 +14,20 @@
 #include <stdint.h>
 #include <assert.h>
 #include "fips202.h"
+#include "../config.h"
 
 #define NROUNDS 24
 #define ROL(a, offset) ((a << offset) ^ (a >> (64-offset)))
 
-
 static uint64_t load64(const unsigned char *x)
 {
-  unsigned long long r = 0, i;
-
-  for (i = 0; i < 8; ++i) {
-    r |= (unsigned long long)x[i] << 8 * i;
-  }
-  return r;
+  return LETOH_64(*((uint64_t*)x));
 }
 
 
 static void store64(uint8_t *x, uint64_t u)
 {
-  unsigned int i;
-
-  for (i = 0; i < 8; ++i) {
-    x[i] = (uint8_t)u;
-    u >>= 8;
-  }
+  *(uint64_t*)x = HTOLE_64(u);
 }
 
 
