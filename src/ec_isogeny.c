@@ -364,6 +364,59 @@ static void LADDER3PT(const f2elm_t xP, const f2elm_t xQ, const f2elm_t xPQ, con
 
 #ifdef COMPRESS
 
+static void CompletePoint(const point_proj_t P, point_full_proj_t R)
+{ // Complete point on A = 0 curve
+    f2elm_t xz, s2, r2, yz, invz, t0, t1, one = {0};
+    fpcopy((digit_t*)&Montgomery_one, one[0]);
+
+    fp2mul_mont(P->X, P->Z, xz);
+    fpsub(P->X[0], P->Z[1], t0[0]);
+    fpadd(P->X[1], P->Z[0], t0[1]);
+    fpadd(P->X[0], P->Z[1], t1[0]);
+    fpsub(P->X[1], P->Z[0], t1[1]);
+    fp2mul_mont(t0, t1, s2);
+    fp2mul_mont(xz, s2, r2);
+    //sqrtinv2(r2, P->Z, yz, invz);
+    sqrt_Fp2(r2, yz);
+    fp2copy(P->Z,invz);
+    fp2inv_mont_bingcd(invz);    
+    fp2mul_mont(P->X, invz, R->X);
+    fp2sqr_mont(invz, t0);
+    fp2mul_mont(yz, t0, R->Y);
+    fp2copy(one, R->Z);
+}
+
+
+void CompleteMPoint(const f2elm_t A, point_proj_t P, point_full_proj_t R)
+{ // Given an xz-only representation on a montgomery curve, compute its affine representation
+    f2elm_t zero = {0}, one = {0}, xz, yz, s2, r2, invz, temp0, temp1;
+    fpcopy((digit_t*)&Montgomery_one,one[0]);
+    
+    if (memcmp(P->Z[0],zero,NBITS_TO_NBYTES(NBITS_FIELD)) != 0 || memcmp(P->Z[1],zero,NBITS_TO_NBYTES(NBITS_FIELD)) != 0) {
+        fp2mul_mont(P->X,P->Z,xz);       // xz = x*z;
+        fpsub(P->X[0],P->Z[1],temp0[0]);
+        fpadd(P->X[1],P->Z[0],temp0[1]);
+        fpadd(P->X[0],P->Z[1],temp1[0]);
+        fpsub(P->X[1],P->Z[0],temp1[1]);        
+        fp2mul_mont(temp0,temp1,s2);     // s2 = (x + i*z)*(x - i*z);
+        fp2mul_mont(A,xz,temp0);
+        fp2add(temp0,s2,temp1);
+        fp2mul_mont(xz,temp1,r2);        // r2 = xz*(A*xz + s2);
+        //sqrtinv2(r2,P->Z,yz,invz);                    
+        sqrt_Fp2(r2, yz);
+        fp2copy(P->Z,invz);
+        fp2inv_mont_bingcd(invz);        
+        fp2mul_mont(P->X,invz,R->X);
+        fp2sqr_mont(invz,temp0);
+        fp2mul_mont(yz,temp0,R->Y);      // R = EM![x*invz, yz*invz^2];
+        fp2copy(one,R->Z);
+    } else {
+        fp2copy(zero,R->X);
+        fp2copy(one,R->Y); 
+        fp2copy(zero,R->Z);              // R = EM!0;
+    }
+}
+
 void Double(point_proj_t P, point_proj_t Q, f2elm_t A24, const int k)
 { // Doubling of a Montgomery point in projective coordinates (X:Z) over affine curve coefficient A. 
   // Input: projective Montgomery x-coordinates P = (X1:Z1), where x1=X1/Z1 and Montgomery curve constants (A+2)/4.
@@ -530,5 +583,106 @@ void mont_twodim_scalarmult(digit_t* a, const point_t R, const point_t S, const 
     recover_os(P0->X, P0->Z, P1->X, P1->Z, S->x, S->y, A, P2->X, P2->Y, P2->Z);     
     ADD(P2, R->x, R->y, one, A, P);       
 }
+
+
+#ifdef COMPRESS_SPEED
+
+void xDBLADD_proj(point_proj_t P, point_proj_t Q, const f2elm_t XPQ, const f2elm_t ZPQ, const f2elm_t A24)
+{ // Simultaneous doubling and differential addition.
+  // Input: projective Montgomery points P=(XP:ZP) and Q=(XQ:ZQ) such that xP=XP/ZP and xQ=XQ/ZQ, affine difference xPQ=x(P-Q) and Montgomery curve constant A24=(A+2)/4.
+  // Output: projective Montgomery points P <- 2*P = (X2P:Z2P) such that x(2P)=X2P/Z2P, and Q <- P+Q = (XQP:ZQP) such that = x(Q+P)=XQP/ZQP. 
+    f2elm_t t0, t1, t2;
+
+    fp2add(P->X, P->Z, t0);                         // t0 = XP+ZP
+    fp2sub(P->X, P->Z, t1);                         // t1 = XP-ZP    
+    fp2sqr_mont(t0, P->X);                          // XP = (XP+ZP)^2    
+    fp2sub(Q->X, Q->Z, t2);                         // t2 = XQ-ZQ
+    fp2correction(t2);    
+    fp2add(Q->X, Q->Z, Q->X);                       // XQ = XQ+ZQ    
+    fp2mul_mont(t0, t2, t0);                        // t0 = (XP+ZP)*(XQ-ZQ)    
+    fp2sqr_mont(t1, P->Z);                          // ZP = (XP-ZP)^2    
+    fp2mul_mont(t1, Q->X, t1);                      // t1 = (XP-ZP)*(XQ+ZQ)    
+    fp2sub(P->X, P->Z, t2);                         // t2 = (XP+ZP)^2-(XP-ZP)^2    
+    fp2mul_mont(P->X, P->Z, P->X);                  // XP = (XP+ZP)^2*(XP-ZP)^2    
+    fp2mul_mont(t2, A24, Q->X);                     // XQ = A24*[(XP+ZP)^2-(XP-ZP)^2]    
+    fp2sub(t0, t1, Q->Z);                           // ZQ = (XP+ZP)*(XQ-ZQ)-(XP-ZP)*(XQ+ZQ)    
+    fp2add(Q->X, P->Z, P->Z);                       // ZP = A24*[(XP+ZP)^2-(XP-ZP)^2]+(XP-ZP)^2    
+    fp2add(t0, t1, Q->X);                           // XQ = (XP+ZP)*(XQ-ZQ)+(XP-ZP)*(XQ+ZQ)    
+    fp2mul_mont(P->Z, t2, P->Z);                    // ZP = [A24*[(XP+ZP)^2-(XP-ZP)^2]+(XP-ZP)^2]*[(XP+ZP)^2-(XP-ZP)^2]    
+    fp2sqr_mont(Q->Z, Q->Z);                        // ZQ = [(XP+ZP)*(XQ-ZQ)-(XP-ZP)*(XQ+ZQ)]^2    
+    fp2sqr_mont(Q->X, Q->X);                        // XQ = [(XP+ZP)*(XQ-ZQ)+(XP-ZP)*(XQ+ZQ)]^2    
+    fp2mul_mont(Q->X, ZPQ, Q->X);                   // XQ = ZPQ*[(XP+ZP)*(XQ-ZQ)+(XP-ZP)*(XQ+ZQ)]^2    
+    fp2mul_mont(Q->Z, XPQ, Q->Z);                   // ZQ = XPQ*[(XP+ZP)*(XQ-ZQ)-(XP-ZP)*(XQ+ZQ)]^2          
+}
+
+void xDBL_e(const point_proj_t P, point_proj_t Q, const f2elm_t A24, const int e)
+{ // Doubling of a Montgomery point in projective coordinates (X:Z) over affine curve coefficient A. 
+  // Input: projective Montgomery x-coordinates P = (X1:Z1), where x1=X1/Z1 and Montgomery curve constants (A+2)/4.
+  // Output: projective Montgomery x-coordinates Q = 2*P = (X2:Z2). 
+    f2elm_t temp, a, b, c, aa, bb;    
+    
+    fp2copy(P->X,Q->X);
+    fp2copy(P->Z,Q->Z);
+    
+    for (int j = 0; j < e; j++) {
+        fp2add(Q->X,Q->Z,a); // a = xQ + zQ
+        fp2sub(Q->X,Q->Z,b); // b = xQ - zQ
+        fp2sqr_mont(a,aa);   //aa = (xQ + zQ)^2
+        fp2sqr_mont(b,bb);   //bb = (xQ - zQ)^2
+        fp2sub(aa,bb,c);     // c = (xQ + zQ)^2 - (xQ - zQ)^2
+        fp2mul_mont(aa,bb,Q->X); // xQ = (xQ + zQ)^2 * (xQ - zQ)^2
+        fp2mul_mont(A24,c,temp); // temp = A24 * ((xQ + zQ)^2 - (xQ - zQ)^2)
+        fp2add(temp,bb,temp);    // temp = A24 * ((xQ + zQ)^2 - (xQ - zQ)^2) + (xQ - zQ)^2
+        fp2mul_mont(c,temp,Q->Z); // temp =  (A24 * ((xQ + zQ)^2 - (xQ - zQ)^2) + (xQ - zQ)^2) * ((xQ + zQ)^2 - (xQ - zQ)^2)
+    }
+}
+
+void Ladder(const point_proj_t P, const digit_t* m, const f2elm_t A, const unsigned int order_bits, point_proj_t R) 
+{
+    point_proj_t R0, R1;
+    f2elm_t A24 = {0};
+    unsigned int bit = 0;
+    int j;
+    digit_t mask;
+    int swap, prevbit = 0;    
+        
+    fpcopy((digit_t*)&Montgomery_one, A24[0]);
+    fpadd(A24[0], A24[0], A24[0]);
+    fp2add(A, A24, A24);
+    fp2div2(A24, A24);  
+    fp2div2(A24, A24);  // A24 = (A+2)/4          
+
+    j = order_bits - 1;
+    bit = (m[j >> LOG2RADIX] >> (j & (RADIX-1))) & 1;
+    while (bit == 0) {
+        j--;
+        bit = (m[j >> LOG2RADIX] >> (j & (RADIX-1))) & 1;
+    }
+
+    // R0 <- P, R1 <- 2P
+    fp2copy(P->X, R0->X);
+    fp2copy(P->Z, R0->Z);
+    xDBL_e(P, R1, A24, 1);    
+    
+    // Main loop
+    for (int i = j - 1;  i >= 0; i--) {
+        bit = (m[i >> LOG2RADIX] >> (i & (RADIX-1))) & 1;
+        swap = bit ^ prevbit;
+        prevbit = bit;
+        mask = 0 - (digit_t)swap;
+
+        swap_points(R0, R1, mask);
+        xDBLADD_proj(R0, R1, P->X, P->Z, A24);
+    }
+    swap = 0 ^ prevbit;
+    mask = 0 - (digit_t)swap;
+    swap_points(R0, R1, mask);    
+    
+    fp2copy(R0->X, R->X);
+    fp2copy(R0->Z, R->Z);
+}
+
+
+#endif
 
 #endif

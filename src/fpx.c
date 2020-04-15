@@ -32,6 +32,7 @@ static void digits_encode(const digit_t* digits, unsigned char* os, int digitsLe
 #endif
 }
 
+
 void clear_words(void* mem, digit_t nwords)
 { // Clear digits from memory. "nwords" indicates the number of digits to be zeroed.
   // This function uses the volatile type qualifier to inform the compiler not to optimize out the memory clearing.
@@ -41,6 +42,47 @@ void clear_words(void* mem, digit_t nwords)
     for (i = 0; i < nwords; i++) {
         v[i] = 0;
     }
+}
+
+
+unsigned int cmp_f2elm(const f2elm_t x, const f2elm_t y)
+{ // Is x != y? return 1 (TRUE) if condition is true, 0 (FALSE) otherwise.
+  // SECURITY NOTE: This function does not run in constant-time.
+    int i;
+    f2elm_t a, b;
+    
+    fp2copy(x, a);
+    fp2copy(y, b);
+    fp2correction(a);
+    fp2correction(b);    
+
+    for (i = NWORDS_FIELD-1; i >= 0; i--) {
+        if (a[0][i] != b[0][i] || a[1][i] != b[1][i] )
+            return 1;
+    }
+    return 0;
+}
+
+
+static __inline unsigned int is_felm_even(const felm_t x)
+{ // Is x even? return 1 (TRUE) if condition is true, 0 (FALSE) otherwise.
+    return (unsigned int)((x[0] & 1) ^ 1);
+}
+
+
+static __inline unsigned int is_felm_lt(const felm_t x, const felm_t y)
+{ // Is x < y? return 1 (TRUE) if condition is true, 0 (FALSE) otherwise.
+  // SECURITY NOTE: This function does not run in constant-time.
+    int i;
+
+    for (i = NWORDS_FIELD-1; i >= 0; i--) {
+        if (x[i] < y[i]) { 
+            return true;
+        } else if (x[i] > y[i]) {
+            return false;
+        }
+    }
+    return false;
 }
 
 
@@ -978,28 +1020,6 @@ static __inline void power2_setup(digit_t* x, int mark, const unsigned int nword
         i += 1;
     }
     
-}
-
-
-static __inline unsigned int is_felm_even(const felm_t x)
-{ // Is x even? return 1 (TRUE) if condition is true, 0 (FALSE) otherwise.
-    return (unsigned int)((x[0] & 1) ^ 1);
-}
-
-
-static __inline unsigned int is_felm_lt(const felm_t x, const felm_t y)
-{ // Is x < y? return 1 (TRUE) if condition is true, 0 (FALSE) otherwise.
-  // SECURITY NOTE: This function does not run in constant-time.
-    int i;
-
-    for (i = NWORDS_FIELD-1; i >= 0; i--) {
-        if (x[i] < y[i]) { 
-            return true;
-        } else if (x[i] > y[i]) {
-            return false;
-        }
-    }
-    return false;
 }
 
 

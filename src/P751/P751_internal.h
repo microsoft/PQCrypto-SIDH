@@ -63,6 +63,9 @@
     #define MASK3_BOB               0xFF
     #define ORDER_A_ENCODED_BYTES   SECRETKEY_A_BYTES
     #define ORDER_B_ENCODED_BYTES   SECRETKEY_B_BYTES
+#ifdef COMPRESS_SPEED
+    #define PARTIALLY_COMPRESSED_CHUNK_CT     (4*ORDER_A_ENCODED_BYTES + FP2_ENCODED_BYTES + 2)
+#endif
     #define COMPRESSED_CHUNK_CT     (3*ORDER_A_ENCODED_BYTES + FP2_ENCODED_BYTES + 2)
     #define UNCOMPRESSEDPK_BYTES    564
     // Table sizes used by the Entangled basis generation
@@ -71,19 +74,20 @@
     // Parameters for discrete log computations
     // Binary Pohlig-Hellman reduced to smaller logs of order ell^W
     #define W_2 4
-    #define W_3 5
+    #define W_3 4
     // ell^w    
     #define ELL2_W (1 << W_2)    
-    #define ELL3_W 243 // W_3 = 5
+
+    #define ELL3_W 81
     // ell^(e mod w) 
     #define ELL2_EMODW (1 << (OALICE_BITS % W_2))    
-    #define ELL3_EMODW 81
+    #define ELL3_EMODW 27
     // # of digits in the discrete log    
     #define DLEN_2 93 // ceil(eA/W_2)
-    #define DLEN_3 48 // ceil(eB/W_3)
+    #define DLEN_3 60 // ceil(eB/W_3)
     // Length of the optimal strategy path for Pohlig-Hellman
     #define PLEN_2 94   
-    #define PLEN_3 49 
+    #define PLEN_3 61 
 #endif
 
 

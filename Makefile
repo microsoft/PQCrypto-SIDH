@@ -11,6 +11,15 @@ endif
 
 ARCHITECTURE=_AMD64_
 USE_OPT_LEVEL=_FAST_
+
+OS_ARGS=__LINUX__
+
+ifeq "$(OS)" "LINUX"
+    OS_ARGS=__LINUX__
+else ifeq "$(OS)" "OSX"
+    OS_ARGS=__LINUX__ -D __ASM_UNDER__
+endif
+
 ifeq "$(ARCH)" "x64"
     ARCHITECTURE=_AMD64_
     USE_OPT_LEVEL=_FAST_
@@ -71,7 +80,7 @@ endif
 
 ADDITIONAL_SETTINGS+= -std=c99
 
-CFLAGS=$(OPT) $(ADDITIONAL_SETTINGS) -D $(ARCHITECTURE) -D $(ENDIANNESS) -D __LINUX__ -D $(USE_OPT_LEVEL) $(MULX) $(ADX)
+CFLAGS=$(OPT) $(ADDITIONAL_SETTINGS) -D $(ARCHITECTURE) -D $(ENDIANNESS) -D $(OS_ARGS) -D $(USE_OPT_LEVEL) $(MULX) $(ADX)
 LDFLAGS=-lm
 ifeq "$(USE_OPT_LEVEL)" "_GENERIC_"
     EXTRA_OBJECTS_434=objs434/fp_generic.o
@@ -99,8 +108,13 @@ OBJECTS_434_COMP=objs434comp/P434_compressed.o $(EXTRA_OBJECTS_434) objs/random.
 OBJECTS_503_COMP=objs503comp/P503_compressed.o $(EXTRA_OBJECTS_503) objs/random.o objs/fips202.o
 OBJECTS_610_COMP=objs610comp/P610_compressed.o $(EXTRA_OBJECTS_610) objs/random.o objs/fips202.o
 OBJECTS_751_COMP=objs751comp/P751_compressed.o $(EXTRA_OBJECTS_751) objs/random.o objs/fips202.o
+OBJECTS_434_COMP_TO=objs434compspeed/P434_compressed_speed.o $(EXTRA_OBJECTS_434) objs/random.o objs/fips202.o
+OBJECTS_503_COMP_TO=objs503compspeed/P503_compressed_speed.o $(EXTRA_OBJECTS_503) objs/random.o objs/fips202.o
+OBJECTS_610_COMP_TO=objs610compspeed/P610_compressed_speed.o $(EXTRA_OBJECTS_610) objs/random.o objs/fips202.o
+OBJECTS_751_COMP_TO=objs751compspeed/P751_compressed_speed.o $(EXTRA_OBJECTS_751) objs/random.o objs/fips202.o
 
-all: lib434 lib503 lib610 lib751 lib434comp lib503comp lib610comp lib751comp tests KATS
+
+all: lib434 lib503 lib610 lib751 lib434comp lib503comp lib610comp lib751comp lib434compspeed lib503compspeed lib610compspeed lib751compspeed tests KATS
 
 objs434/%.o: src/P434/%.c
 	@mkdir -p $(@D)
@@ -133,6 +147,22 @@ objs610comp/%.o: src/P610/%.c
 objs751comp/%.o: src/P751/%.c
 	@mkdir -p $(@D)
 	$(CC) -c $(CFLAGS) $< -o $@
+
+objs434compspeed/%.o: src/P434/%.c
+	@mkdir -p $(@D)
+	$(CC) -c $(CFLAGS) $< -o $@
+
+objs503compspeed/%.o: src/P503/%.c
+	@mkdir -p $(@D)
+	$(CC) -c $(CFLAGS) $< -o $@
+
+objs610compspeed/%.o: src/P610/%.c
+	@mkdir -p $(@D)
+	$(CC) -c $(CFLAGS) $< -o $@
+
+objs751compspeed/%.o: src/P751/%.c
+	@mkdir -p $(@D)
+	$(CC) -c $(CFLAGS) $< -o $@	
 
 ifeq "$(USE_OPT_LEVEL)" "_GENERIC_"		
     objs434/fp_generic.o: src/P434/generic/fp_generic.c
@@ -247,7 +277,31 @@ lib751comp: $(OBJECTS_751_COMP)
 	$(AR) lib751comp/libsidh.a $^
 	$(RANLIB) lib751comp/libsidh.a
 
-tests: lib434 lib434comp lib503 lib503comp lib610 lib610comp lib751 lib751comp
+lib434compspeed: $(OBJECTS_434_COMP_TO)
+	rm -rf lib434compspeed sike434_compressed_speed sidh434_compressed_speed
+	mkdir lib434compspeed sike434_compressed_speed sidh434_compressed_speed
+	$(AR) lib434compspeed/libsidh.a $^
+	$(RANLIB) lib434compspeed/libsidh.a
+
+lib503compspeed: $(OBJECTS_503_COMP_TO)
+	rm -rf lib503compspeed sike503_compressed_speed sidh503_compressed_speed
+	mkdir lib503compspeed sike503_compressed_speed sidh503_compressed_speed
+	$(AR) lib503compspeed/libsidh.a $^
+	$(RANLIB) lib503compspeed/libsidh.a
+
+lib610compspeed: $(OBJECTS_610_COMP_TO)
+	rm -rf lib610compspeed sike610_compressed_speed sidh610_compressed_speed
+	mkdir lib610compspeed sike610_compressed_speed sidh610_compressed_speed
+	$(AR) lib610compspeed/libsidh.a $^
+	$(RANLIB) lib610compspeed/libsidh.a
+
+lib751compspeed: $(OBJECTS_751_COMP_TO)
+	rm -rf lib751compspeed sike751_compressed_speed sidh751_compressed_speed
+	mkdir lib751compspeed sike751_compressed_speed sidh751_compressed_speed
+	$(AR) lib751compspeed/libsidh.a $^
+	$(RANLIB) lib751compspeed/libsidh.a	
+
+tests: lib434 lib434comp lib503 lib503comp lib610 lib610comp lib751 lib751comp lib434compspeed lib503compspeed lib610compspeed lib751compspeed
 	$(CC) $(CFLAGS) -L./lib434 tests/arith_tests-p434.c tests/test_extras.c -lsidh $(LDFLAGS) -o arith_tests-p434 $(ARM_SETTING)
 	$(CC) $(CFLAGS) -L./lib503 tests/arith_tests-p503.c tests/test_extras.c -lsidh $(LDFLAGS) -o arith_tests-p503 $(ARM_SETTING)
 	$(CC) $(CFLAGS) -L./lib610 tests/arith_tests-p610.c tests/test_extras.c -lsidh $(LDFLAGS) -o arith_tests-p610 $(ARM_SETTING)
@@ -268,6 +322,11 @@ tests: lib434 lib434comp lib503 lib503comp lib610 lib610comp lib751 lib751comp
 	$(CC) $(CFLAGS) -L./lib503comp tests/test_SIKEp503_compressed.c tests/test_extras.c -lsidh $(LDFLAGS) -o sike503_compressed/test_SIKE $(ARM_SETTING)
 	$(CC) $(CFLAGS) -L./lib610comp tests/test_SIKEp610_compressed.c tests/test_extras.c -lsidh $(LDFLAGS) -o sike610_compressed/test_SIKE $(ARM_SETTING)
 	$(CC) $(CFLAGS) -L./lib751comp tests/test_SIKEp751_compressed.c tests/test_extras.c -lsidh $(LDFLAGS) -o sike751_compressed/test_SIKE $(ARM_SETTING)
+	$(CC) $(CFLAGS) -L./lib434compspeed tests/test_SIKEp434_compressed_speed.c tests/test_extras.c -lsidh $(LDFLAGS) -o sike434_compressed_speed/test_SIKE $(ARM_SETTING)
+	$(CC) $(CFLAGS) -L./lib503compspeed tests/test_SIKEp503_compressed_speed.c tests/test_extras.c -lsidh $(LDFLAGS) -o sike503_compressed_speed/test_SIKE $(ARM_SETTING)
+	$(CC) $(CFLAGS) -L./lib610compspeed tests/test_SIKEp610_compressed_speed.c tests/test_extras.c -lsidh $(LDFLAGS) -o sike610_compressed_speed/test_SIKE $(ARM_SETTING)
+	$(CC) $(CFLAGS) -L./lib751compspeed tests/test_SIKEp751_compressed_speed.c tests/test_extras.c -lsidh $(LDFLAGS) -o sike751_compressed_speed/test_SIKE $(ARM_SETTING)	
+
 
 # AES
 AES_OBJS=objs/aes.o objs/aes_c.o
@@ -308,7 +367,23 @@ lib751comp_for_KATs: $(OBJECTS_751_COMP) $(AES_OBJS)
 	$(AR) lib751comp/libsidh_for_testing.a $^
 	$(RANLIB) lib751comp/libsidh_for_testing.a
 
-KATS: lib434_for_KATs lib503_for_KATs lib610_for_KATs lib751_for_KATs lib434comp_for_KATs lib503comp_for_KATs lib610comp_for_KATs lib751comp_for_KATs
+lib434compspeed_for_KATs: $(OBJECTS_434_COMP_TO) $(AES_OBJS)
+	$(AR) lib434compspeed/libsidh_for_testing.a $^
+	$(RANLIB) lib434compspeed/libsidh_for_testing.a
+
+lib503compspeed_for_KATs: $(OBJECTS_503_COMP_TO) $(AES_OBJS)
+	$(AR) lib503compspeed/libsidh_for_testing.a $^
+	$(RANLIB) lib503compspeed/libsidh_for_testing.a
+
+lib610compspeed_for_KATs: $(OBJECTS_610_COMP_TO) $(AES_OBJS)
+	$(AR) lib610compspeed/libsidh_for_testing.a $^
+	$(RANLIB) lib610compspeed/libsidh_for_testing.a
+
+lib751compspeed_for_KATs: $(OBJECTS_751_COMP_TO) $(AES_OBJS)
+	$(AR) lib751compspeed/libsidh_for_testing.a $^
+	$(RANLIB) lib751compspeed/libsidh_for_testing.a	
+
+KATS: lib434_for_KATs lib503_for_KATs lib610_for_KATs lib751_for_KATs lib434comp_for_KATs lib503comp_for_KATs lib610comp_for_KATs lib751comp_for_KATs lib434compspeed_for_KATs lib503compspeed_for_KATs lib610compspeed_for_KATs lib751compspeed_for_KATs
 	$(CC) $(CFLAGS) -L./lib434 tests/PQCtestKAT_kem434.c tests/rng/rng.c -lsidh_for_testing $(LDFLAGS) -o sike434/PQCtestKAT_kem $(ARM_SETTING)
 	$(CC) $(CFLAGS) -L./lib503 tests/PQCtestKAT_kem503.c tests/rng/rng.c -lsidh_for_testing $(LDFLAGS) -o sike503/PQCtestKAT_kem $(ARM_SETTING)
 	$(CC) $(CFLAGS) -L./lib610 tests/PQCtestKAT_kem610.c tests/rng/rng.c -lsidh_for_testing $(LDFLAGS) -o sike610/PQCtestKAT_kem $(ARM_SETTING)
@@ -317,6 +392,11 @@ KATS: lib434_for_KATs lib503_for_KATs lib610_for_KATs lib751_for_KATs lib434comp
 	$(CC) $(CFLAGS) -L./lib503comp tests/PQCtestKAT_kem503_compressed.c tests/rng/rng.c -lsidh_for_testing $(LDFLAGS) -o sike503_compressed/PQCtestKAT_kem $(ARM_SETTING)
 	$(CC) $(CFLAGS) -L./lib610comp tests/PQCtestKAT_kem610_compressed.c tests/rng/rng.c -lsidh_for_testing $(LDFLAGS) -o sike610_compressed/PQCtestKAT_kem $(ARM_SETTING)
 	$(CC) $(CFLAGS) -L./lib751comp tests/PQCtestKAT_kem751_compressed.c tests/rng/rng.c -lsidh_for_testing $(LDFLAGS) -o sike751_compressed/PQCtestKAT_kem $(ARM_SETTING)
+	$(CC) $(CFLAGS) -L./lib434compspeed tests/PQCtestKAT_kem434_compressed_speed.c tests/rng/rng.c -lsidh_for_testing $(LDFLAGS) -o sike434_compressed_speed/PQCtestKAT_kem $(ARM_SETTING)
+	$(CC) $(CFLAGS) -L./lib503compspeed tests/PQCtestKAT_kem503_compressed_speed.c tests/rng/rng.c -lsidh_for_testing $(LDFLAGS) -o sike503_compressed_speed/PQCtestKAT_kem $(ARM_SETTING)
+	$(CC) $(CFLAGS) -L./lib610compspeed tests/PQCtestKAT_kem610_compressed_speed.c tests/rng/rng.c -lsidh_for_testing $(LDFLAGS) -o sike610_compressed_speed/PQCtestKAT_kem $(ARM_SETTING)
+	$(CC) $(CFLAGS) -L./lib751compspeed tests/PQCtestKAT_kem751_compressed_speed.c tests/rng/rng.c -lsidh_for_testing $(LDFLAGS) -o sike751_compressed_speed/PQCtestKAT_kem $(ARM_SETTING)
+
 
 check: tests
 

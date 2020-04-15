@@ -7,6 +7,9 @@
 #include "../random/random.h"
 #include <string.h>
 
+#define COMPRESSION 0
+#define DECOMPRESSION 1
+
 
 static void init_basis(digit_t *gen, f2elm_t XP, f2elm_t XQ, f2elm_t XR)
 { // Initialization of basis points
@@ -84,7 +87,7 @@ static void Ladder3pt_dual(const point_proj_t *Rs, const digit_t* m, const unsig
 }
 
 
-static void Elligator2(const f2elm_t a24, const unsigned int r, f2elm_t x)
+static void Elligator2(const f2elm_t a24, const unsigned int r, f2elm_t x, unsigned char *bit, const unsigned char COMPorDEC)
 { // Generate an x-coordinate of a point on curve with (affine) coefficient a24 
   // Use the counter r
     int i;
@@ -100,28 +103,38 @@ static void Elligator2(const f2elm_t a24, const unsigned int r, f2elm_t x)
     t_ptr = (f2elm_t *)&v_3_torsion[r];    
     fp2mul_mont(A, (felm_t*)t_ptr, x);     // x = A*v; v := 1/(1 + U*r^2) table lookup
     fp2neg(x);                             // x = -A*v;
-    fp2add(A, x, y2);                      // y2 = x + A
-    fp2mul_mont(y2,  x,  y2);              // y2 = x*(x + A)
-    fpadd(y2[0],  one_fp,  y2[0]);         // y2 = x(x + A) + 1
-    fp2mul_mont(x, y2, y2);                // y2 = x*(x^2 + Ax + 1);
-    fpsqr_mont(y2[0], a2);
-    fpsqr_mont(y2[1], b2);
-    fpadd(a2, b2, N);                      // N := norm(y2);
+    
+    if (COMPorDEC == COMPRESSION) {    
+        fp2add(A, x, y2);                      // y2 = x + A
+        fp2mul_mont(y2,  x,  y2);              // y2 = x*(x + A)
+        fpadd(y2[0],  one_fp,  y2[0]);         // y2 = x(x + A) + 1
+        fp2mul_mont(x, y2, y2);                // y2 = x*(x^2 + Ax + 1);
+        fpsqr_mont(y2[0], a2);
+        fpsqr_mont(y2[1], b2);
+        fpadd(a2, b2, N);                      // N := norm(y2);
 
-    fpcopy(N, temp0);
-    for (i = 0; i < OALICE_BITS - 2; i++) {    
-        fpsqr_mont(temp0,  temp0);
-    }
-    for (i = 0; i < OBOB_EXPON; i++) {
-        fpsqr_mont(temp0,  temp1);
-        fpmul_mont(temp0,  temp1,  temp0);
-    }
-    fpsqr_mont(temp0, temp1);              // z = N^((p + 1) div 4);
-    fpcorrection(temp1);
-    fpcorrection(N);
-    if (memcmp(temp1, N, NBITS_TO_NBYTES(NBITS_FIELD)) != 0) {
-        fp2neg(x);
-        fp2sub(x, A, x);                   // x = -x - A;
+        fpcopy(N, temp0);
+        for (i = 0; i < OALICE_BITS - 2; i++) {    
+            fpsqr_mont(temp0,  temp0);
+        }
+        for (i = 0; i < OBOB_EXPON; i++) {
+            fpsqr_mont(temp0,  temp1);
+            fpmul_mont(temp0,  temp1,  temp0);
+        }
+        fpsqr_mont(temp0, temp1);              // z = N^((p + 1) div 4);
+        fpcorrection(temp1);
+        fpcorrection(N);
+        if (memcmp(temp1, N, NBITS_TO_NBYTES(NBITS_FIELD)) != 0) {
+            fp2neg(x);
+            fp2sub(x, A, x);                   // x = -x - A;
+            if (COMPorDEC == COMPRESSION)
+                *bit = 1;                 
+        }
+    } else {
+        if (*bit) {
+            fp2neg(x);
+            fp2sub(x,A,x);                              // x = -x - A;
+        }       
     }
 }
 
@@ -275,26 +288,6 @@ static void eval_full_dual_4_isog(const f2elm_t As[][5], point_proj_t P)
 }
 
 
-static void CompletePoint(const point_proj_t P, point_full_proj_t R)
-{ // Complete point on A = 0 curve
-    f2elm_t xz, s2, r2, yz, invz, t0, t1, one = {0};
-    fpcopy((digit_t*)&Montgomery_one, one[0]);
-
-    fp2mul_mont(P->X, P->Z, xz);
-    fpsub(P->X[0], P->Z[1], t0[0]);
-    fpadd(P->X[1], P->Z[0], t0[1]);
-    fpadd(P->X[0], P->Z[1], t1[0]);
-    fpsub(P->X[1], P->Z[0], t1[1]);
-    fp2mul_mont(t0, t1, s2);
-    fp2mul_mont(xz, s2, r2);
-    sqrtinv2(r2, P->Z, yz, invz);
-    fp2mul_mont(P->X, invz, R->X);
-    fp2sqr_mont(invz, t0);
-    fp2mul_mont(yz, t0, R->Y);
-    fp2copy(one, R->Z);
-}
-
-
 static void TripleAndParabola_proj(const point_full_proj_t R, f2elm_t l1x, f2elm_t l1z)
 {
     fp2sqr_mont(R->X, l1z);
@@ -326,7 +319,7 @@ static void FinalExpo3(f2elm_t gX, f2elm_t gZ)
     fp2copy(gZ, f_);
     fpneg(f_[1]);
     fp2mul_mont(gX, f_, f_);
-    fp2inv_mont(f_);               // TODO: Make non-constant time... 
+    fp2inv_mont_bingcd(f_);
     fpneg(gX[1]);
     fp2mul_mont(gX,gZ, gX);
     fp2mul_mont(gX,f_, gX);
@@ -441,7 +434,7 @@ static bool SecondPoint_dual(const point_proj_t P, point_full_proj_t R, unsigned
 }
 
 
-static void FirstPoint3n(const f2elm_t a24, const f2elm_t As[][5], f2elm_t x, point_full_proj_t R, unsigned int *r, unsigned char *ind)
+static void FirstPoint3n(const f2elm_t a24, const f2elm_t As[][5], f2elm_t x, point_full_proj_t R, unsigned int *r, unsigned char *ind, unsigned char *bitEll)
 {
     bool b = false;
     point_proj_t P;
@@ -449,7 +442,8 @@ static void FirstPoint3n(const f2elm_t a24, const f2elm_t As[][5], f2elm_t x, po
     *r = 0;
 
     while (!b) {
-        Elligator2(a24, *r, x);    // Get x-coordinate on curve a24
+        *bitEll = 0;
+        Elligator2(a24, *r, x, bitEll, COMPRESSION);    // Get x-coordinate on curve a24
 
         fp2copy(x, P->X);
         fpcopy((digit_t*)&Montgomery_one, (P->Z)[0]);
@@ -462,14 +456,15 @@ static void FirstPoint3n(const f2elm_t a24, const f2elm_t As[][5], f2elm_t x, po
 }
 
 
-static void SecondPoint3n(const f2elm_t a24, const f2elm_t As[][5], f2elm_t x, point_full_proj_t R, unsigned int *r, unsigned char ind)
+static void SecondPoint3n(const f2elm_t a24, const f2elm_t As[][5], f2elm_t x, point_full_proj_t R, unsigned int *r, unsigned char ind, unsigned char *bitEll)
 {
     bool b = false;
     point_proj_t P;
     felm_t zero = {0};
 
     while (!b) {
-        Elligator2(a24, *r, x);
+        *bitEll = 0;
+        Elligator2(a24, *r, x, bitEll, COMPRESSION);
 
         fp2copy(x, P->X);
         fpcopy((digit_t*)&Montgomery_one, (P->Z)[0]);
@@ -503,15 +498,17 @@ static void makeDiff(const point_full_proj_t R, point_full_proj_t S, const point
 }
 
 
-static void BuildOrdinary3nBasis_dual(const f2elm_t a24, const f2elm_t As[][5], point_full_proj_t *R, unsigned int *r)
+static void BuildOrdinary3nBasis_dual(const f2elm_t a24, const f2elm_t As[][5], point_full_proj_t *R, unsigned int *r, unsigned char *bitsEll)
 {
     point_proj_t D;
     f2elm_t xs[2];
-    unsigned char ind;
+    unsigned char ind, bit;
 
-    FirstPoint3n(a24, As, xs[0], R[0], r, &ind);
+    FirstPoint3n(a24, As, xs[0], R[0], r, &ind, &bit);
+    *bitsEll = bit;
     *(r+1) = *r;
-    SecondPoint3n(a24, As, xs[1], R[1], r+1, ind);
+    SecondPoint3n(a24, As, xs[1], R[1], r+1, ind, &bit);
+    *bitsEll |= (bit << 1);
 
     // Get x-coordinate of difference
     BiQuad_affine(a24, xs[0], xs[1], D);
@@ -585,7 +582,7 @@ static void FullIsogeny_A_dual(const unsigned char* PrivateKeyA, f2elm_t As[][5]
     eval_dual_4_isog_shared(coeff[2], coeff[3], coeff[4], *(As+MAX_Alice-1)+2);
     fp2copy(A24, As[MAX_Alice][0]);
     fp2copy(C24, As[MAX_Alice][1]);
-    fp2inv_mont(C24);
+    fp2inv_mont_bingcd(C24); // a24 is public, thus non-constant time inversion is ok here
     fp2mul_mont(A24,C24,a24);
 }
 
@@ -600,19 +597,25 @@ static void Dlogs3_dual(const f2elm_t *f, int *D, digit_t *d0, digit_t *c0, digi
     mp_sub((digit_t*)Bob_order, c1, c1, NWORDS_ORDER);  
 }
 
-// TODO: Optimize.. 
-static void BuildOrdinary3nBasis_Decomp_dual(const f2elm_t A24, point_proj_t *Rs, unsigned char *r)
+ 
+static void BuildOrdinary3nBasis_Decomp_dual(const f2elm_t A24, point_proj_t *Rs, unsigned char *r, const unsigned char bitsEll)
 {
+    unsigned char bitEll[2];
+    
+    bitEll[0] = bitsEll & 0x1;
+    bitEll[1] = (bitsEll >> 1) & 0x1;    
+    
     // Elligator2 both x-coordinates
-    Elligator2(A24, r[0]-1, Rs[0]->X);
-    Elligator2(A24, r[1]-1, Rs[1]->X);
+    Elligator2(A24, r[0]-1, Rs[0]->X, &bitEll[0], DECOMPRESSION);
+    Elligator2(A24, r[1]-1, Rs[1]->X, &bitEll[1], DECOMPRESSION);
     // Get x-coordinate of difference
     BiQuad_affine(A24, Rs[0]->X, Rs[1]->X, Rs[2]);
 }
 
+
 static void PKADecompression_dual(const unsigned char* SecretKeyB, const unsigned char* CompressedPKA, point_proj_t R, f2elm_t A)
 {
-    unsigned char bit, rs[2];
+    unsigned char bit, rs[3];
     f2elm_t A24;
     point_proj_t Rs[3] = {0};
     digit_t t1[NWORDS_ORDER] = {0}, t2[NWORDS_ORDER] = {0}, t3[NWORDS_ORDER] = {0}, t4[NWORDS_ORDER] = {0};
@@ -623,7 +626,7 @@ static void PKADecompression_dual(const unsigned char* SecretKeyB, const unsigne
     to_Montgomery_mod_order(vone, vone, (digit_t*)Bob_order, (digit_t*)&Montgomery_RB2, (digit_t*)&Montgomery_RB1);  // Converting to Montgomery representation
     
     bit = CompressedPKA[3*ORDER_B_ENCODED_BYTES + FP2_ENCODED_BYTES] >> 7;
-    memcpy(rs, &CompressedPKA[3*ORDER_B_ENCODED_BYTES + FP2_ENCODED_BYTES], 2);
+    memcpy(rs, &CompressedPKA[3*ORDER_B_ENCODED_BYTES + FP2_ENCODED_BYTES], 3);
     rs[0] &= 0x7F;
 
     fpadd(A[0], (digit_t*)Montgomery_one, A24[0]);
@@ -632,7 +635,7 @@ static void PKADecompression_dual(const unsigned char* SecretKeyB, const unsigne
     fp2div2(A24, A24);
     fp2div2(A24, A24);
 
-    BuildOrdinary3nBasis_Decomp_dual(A24, Rs, rs);
+    BuildOrdinary3nBasis_Decomp_dual(A24, Rs, rs, rs[2]);
     fpcopy((digit_t*)Montgomery_one, (Rs[0]->Z)[0]);
     fpcopy((digit_t*)Montgomery_one, (Rs[1]->Z)[0]);
 
@@ -727,19 +730,21 @@ static void Compress_PKA_dual(digit_t *d0, digit_t *c0, digit_t *d1, digit_t *c1
     fp2_encode(A, &CompressedPKA[3*ORDER_B_ENCODED_BYTES]);    
     CompressedPKA[3*ORDER_B_ENCODED_BYTES + FP2_ENCODED_BYTES] |= (unsigned char)rs[0];
     CompressedPKA[3*ORDER_B_ENCODED_BYTES + FP2_ENCODED_BYTES + 1] = (unsigned char)rs[1];
+    CompressedPKA[3*ORDER_B_ENCODED_BYTES + FP2_ENCODED_BYTES + 2] = (unsigned char)rs[2];
+    
 }
 
 
 int EphemeralKeyGeneration_A(const unsigned char* PrivateKeyA, unsigned char* CompressedPKA)
 { // Alice's ephemeral public key generation using compression
-    unsigned int rs[2];
+    unsigned int rs[3];
     int D[DLEN_3];
     f2elm_t a24, As[MAX_Alice+1][5], f[4];
     digit_t c0[NWORDS_ORDER] = {0}, d0[NWORDS_ORDER] = {0}, c1[NWORDS_ORDER] = {0}, d1[NWORDS_ORDER] = {0}; 
     point_full_proj_t Rs[2];
 
     FullIsogeny_A_dual(PrivateKeyA, As, a24);
-    BuildOrdinary3nBasis_dual(a24, As, Rs, rs);
+    BuildOrdinary3nBasis_dual(a24, As, Rs, rs, (unsigned char *)&rs[2]);
     Tate3_pairings(Rs, f);
     Dlogs3_dual(f, D, d0, c0, d1, c1);
     Compress_PKA_dual(d0, c0, d1, c1, a24, rs, CompressedPKA);
@@ -879,7 +884,7 @@ static void RecoverY(const f2elm_t A, const point_proj_t *xs, point_full_proj_t 
     fp2mul_mont(xs[1]->Z, t0, Rs[1]->Z);
     fp2add(Rs[1]->Z, Rs[1]->Z, Rs[1]->Z);
 
-    fp2inv_mont(Rs[1]->Z);                       // TODO: Make non constant-time.. 
+    fp2inv_mont_bingcd(Rs[1]->Z); 
     fp2mul_mont(Rs[1]->X, Rs[1]->Z, Rs[1]->X);
     fp2mul_mont(Rs[1]->Y, Rs[1]->Z, Rs[1]->Y);
 }
@@ -972,7 +977,7 @@ static void FullIsogeny_B_dual(const unsigned char* PrivateKeyB, f2elm_t Ds[][2]
 
     fp2add(A24plus, A24minus, A);
     fp2sub(A24plus, A24minus, A24plus);
-    fp2inv_mont(A24plus);
+    fp2inv_mont_bingcd(A24plus); // A is going to be public, thus should be ok to use non-constant time inversion
     fp2mul_mont(A24plus, A, A);
     fp2add(A, A, A);    // A = 2*(A24plus+A24mins)/(A24plus-A24minus) 
 }

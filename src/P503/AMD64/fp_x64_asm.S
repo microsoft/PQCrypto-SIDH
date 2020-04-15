@@ -31,13 +31,19 @@
 #endif
 
 
+#if defined(__ASM_UNDER__)
+# define fmtunder(s) _##s
+#else
+# define fmtunder(s) s
+#endif
+
 .text
 //***********************************************************************
 //  Field addition
 //  Operation: c [reg_p3] = a [reg_p1] + b [reg_p2]
 //*********************************************************************** 
-.global fpadd503_asm
-fpadd503_asm:
+.global fmtunder(fpadd503_asm)
+fmtunder(fpadd503_asm):
   push   r12
   push   r13
   push   r14
@@ -61,28 +67,28 @@ fpadd503_asm:
   adc    r14, [reg_p2+48] 
   adc    r15, [reg_p2+56]
 
-  mov    rcx, [rip+p503x2]
+  mov    rcx, [rip+fmtunder(p503x2)]
   sub    r8, rcx
-  mov    rcx, [rip+p503x2+8]
+  mov    rcx, [rip+fmtunder(p503x2)+8]
   sbb    r9, rcx
   sbb    r10, rcx
-  mov    rcx, [rip+p503x2+24]
+  mov    rcx, [rip+fmtunder(p503x2)+24]
   sbb    r11, rcx
-  mov    rcx, [rip+p503x2+32]
+  mov    rcx, [rip+fmtunder(p503x2)+32]
   sbb    r12, rcx
-  mov    rcx, [rip+p503x2+40]
+  mov    rcx, [rip+fmtunder(p503x2)+40]
   sbb    r13, rcx
-  mov    rcx, [rip+p503x2+48]
+  mov    rcx, [rip+fmtunder(p503x2)+48]
   sbb    r14, rcx
-  mov    rcx, [rip+p503x2+56]
+  mov    rcx, [rip+fmtunder(p503x2)+56]
   sbb    r15, rcx
   sbb    rax, 0
   
-  mov    rdi, [rip+p503x2]
+  mov    rdi, [rip+fmtunder(p503x2)]
   and    rdi, rax
-  mov    rsi, [rip+p503x2+8]
+  mov    rsi, [rip+fmtunder(p503x2)+8]
   and    rsi, rax
-  mov    rcx, [rip+p503x2+24]
+  mov    rcx, [rip+fmtunder(p503x2)+24]
   and    rcx, rax
   
   add    r8, rdi  
@@ -95,13 +101,13 @@ fpadd503_asm:
   mov    [reg_p3+24], r11 
   setc   cl
 
-  mov    r8, [rip+p503x2+32]
+  mov    r8, [rip+fmtunder(p503x2)+32]
   and    r8, rax
-  mov    r9, [rip+p503x2+40]
+  mov    r9, [rip+fmtunder(p503x2)+40]
   and    r9, rax
-  mov    r10, [rip+p503x2+48]
+  mov    r10, [rip+fmtunder(p503x2)+48]
   and    r10, rax
-  mov    r11, [rip+p503x2+56]
+  mov    r11, [rip+fmtunder(p503x2)+56]
   and    r11, rax
   
   bt     rcx, 0
@@ -125,8 +131,8 @@ fpadd503_asm:
 //  Field subtraction
 //  Operation: c [reg_p3] = a [reg_p1] - b [reg_p2]
 //*********************************************************************** 
-.global fpsub503_asm
-fpsub503_asm:
+.global fmtunder(fpsub503_asm)
+fmtunder(fpsub503_asm):
   push   r12
   push   r13
   push   r14
@@ -151,11 +157,11 @@ fpsub503_asm:
   sbb    r15, [reg_p2+56]
   sbb    rax, 0
   
-  mov    rdi, [rip+p503x2]
+  mov    rdi, [rip+fmtunder(p503x2)]
   and    rdi, rax
-  mov    rsi, [rip+p503x2+8]
+  mov    rsi, [rip+fmtunder(p503x2)+8]
   and    rsi, rax
-  mov    rcx, [rip+p503x2+24]
+  mov    rcx, [rip+fmtunder(p503x2)+24]
   and    rcx, rax
   
   add    r8, rdi  
@@ -168,13 +174,13 @@ fpsub503_asm:
   mov    [reg_p3+24], r11 
   setc   cl
 
-  mov    r8, [rip+p503x2+32]
+  mov    r8, [rip+fmtunder(p503x2)+32]
   and    r8, rax
-  mov    r9, [rip+p503x2+40]
+  mov    r9, [rip+fmtunder(p503x2)+40]
   and    r9, rax
-  mov    r10, [rip+p503x2+48]
+  mov    r10, [rip+fmtunder(p503x2)+48]
   and    r10, rax
-  mov    r11, [rip+p503x2+56]
+  mov    r11, [rip+fmtunder(p503x2)+56]
   and    r11, rax
   
   bt     rcx, 0
@@ -350,8 +356,8 @@ fpsub503_asm:
 //*****************************************************************************
 //  503-bit multiplication using Karatsuba (one level), schoolbook (one level)
 //***************************************************************************** 
-.global mul503_asm
-mul503_asm:    
+.global fmtunder(mul503_asm)
+fmtunder(mul503_asm):    
     push   r12
     push   r13 
     push   r14 
@@ -512,8 +518,8 @@ mul503_asm:
 //  Operation: c [reg_p3] = a [reg_p1] * b [reg_p2]
 //  NOTE: a=c or b=c are not allowed
 //***********************************************************************
-.global mul503_asm
-mul503_asm:
+.global fmtunder(mul503_asm)
+fmtunder(mul503_asm):
   push   r12
   push   r13
   push   r14
@@ -1029,8 +1035,8 @@ mul503_asm:
 //  Operation: c [reg_p2] = a [reg_p1]
 //  NOTE: a=c is not allowed
 //************************************************************************************** 
-.global rdc503_asm
-rdc503_asm:
+.global fmtunder(rdc503_asm)
+fmtunder(rdc503_asm):
     push   rbx
     push   r12
     push   r13 
@@ -1038,7 +1044,7 @@ rdc503_asm:
     push   r15  
 
     // a[0-1] x p503p1_nz --> result: r8:r14 
-    MUL128x320_SCHOOL [reg_p1], [rip+p503p1+24], r8, r9, r10, r11, r12, r13, r14, rbx, rcx, r15     
+    MUL128x320_SCHOOL [reg_p1], [rip+fmtunder(p503p1)+24], r8, r9, r10, r11, r12, r13, r14, rbx, rcx, r15     
 
     xor    r15, r15
     add    r8, [reg_p1+24]  
@@ -1074,7 +1080,7 @@ rdc503_asm:
     mov    [reg_p1+120], r12
 
     // a[2-3] x p503p1_nz --> result: r8:r14
-    MUL128x320_SCHOOL [reg_p1+16], [rip+p503p1+24], r8, r9, r10, r11, r12, r13, r14, rbx, rcx, r15 
+    MUL128x320_SCHOOL [reg_p1+16], [rip+fmtunder(p503p1)+24], r8, r9, r10, r11, r12, r13, r14, rbx, rcx, r15 
 
     xor    r15, r15
     add    r8, [reg_p1+40]  
@@ -1104,7 +1110,7 @@ rdc503_asm:
     mov    [reg_p1+120], r10 
 
     // a[4-5] x p503p1_nz --> result: r8:r14
-    MUL128x320_SCHOOL [reg_p1+32], [rip+p503p1+24], r8, r9, r10, r11, r12, r13, r14, rbx, rcx, r15  
+    MUL128x320_SCHOOL [reg_p1+32], [rip+fmtunder(p503p1)+24], r8, r9, r10, r11, r12, r13, r14, rbx, rcx, r15  
 
     xor    r15, r15
     xor    rbx, rbx
@@ -1128,7 +1134,7 @@ rdc503_asm:
     mov    [reg_p1+120], rbx 
 
     // a[6-7] x p503p1_nz --> result: r8:r14
-    MUL128x320_SCHOOL [reg_p1+48], [rip+p503p1+24], r8, r9, r10, r11, r12, r13, r14, rbx, rcx, r15  
+    MUL128x320_SCHOOL [reg_p1+48], [rip+fmtunder(p503p1)+24], r8, r9, r10, r11, r12, r13, r14, rbx, rcx, r15  
     
     // Final result c1:c7
     add    r8, [reg_p1+72]  
@@ -1161,15 +1167,15 @@ rdc503_asm:
 //  Operation: c [reg_p2] = a [reg_p1]
 //  NOTE: a=c is not allowed
 //*********************************************************************** 
-.global rdc503_asm
-rdc503_asm:
+.global fmtunder(rdc503_asm)
+fmtunder(rdc503_asm):
   push   r12
   push   r13 
   push   r14 
   push   r15 
 
   mov    r11, [reg_p1]
-  mov    rax, [rip+p503p1+24] 
+  mov    rax, [rip+fmtunder(p503p1)+24] 
   mul    r11
   xor    r8, r8
   add    rax, [reg_p1+24]
@@ -1177,14 +1183,14 @@ rdc503_asm:
   adc    r8, rdx
   
   xor    r9, r9
-  mov    rax, [rip+p503p1+32] 
+  mov    rax, [rip+fmtunder(p503p1)+32] 
   mul    r11
   xor    r10, r10
   add    r8, rax
   adc    r9, rdx
 
   mov    r12, [reg_p1+8]
-  mov    rax, [rip+p503p1+24] 
+  mov    rax, [rip+fmtunder(p503p1)+24] 
   mul    r12
   add    r8, rax
   adc    r9, rdx
@@ -1195,20 +1201,20 @@ rdc503_asm:
   adc    r10, 0
   
   xor    r8, r8
-  mov    rax, [rip+p503p1+40] 
+  mov    rax, [rip+fmtunder(p503p1)+40] 
   mul    r11
   add    r9, rax
   adc    r10, rdx
   adc    r8, 0
   
-  mov    rax, [rip+p503p1+32] 
+  mov    rax, [rip+fmtunder(p503p1)+32] 
   mul    r12
   add    r9, rax
   adc    r10, rdx
   adc    r8, 0
   
   mov    r13, [reg_p1+16]
-  mov    rax, [rip+p503p1+24] 
+  mov    rax, [rip+fmtunder(p503p1)+24] 
   mul    r13
   add    r9, rax
   adc    r10, rdx
@@ -1219,26 +1225,26 @@ rdc503_asm:
   adc    r8, 0
   
   xor    r9, r9
-  mov    rax, [rip+p503p1+48] 
+  mov    rax, [rip+fmtunder(p503p1)+48] 
   mul    r11
   add    r10, rax
   adc    r8, rdx
   adc    r9, 0
   
-  mov    rax, [rip+p503p1+40] 
+  mov    rax, [rip+fmtunder(p503p1)+40] 
   mul    r12
   add    r10, rax
   adc    r8, rdx
   adc    r9, 0
   
-  mov    rax, [rip+p503p1+32]
+  mov    rax, [rip+fmtunder(p503p1)+32]
   mul    r13
   add    r10, rax
   adc    r8, rdx
   adc    r9, 0
   
   mov    r14, [reg_p2+24]
-  mov    rax, [rip+p503p1+24] 
+  mov    rax, [rip+fmtunder(p503p1)+24] 
   mul    r14
   add    r10, rax
   adc    r8, rdx
@@ -1249,32 +1255,32 @@ rdc503_asm:
   adc    r9, 0
   
   xor    r10, r10
-  mov    rax, [rip+p503p1+56] 
+  mov    rax, [rip+fmtunder(p503p1)+56] 
   mul    r11
   add    r8, rax
   adc    r9, rdx
   adc    r10, 0
   
-  mov    rax, [rip+p503p1+48] 
+  mov    rax, [rip+fmtunder(p503p1)+48] 
   mul    r12
   add    r8, rax
   adc    r9, rdx
   adc    r10, 0
   
-  mov    rax, [rip+p503p1+40] 
+  mov    rax, [rip+fmtunder(p503p1)+40] 
   mul    r13
   add    r8, rax
   adc    r9, rdx
   adc    r10, 0
   
-  mov    rax, [rip+p503p1+32] 
+  mov    rax, [rip+fmtunder(p503p1)+32] 
   mul    r14
   add    r8, rax
   adc    r9, rdx
   adc    r10, 0
   
   mov    r15, [reg_p2+32]
-  mov    rax, [rip+p503p1+24] 
+  mov    rax, [rip+fmtunder(p503p1)+24] 
   mul    r15
   add    r8, rax
   adc    r9, rdx
@@ -1285,32 +1291,32 @@ rdc503_asm:
   adc    r10, 0
   
   xor    r8, r8
-  mov    rax, [rip+p503p1+56] 
+  mov    rax, [rip+fmtunder(p503p1)+56] 
   mul    r12
   add    r9, rax
   adc    r10, rdx
   adc    r8, 0
   
-  mov    rax, [rip+p503p1+48] 
+  mov    rax, [rip+fmtunder(p503p1)+48] 
   mul    r13
   add    r9, rax
   adc    r10, rdx
   adc    r8, 0
   
-  mov    rax, [rip+p503p1+40] 
+  mov    rax, [rip+fmtunder(p503p1)+40] 
   mul    r14
   add    r9, rax
   adc    r10, rdx
   adc    r8, 0
   
-  mov    rax, [rip+p503p1+32] 
+  mov    rax, [rip+fmtunder(p503p1)+32] 
   mul    r15
   add    r9, rax
   adc    r10, rdx
   adc    r8, 0
   
   mov    rcx, [reg_p2+40]
-  mov    rax, [rip+p503p1+24] 
+  mov    rax, [rip+fmtunder(p503p1)+24] 
   mul    rcx
   add    r9, rax
   adc    r10, rdx
@@ -1321,32 +1327,32 @@ rdc503_asm:
   adc    r8, 0
   
   xor    r9, r9
-  mov    rax, [rip+p503p1+56] 
+  mov    rax, [rip+fmtunder(p503p1)+56] 
   mul    r13
   add    r10, rax
   adc    r8, rdx
   adc    r9, 0
 
-  mov    rax, [rip+p503p1+48] 
+  mov    rax, [rip+fmtunder(p503p1)+48] 
   mul    r14
   add    r10, rax
   adc    r8, rdx
   adc    r9, 0
 
-  mov    rax, [rip+p503p1+40]
+  mov    rax, [rip+fmtunder(p503p1)+40]
   mul    r15
   add    r10, rax
   adc    r8, rdx
   adc    r9, 0
 
-  mov    rax, [rip+p503p1+32]
+  mov    rax, [rip+fmtunder(p503p1)+32]
   mul    rcx
   add    r10, rax
   adc    r8, rdx
   adc    r9, 0
   
   mov    r13, [reg_p2+48]
-  mov    rax, [rip+p503p1+24]
+  mov    rax, [rip+fmtunder(p503p1)+24]
   mul    r13
   add    r10, rax
   adc    r8, rdx
@@ -1357,32 +1363,32 @@ rdc503_asm:
   adc    r9, 0
   
   xor    r10, r10
-  mov    rax, [rip+p503p1+56] 
+  mov    rax, [rip+fmtunder(p503p1)+56] 
   mul    r14
   add    r8, rax
   adc    r9, rdx
   adc    r10, 0
   
-  mov    rax, [rip+p503p1+48] 
+  mov    rax, [rip+fmtunder(p503p1)+48] 
   mul    r15
   add    r8, rax
   adc    r9, rdx
   adc    r10, 0
   
-  mov    rax, [rip+p503p1+40] 
+  mov    rax, [rip+fmtunder(p503p1)+40] 
   mul    rcx
   add    r8, rax
   adc    r9, rdx
   adc    r10, 0
   
-  mov    rax, [rip+p503p1+32] 
+  mov    rax, [rip+fmtunder(p503p1)+32] 
   mul    r13
   add    r8, rax
   adc    r9, rdx
   adc    r10, 0
   
   mov    r14, [reg_p2+56]
-  mov    rax, [rip+p503p1+24] 
+  mov    rax, [rip+fmtunder(p503p1)+24] 
   mul    r14
   add    r8, rax
   adc    r9, rdx
@@ -1393,25 +1399,25 @@ rdc503_asm:
   adc    r10, 0
   
   xor    r8, r8
-  mov    rax, [rip+p503p1+56] 
+  mov    rax, [rip+fmtunder(p503p1)+56] 
   mul    r15
   add    r9, rax
   adc    r10, rdx
   adc    r8, 0
   
-  mov    rax, [rip+p503p1+48] 
+  mov    rax, [rip+fmtunder(p503p1)+48] 
   mul    rcx
   add    r9, rax
   adc    r10, rdx
   adc    r8, 0
   
-  mov    rax, [rip+p503p1+40] 
+  mov    rax, [rip+fmtunder(p503p1)+40] 
   mul    r13
   add    r9, rax
   adc    r10, rdx
   adc    r8, 0
   
-  mov    rax, [rip+p503p1+32] 
+  mov    rax, [rip+fmtunder(p503p1)+32] 
   mul    r14
   add    r9, rax
   adc    r10, rdx
@@ -1422,19 +1428,19 @@ rdc503_asm:
   adc    r8, 0
   
   xor    r9, r9
-  mov    rax, [rip+p503p1+56] 
+  mov    rax, [rip+fmtunder(p503p1)+56] 
   mul    rcx
   add    r10, rax
   adc    r8, rdx
   adc    r9, 0
   
-  mov    rax, [rip+p503p1+48] 
+  mov    rax, [rip+fmtunder(p503p1)+48] 
   mul    r13
   add    r10, rax
   adc    r8, rdx
   adc    r9, 0
   
-  mov    rax, [rip+p503p1+40] 
+  mov    rax, [rip+fmtunder(p503p1)+40] 
   mul    r14
   add    r10, rax
   adc    r8, rdx
@@ -1445,13 +1451,13 @@ rdc503_asm:
   adc    r9, 0
   
   xor    r10, r10
-  mov    rax, [rip+p503p1+56] 
+  mov    rax, [rip+fmtunder(p503p1)+56] 
   mul    r13
   add    r8, rax
   adc    r9, rdx
   adc    r10, 0
 
-  mov    rax, [rip+p503p1+48] 
+  mov    rax, [rip+fmtunder(p503p1)+48] 
   mul    r14
   add    r8, rax
   adc    r9, rdx
@@ -1461,7 +1467,7 @@ rdc503_asm:
   adc    r9, 0
   adc    r10, 0
   
-  mov    rax, [rip+p503p1+56] 
+  mov    rax, [rip+fmtunder(p503p1)+56] 
   mul    r14
   add    r9, rax
   adc    r10, rdx
@@ -1484,8 +1490,8 @@ rdc503_asm:
 //  503-bit multiprecision addition
 //  Operation: c [reg_p3] = a [reg_p1] + b [reg_p2]
 //*********************************************************************** 
-.global mp_add503_asm
-mp_add503_asm: 
+.global fmtunder(mp_add503_asm)
+fmtunder(mp_add503_asm): 
   mov    r8, [reg_p1]
   mov    r9, [reg_p1+8]
   mov    r10, [reg_p1+16]
@@ -1518,8 +1524,8 @@ mp_add503_asm:
 //  2x503-bit multiprecision subtraction/addition
 //  Operation: c [x2] = a [x0] - b [x1]. If c < 0, add p503*2^512
 //*********************************************************************** 
-.global mp_subadd503x2_asm
-mp_subadd503x2_asm:
+.global fmtunder(mp_subadd503x2_asm)
+fmtunder(mp_subadd503x2_asm):
   push   r12
   push   r13 
   push   r14 
@@ -1575,12 +1581,12 @@ mp_subadd503x2_asm:
   sbb    rax, 0
   
   // Add p503 anded with the mask in rax 
-  mov    r8, [rip+p503]
-  mov    r9, [rip+p503+24]
-  mov    r10, [rip+p503+32]
-  mov    r11, [rip+p503+40]
-  mov    rdi, [rip+p503+48]
-  mov    rsi, [rip+p503+56]
+  mov    r8, [rip+fmtunder(p503)]
+  mov    r9, [rip+fmtunder(p503)+24]
+  mov    r10, [rip+fmtunder(p503)+32]
+  mov    r11, [rip+fmtunder(p503)+40]
+  mov    rdi, [rip+fmtunder(p503)+48]
+  mov    rsi, [rip+fmtunder(p503)+56]
   and    r8, rax
   and    r9, rax
   and    r10, rax
@@ -1619,8 +1625,8 @@ mp_subadd503x2_asm:
 //  Double 2x503-bit multiprecision subtraction
 //  Operation: c [reg_p3] = c [reg_p3] - a [reg_p1] - b [reg_p2]
 //*********************************************************************** 
-.global mp_dblsub503x2_asm
-mp_dblsub503x2_asm:
+.global fmtunder(mp_dblsub503x2_asm)
+fmtunder(mp_dblsub503x2_asm):
   push   r12
   push   r13
   push   r14

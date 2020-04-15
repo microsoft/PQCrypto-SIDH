@@ -31,13 +31,19 @@
 #endif
 
 
+#if defined(__ASM_UNDER__)
+# define fmtunder(s) _##s
+#else
+# define fmtunder(s) s
+#endif
+
 .text
 //***********************************************************************
 //  Field addition
 //  Operation: c [reg_p3] = a [reg_p1] + b [reg_p2]
 //*********************************************************************** 
-.global fpadd434_asm
-fpadd434_asm:
+.global fmtunder(fpadd434_asm)
+fmtunder(fpadd434_asm):
   push   r12
   push   r13
   push   r14
@@ -61,18 +67,18 @@ fpadd434_asm:
   adc    r13, [reg_p2+40] 
   adc    r14, [reg_p2+48]
 
-  mov    rbx, [rip+p434x2]
+  mov    rbx, [rip+fmtunder(p434x2)]
   sub    r8, rbx
-  mov    rcx, [rip+p434x2+8]
+  mov    rcx, [rip+fmtunder(p434x2)+8]
   sbb    r9, rcx
   sbb    r10, rcx
-  mov    rdi, [rip+p434x2+24]
+  mov    rdi, [rip+fmtunder(p434x2)+24]
   sbb    r11, rdi
-  mov    rsi, [rip+p434x2+32]
+  mov    rsi, [rip+fmtunder(p434x2)+32]
   sbb    r12, rsi
-  mov    rbp, [rip+p434x2+40]
+  mov    rbp, [rip+fmtunder(p434x2)+40]
   sbb    r13, rbp
-  mov    r15, [rip+p434x2+48]
+  mov    r15, [rip+fmtunder(p434x2)+48]
   sbb    r14, r15
   sbb    rax, 0
   
@@ -111,8 +117,8 @@ fpadd434_asm:
 //  Field subtraction
 //  Operation: c [reg_p3] = a [reg_p1] - b [reg_p2]
 //*********************************************************************** 
-.global fpsub434_asm
-fpsub434_asm:
+.global fmtunder(fpsub434_asm)
+fmtunder(fpsub434_asm):
   push   r12
   push   r13
   push   r14
@@ -134,9 +140,9 @@ fpsub434_asm:
   sbb    r14, [reg_p2+48]
   sbb    rax, 0
   
-  mov    rcx, [rip+p434x2]
-  mov    rdi, [rip+p434x2+8]
-  mov    rsi, [rip+p434x2+24]
+  mov    rcx, [rip+fmtunder(p434x2)]
+  mov    rdi, [rip+fmtunder(p434x2)+8]
+  mov    rsi, [rip+fmtunder(p434x2)+24]
   and    rcx, rax
   and    rdi, rax
   and    rsi, rax  
@@ -150,9 +156,9 @@ fpsub434_asm:
   mov    [reg_p3+24], r11 
   setc   cl  
 
-  mov    r8, [rip+p434x2+32]
-  mov    rdi, [rip+p434x2+40]
-  mov    rsi, [rip+p434x2+48]
+  mov    r8, [rip+fmtunder(p434x2)+32]
+  mov    rdi, [rip+fmtunder(p434x2)+40]
+  mov    rsi, [rip+fmtunder(p434x2)+48]
   and    r8, rax
   and    rdi, rax
   and    rsi, rax  
@@ -410,8 +416,8 @@ fpsub434_asm:
 //*****************************************************************************
 //  434-bit multiplication using Karatsuba (one level), schoolbook (one level)
 //***************************************************************************** 
-.global mul434_asm
-mul434_asm:    
+.global fmtunder(mul434_asm)
+fmtunder(mul434_asm):    
     push   r12
     push   r13 
     push   r14 
@@ -660,13 +666,13 @@ mul434_asm:
 //  Operation: c [reg_p2] = a [reg_p1]
 //  NOTE: a=c is not allowed
 //************************************************************************************** 
-.global rdc434_asm
-rdc434_asm:
+.global fmtunder(rdc434_asm)
+fmtunder(rdc434_asm):
     push   r12
     push   r13 
 
-    // a[0-1] x p434p1_nz --> result: r8:r13 
-    MUL128x256_SCHOOL [reg_p1], [rip+p434p1+24], r8, r9, r10, r11, r12, r13, rcx     
+    // a[0-1] x fmtunder(p434p1)_nz --> result: r8:r13 
+    MUL128x256_SCHOOL [reg_p1], [rip+fmtunder(p434p1)+24], r8, r9, r10, r11, r12, r13, rcx     
 
     xor    rcx, rcx
     add    r8, [reg_p1+24]  
@@ -696,8 +702,8 @@ rdc434_asm:
     mov    [reg_p1+96], r10
     mov    [reg_p1+104], r11
 
-    // a[2-3] x p434p1_nz --> result: r8:r13
-    MUL128x256_SCHOOL [reg_p1+16], [rip+p434p1+24], r8, r9, r10, r11, r12, r13, rcx 
+    // a[2-3] x fmtunder(p434p1)_nz --> result: r8:r13
+    MUL128x256_SCHOOL [reg_p1+16], [rip+fmtunder(p434p1)+24], r8, r9, r10, r11, r12, r13, rcx 
 
     xor    rcx, rcx
     add    r8, [reg_p1+40]  
@@ -721,8 +727,8 @@ rdc434_asm:
     mov    [reg_p1+96], r8  
     mov    [reg_p1+104], r9
 
-    // a[4-5] x p434p1_nz --> result: r8:r13
-    MUL128x256_SCHOOL [reg_p1+32], [rip+p434p1+24], r8, r9, r10, r11, r12, r13, rcx  
+    // a[4-5] x fmtunder(p434p1)_nz --> result: r8:r13
+    MUL128x256_SCHOOL [reg_p1+32], [rip+fmtunder(p434p1)+24], r8, r9, r10, r11, r12, r13, rcx  
 
     xor    rcx, rcx
     add    r8, [reg_p1+56]  
@@ -740,8 +746,8 @@ rdc434_asm:
     mov    [reg_p1+96], r13  
     mov    [reg_p1+104], rcx
 
-    // a[6-7] x p434p1_nz --> result: r8:r12
-    MUL64x256_SCHOOL [reg_p1+48], [rip+p434p1+24], r8, r9, r10, r11, r12, r13  
+    // a[6-7] x fmtunder(p434p1)_nz --> result: r8:r12
+    MUL64x256_SCHOOL [reg_p1+48], [rip+fmtunder(p434p1)+24], r8, r9, r10, r11, r12, r13  
     
     // Final result c2:c6
     add    r8, [reg_p1+72]  
@@ -781,8 +787,8 @@ rdc434_asm:
 //  434-bit multiprecision addition
 //  Operation: c [reg_p3] = a [reg_p1] + b [reg_p2]
 //*********************************************************************** 
-.global mp_add434_asm
-mp_add434_asm: 
+.global fmtunder(mp_add434_asm)
+fmtunder(mp_add434_asm): 
   mov    r8, [reg_p1]
   mov    r9, [reg_p1+8]
   mov    r10, [reg_p1+16]
@@ -812,8 +818,8 @@ mp_add434_asm:
 //  2x434-bit multiprecision subtraction/addition
 //  Operation: c [x2] = a [x0] - b [x1]. If c < 0, add p434*2^448
 //*********************************************************************** 
-.global mp_subadd434x2_asm
-mp_subadd434x2_asm:
+.global fmtunder(mp_subadd434x2_asm)
+fmtunder(mp_subadd434x2_asm):
   push   r12
   push   r13 
   push   r14 
@@ -860,11 +866,11 @@ mp_subadd434x2_asm:
   sbb    rax, 0
   
   // Add p434 anded with the mask in rax 
-  mov    r8, [rip+p434]
-  mov    r9, [rip+p434+24]
-  mov    r10, [rip+p434+32]
-  mov    rdi, [rip+p434+40]
-  mov    rsi, [rip+p434+48]
+  mov    r8, [rip+fmtunder(p434)]
+  mov    r9, [rip+fmtunder(p434)+24]
+  mov    r10, [rip+fmtunder(p434)+32]
+  mov    rdi, [rip+fmtunder(p434)+40]
+  mov    rsi, [rip+fmtunder(p434)+48]
   and    r8, rax
   and    r9, rax
   and    r10, rax
@@ -897,8 +903,8 @@ mp_subadd434x2_asm:
 //  Double 2x434-bit multiprecision subtraction
 //  Operation: c [reg_p3] = c [reg_p3] - a [reg_p1] - b [reg_p2]
 //*********************************************************************** 
-.global mp_dblsub434x2_asm
-mp_dblsub434x2_asm:
+.global fmtunder(mp_dblsub434x2_asm)
+fmtunder(mp_dblsub434x2_asm):
   push   r12
   push   r13
   
