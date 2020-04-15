@@ -6,6 +6,7 @@
 
 #include "P503_compressed_api.h" 
 #define COMPRESS
+#define COMPRESS_SPEED
 #include "P503_internal.h"
 
 
@@ -364,12 +365,10 @@ const uint64_t v_3_torsion[20][2 * NWORDS64_FIELD] =
 #define EphemeralKeyGeneration_A      EphemeralKeyGeneration_A_SIDHp503_Compressed
 #define EphemeralKeyGeneration_B      EphemeralKeyGeneration_B_SIDHp503_Compressed
 #define EphemeralSecretAgreement_A    EphemeralSecretAgreement_A_SIDHp503_Compressed
-#define EphemeralSecretAgreement_B    EphemeralSecretAgreement_B_SIDHp503_Compressed 
+#define EphemeralSecretAgreement_B    EphemeralSecretAgreement_B_SIDHp503_Compressed
 #define crypto_kem_keypair            crypto_kem_keypair_SIKEp503_compressed
 #define crypto_kem_enc                crypto_kem_enc_SIKEp503_compressed
 #define crypto_kem_dec                crypto_kem_dec_SIKEp503_compressed
-#define cryptorun_benchs              cryptorun_benchs_SIKEp503_compressed
-
 
 #include "../fpx.c"
 #include "../ec_isogeny.c"

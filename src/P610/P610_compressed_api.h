@@ -1,42 +1,42 @@
 /********************************************************************************************
 * SIDH: an efficient supersingular isogeny cryptography library
 *
-* Abstract: API header file for P610 using compression
+* Abstract: API header file for P610 using compression with ciphertext vs decaps. speed tradeoff
 *********************************************************************************************/  
 
-#ifndef P610_COMPRESSED_API_H
-#define P610_COMPRESSED_API_H
+#ifndef P610_COMPRESSED_SPEED_API_H
+#define P610_COMPRESSED_SPEED_API_H
     
 
 /*********************** Key encapsulation mechanism API ***********************/
 
-#define CRYPTO_SECRETKEYBYTES     337      // MSG_BYTES + SECRETKEY_A_BYTES + CRYPTO_PUBLICKEYBYTES bytes
-#define CRYPTO_PUBLICKEYBYTES     274      // 3*ORDER_B_ENCODED_BYTES + FP2_ENCODED_BYTES + 2 bytes for shared elligator
+#define CRYPTO_SECRETKEYBYTES     491      // MSG_BYTES + SECRETKEY_A_BYTES + CRYPTO_PUBLICKEYBYTES + FP2_ENCODED_BYTES bytes
+#define CRYPTO_PUBLICKEYBYTES     274      // 3*ORDER_B_ENCODED_BYTES + FP2_ENCODED_BYTES + 3 bytes for shared elligator
 #define CRYPTO_BYTES               24
-#define CRYPTO_CIPHERTEXTBYTES    297      // COMPRESSED_CHUNK_CT + MSG_BYTES bytes     
+#define CRYPTO_CIPHERTEXTBYTES    336      // COMPRESSED_CHUNK_CT + MSG_BYTES bytes     
 
 // Algorithm name
 #define CRYPTO_ALGNAME "SIKEp610_compressed"  
 
 // SIKE's key generation
 // It produces a private key sk and computes the public key pk.
-// Outputs: secret key sk (CRYPTO_SECRETKEYBYTES = 337 bytes)
+// Outputs: secret key sk (CRYPTO_SECRETKEYBYTES = 491 bytes)
 //          public key pk (CRYPTO_PUBLICKEYBYTES = 274 bytes) 
 int crypto_kem_keypair_SIKEp610_compressed(unsigned char *pk, unsigned char *sk);
 
 // SIKE's encapsulation
 // Input:   public key pk         (CRYPTO_PUBLICKEYBYTES = 274 bytes)
 // Outputs: shared secret ss      (CRYPTO_BYTES = 24 bytes)
-//          ciphertext message ct (CRYPTO_CIPHERTEXTBYTES = 297 bytes) 
+//          ciphertext message ct (CRYPTO_CIPHERTEXTBYTES = 336 bytes) 
 int crypto_kem_enc_SIKEp610_compressed(unsigned char *ct, unsigned char *ss, const unsigned char *pk);
 
 // SIKE's decapsulation
-// Input:   secret key sk         (CRYPTO_SECRETKEYBYTES = 337 bytes)
-//          ciphertext message ct (CRYPTO_CIPHERTEXTBYTES = 297 bytes) 
+// Input:   secret key sk         (CRYPTO_SECRETKEYBYTES = 491 bytes)
+//          ciphertext message ct (CRYPTO_CIPHERTEXTBYTES = 336 bytes) 
 // Outputs: shared secret ss      (CRYPTO_BYTES = 24 bytes)
 int crypto_kem_dec_SIKEp610_compressed(unsigned char *ss, const unsigned char *ct, const unsigned char *sk);
 
-void cryptorun_benchs_SIKEp610_compressed();
+
 
 // Encoding of keys for KEM-based isogeny system "SIKEp610" (wire format):
 // ----------------------------------------------------------------------
@@ -44,10 +44,10 @@ void cryptorun_benchs_SIKEp610_compressed();
 // Elements (a+b*i) over GF(p610^2), where a and b are defined over GF(p610), are encoded as {a, b}, with a in the lowest memory portion.
 //
 // Private keys sk consist of the concatenation of a 24-byte random value, a value in the range [0, 2^305-1] and the public key pk. In the SIKE API, 
-// private keys are encoded in 337 octets in little endian format. 
+// private keys are encoded in 491 octets in little endian format. 
 // Public keys pk consist of 3 values of length OBOB_BITS, one element in GF(p610^2) and 2 bytes. In the SIKE API, pk is encoded in 274 octets.
-// Ciphertexts ct consist of the concatenation of 3 values of length OALICE_BITS, one element in GF(p610^2), 2 bytes and a 24-byte value. In the SIKE API, 
-// ct is encoded in 274 + 24 = 297 octets.  
+// Ciphertexts ct consist of the concatenation of 4 values of length OALICE_BITS, one element in GF(p610^2), 2 bytes and a 24-byte value. In the SIKE API, 
+// ct is encoded in 274 + 24 = 336 octets.  
 // Shared keys ss consist of a value of 24 octets.
 
 
@@ -73,7 +73,7 @@ void random_mod_order_B_SIDHp610(unsigned char* random_digits);
 // Alice's ephemeral public key generation
 // Input:  a private key PrivateKeyA in the range [0, 2^305 - 1], stored in 39 bytes. 
 // Output: the public key PublicKeyA consisting of 3 GF(p610^2) elements encoded in 274 bytes.
-int EphemeralKeyGeneration_A_SIDHp610_Compressed(const unsigned char* PrivateKeyA, unsigned char* PublicKeyA);
+int EphemeralKeyGeneration_A_SIDHp610_Compressed(unsigned char* PrivateKeyA, unsigned char* PublicKeyA);
 
 // Bob's ephemeral key-pair generation
 // It produces a private key PrivateKeyB and computes the public key PublicKeyB.
@@ -86,7 +86,7 @@ int EphemeralKeyGeneration_B_SIDHp610_Compressed(const unsigned char* PrivateKey
 // Inputs: Alice's PrivateKeyA is an integer in the range [0, 2^305 - 1], stored in 39 bytes. 
 //         Bob's PublicKeyB consists of 3 GF(p610^2) elements encoded in 274 bytes.
 // Output: a shared secret SharedSecretA that consists of one element in GF(p610^2) encoded in 154 bytes.
-int EphemeralSecretAgreement_A_SIDHp610_Compressed(const unsigned char* PrivateKeyA, const unsigned char* PublicKeyB, unsigned char* SharedSecretA);
+int EphemeralSecretAgreement_A_SIDHp610_Compressed(const unsigned char* PrivateKeyA, const unsigned char* PublicKeyB, unsigned char* SharedSecretA, unsigned char* phiBKA_t);
 
 // Bob's ephemeral shared secret computation
 // It produces a shared secret key SharedSecretB using his secret key PrivateKeyB and Alice's public key PublicKeyA
