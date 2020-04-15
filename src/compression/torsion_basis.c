@@ -262,34 +262,6 @@ void sqrtinv2(const f2elm_t v, const f2elm_t z, f2elm_t s, f2elm_t invz)
 }
 
 
-void CompleteMPoint(const f2elm_t A, point_proj_t P, point_full_proj_t R)
-{ // Given an xz-only representation on a montgomery curve, compute its affine representation
-    f2elm_t zero = {0}, one = {0}, xz, yz, s2, r2, invz, temp0, temp1;
-    fpcopy((digit_t*)&Montgomery_one,one[0]);
-    
-    if (memcmp(P->Z[0],zero,NBITS_TO_NBYTES(NBITS_FIELD)) != 0 || memcmp(P->Z[1],zero,NBITS_TO_NBYTES(NBITS_FIELD)) != 0) {
-        fp2mul_mont(P->X,P->Z,xz);       // xz = x*z;
-        fpsub(P->X[0],P->Z[1],temp0[0]);
-        fpadd(P->X[1],P->Z[0],temp0[1]);
-        fpadd(P->X[0],P->Z[1],temp1[0]);
-        fpsub(P->X[1],P->Z[0],temp1[1]);        
-        fp2mul_mont(temp0,temp1,s2);     // s2 = (x + i*z)*(x - i*z);
-        fp2mul_mont(A,xz,temp0);
-        fp2add(temp0,s2,temp1);
-        fp2mul_mont(xz,temp1,r2);        // r2 = xz*(A*xz + s2);
-        sqrtinv2(r2,P->Z,yz,invz);        
-        fp2mul_mont(P->X,invz,R->X);
-        fp2sqr_mont(invz,temp0);
-        fp2mul_mont(yz,temp0,R->Y);      // R = EM![x*invz, yz*invz^2];
-        fp2copy(one,R->Z);
-    } else {
-        fp2copy(zero,R->X);
-        fp2copy(one,R->Y); 
-        fp2copy(zero,R->Z);              // R = EM!0;
-    }
-}
-
-
 void BasePoint3n(f2elm_t A, unsigned int *r, point_proj_t P, point_proj_t Q)
 { // xz-only construction of a point of order 3^n in the Montgomery curve y^2 = x^3 + A*x^2 + x from base counter r.
   // This is essentially the Elligator 2 technique coupled with cofactor multiplication and LI checking.

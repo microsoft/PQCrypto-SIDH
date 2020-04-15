@@ -11,14 +11,20 @@
 #define reg_p2  rsi
 #define reg_p3  rdx
 
+#if defined(__ASM_UNDER__)
+# define fmtunder(s) _##s
+#else
+# define fmtunder(s) s
+#endif
+
 
 .text
 //***********************************************************************
 //  Field addition
 //  Operation: c [reg_p3] = a [reg_p1] + b [reg_p2]
 //*********************************************************************** 
-.global fpadd610_asm
-fpadd610_asm:
+.global fmtunder(fpadd610_asm)
+fmtunder(fpadd610_asm):
   push   r12
   push   r13
   push   r14
@@ -45,32 +51,32 @@ fpadd610_asm:
   adc    rcx, [reg_p2+64]
   adc    rdi, [reg_p2+72]
 
-  mov    rax, [rip+p610x2]
+  mov    rax, [rip+fmtunder(p610x2)]
   sub    r8, rax
-  mov    rax, [rip+p610x2+8]
+  mov    rax, [rip+fmtunder(p610x2)+8]
   sbb    r9, rax
   sbb    r10, rax
   sbb    r11, rax
-  mov    rax, [rip+p610x2+32]
+  mov    rax, [rip+fmtunder(p610x2)+32]
   sbb    r12, rax
-  mov    rax, [rip+p610x2+40]
+  mov    rax, [rip+fmtunder(p610x2)+40]
   sbb    r13, rax
-  mov    rax, [rip+p610x2+48]
+  mov    rax, [rip+fmtunder(p610x2)+48]
   sbb    r14, rax
-  mov    rax, [rip+p610x2+56]
+  mov    rax, [rip+fmtunder(p610x2)+56]
   sbb    r15, rax
-  mov    rax, [rip+p610x2+64]
+  mov    rax, [rip+fmtunder(p610x2)+64]
   sbb    rcx, rax
-  mov    rax, [rip+p610x2+72]
+  mov    rax, [rip+fmtunder(p610x2)+72]
   sbb    rdi, rax
   mov    [reg_p3+64], rcx
   mov    [reg_p3+72], rdi
   mov    rax, 0
   sbb    rax, 0
   
-  mov    rsi, [rip+p610x2]
+  mov    rsi, [rip+fmtunder(p610x2)]
   and    rsi, rax
-  mov    rdi, [rip+p610x2+8]
+  mov    rdi, [rip+fmtunder(p610x2)+8]
   and    rdi, rax
   
   add    r8, rsi  
@@ -83,17 +89,17 @@ fpadd610_asm:
   mov    [reg_p3+24], r11 
   setc   cl
   
-  mov    rdi, [rip+p610x2+32]
+  mov    rdi, [rip+fmtunder(p610x2)+32]
   and    rdi, rax
-  mov    rsi, [rip+p610x2+40]
+  mov    rsi, [rip+fmtunder(p610x2)+40]
   and    rsi, rax
-  mov    r8, [rip+p610x2+48]
+  mov    r8, [rip+fmtunder(p610x2)+48]
   and    r8, rax
-  mov    r9, [rip+p610x2+56]
+  mov    r9, [rip+fmtunder(p610x2)+56]
   and    r9, rax
-  mov    r10, [rip+p610x2+64]
+  mov    r10, [rip+fmtunder(p610x2)+64]
   and    r10, rax
-  mov    r11, [rip+p610x2+72]
+  mov    r11, [rip+fmtunder(p610x2)+72]
   and    r11, rax
   
   bt     rcx, 0
@@ -123,8 +129,8 @@ fpadd610_asm:
 //  Field subtraction
 //  Operation: c [reg_p3] = a [reg_p1] - b [reg_p2]
 //*********************************************************************** 
-.global fpsub610_asm
-fpsub610_asm:
+.global fmtunder(fpsub610_asm)
+fmtunder(fpsub610_asm):
   push   r12
   push   r13
   push   r14
@@ -155,9 +161,9 @@ fpsub610_asm:
   mov    rax, 0
   sbb    rax, 0
     
-  mov    rsi, [rip+p610x2]
+  mov    rsi, [rip+fmtunder(p610x2)]
   and    rsi, rax
-  mov    rdi, [rip+p610x2+8]
+  mov    rdi, [rip+fmtunder(p610x2)+8]
   and    rdi, rax
   
   add    r8, rsi  
@@ -170,17 +176,17 @@ fpsub610_asm:
   mov    [reg_p3+24], r11 
   setc   cl
   
-  mov    rdi, [rip+p610x2+32]
+  mov    rdi, [rip+fmtunder(p610x2)+32]
   and    rdi, rax
-  mov    rsi, [rip+p610x2+40]
+  mov    rsi, [rip+fmtunder(p610x2)+40]
   and    rsi, rax
-  mov    r8, [rip+p610x2+48]
+  mov    r8, [rip+fmtunder(p610x2)+48]
   and    r8, rax
-  mov    r9, [rip+p610x2+56]
+  mov    r9, [rip+fmtunder(p610x2)+56]
   and    r9, rax
-  mov    r10, [rip+p610x2+64]
+  mov    r10, [rip+fmtunder(p610x2)+64]
   and    r10, rax
-  mov    r11, [rip+p610x2+72]
+  mov    r11, [rip+fmtunder(p610x2)+72]
   and    r11, rax
   
   bt     rcx, 0
@@ -426,8 +432,8 @@ fpsub610_asm:
 //*****************************************************************************
 //  610-bit multiplication using Karatsuba (one level), schoolbook (two levels)
 //***************************************************************************** 
-.global mul610_asm
-mul610_asm:    
+.global fmtunder(mul610_asm)
+fmtunder(mul610_asm):    
     push   r12
     push   r13 
     push   r14 
@@ -621,8 +627,8 @@ mul610_asm:
 //  Operation: c [reg_p3] = a [reg_p1] * b [reg_p2]
 //  NOTE: a=c or b=c are not allowed
 //***********************************************************************
-.global mul610_asm
-mul610_asm:
+.global fmtunder(mul610_asm)
+fmtunder(mul610_asm):
 
   ret
 
@@ -757,15 +763,15 @@ mul610_asm:
 //  Operation: c [reg_p2] = a [reg_p1]
 //  NOTE: a=c is not allowed
 //************************************************************************************** 
-.global rdc610_asm
-rdc610_asm:
+.global fmtunder(rdc610_asm)
+fmtunder(rdc610_asm):
     push   r12
     push   r13 
     push   r14 
     push   r15  
 
     // a[0-1] x p610p1_nz --> result: r8:r15 
-    MUL128x384_SCHOOL [reg_p1], [rip+p610p1+32], r8, r9, r10, r11, r12, r13, r14, r15, rcx     
+    MUL128x384_SCHOOL [reg_p1], [rip+fmtunder(p610p1)+32], r8, r9, r10, r11, r12, r13, r14, r15, rcx     
 
     xor    rcx, rcx
     add    r8, [reg_p1+32]  
@@ -809,7 +815,7 @@ rdc610_asm:
     mov    [reg_p1+152], r14
 
     // a[2-3] x p610p1_nz --> result: r8:r15
-    MUL128x384_SCHOOL [reg_p1+16], [rip+p610p1+32], r8, r9, r10, r11, r12, r13, r14, r15, rcx 
+    MUL128x384_SCHOOL [reg_p1+16], [rip+fmtunder(p610p1)+32], r8, r9, r10, r11, r12, r13, r14, r15, rcx 
 
     xor    rcx, rcx
     add    r8, [reg_p1+48]  
@@ -847,7 +853,7 @@ rdc610_asm:
     mov    [reg_p1+152], r12 
 
     // a[4-5] x p610p1_nz --> result: r8:r15
-    MUL128x384_SCHOOL [reg_p1+32], [rip+p610p1+32], r8, r9, r10, r11, r12, r13, r14, r15, rcx 
+    MUL128x384_SCHOOL [reg_p1+32], [rip+fmtunder(p610p1)+32], r8, r9, r10, r11, r12, r13, r14, r15, rcx 
 
     xor    rcx, rcx
     add    r8, [reg_p1+64]  
@@ -879,7 +885,7 @@ rdc610_asm:
     mov    [reg_p1+152], r10 
 
     // a[6-7] x p610p1_nz --> result: r8:r15
-    MUL128x384_SCHOOL [reg_p1+48], [rip+p610p1+32], r8, r9, r10, r11, r12, r13, r14, r15, rcx 
+    MUL128x384_SCHOOL [reg_p1+48], [rip+fmtunder(p610p1)+32], r8, r9, r10, r11, r12, r13, r14, r15, rcx 
 
     xor    rcx, rcx
     add    r8, [reg_p1+80]  
@@ -905,7 +911,7 @@ rdc610_asm:
     mov    [reg_p1+152], r8
 
     // a[8-9] x p610p1_nz --> result: r8:r15
-    MUL128x384_SCHOOL [reg_p1+64], [rip+p610p1+32], r8, r9, r10, r11, r12, r13, r14, r15, rcx
+    MUL128x384_SCHOOL [reg_p1+64], [rip+fmtunder(p610p1)+32], r8, r9, r10, r11, r12, r13, r14, r15, rcx
     
     // Final result C2:C9
     add    r8, [reg_p1+96]  
@@ -939,8 +945,8 @@ rdc610_asm:
 //  Operation: c [reg_p2] = a [reg_p1]
 //  NOTE: a=c is not allowed
 //*********************************************************************** 
-.global rdc610_asm
-rdc610_asm:
+.global fmtunder(rdc610_asm)
+fmtunder(rdc610_asm):
 
   ret
 
@@ -953,8 +959,8 @@ rdc610_asm:
 //  610-bit multiprecision addition
 //  Operation: c [reg_p3] = a [reg_p1] + b [reg_p2]
 //*********************************************************************** 
-.global mp_add610_asm
-mp_add610_asm:  
+.global fmtunder(mp_add610_asm)
+fmtunder(mp_add610_asm):  
   mov    r8, [reg_p1]
   mov    r9, [reg_p1+8]
   mov    r10, [reg_p1+16]
@@ -993,8 +999,8 @@ mp_add610_asm:
 //  2x610-bit multiprecision subtraction/addition
 //  Operation: c [x2] = a [x0] - b [x1]. If c < 0, add p610*2^640
 //*********************************************************************** 
-.global mp_subadd610x2_asm
-mp_subadd610x2_asm:
+.global fmtunder(mp_subadd610x2_asm)
+fmtunder(mp_subadd610x2_asm):
   push   r12
   push   r13 
   push   r14 
@@ -1062,13 +1068,13 @@ mp_subadd610x2_asm:
   sbb    rax, 0
   
   // Add p610 anded with the mask in rax 
-  mov    r12, [rip+p610]
-  mov    r13, [rip+p610+32]
-  mov    r14, [rip+p610+40]
-  mov    r15, [rip+p610+48]
-  mov    rdi, [rip+p610+56]
-  mov    rsi, [rip+p610+64]
-  mov    rbx, [rip+p610+72]
+  mov    r12, [rip+fmtunder(p610)]
+  mov    r13, [rip+fmtunder(p610)+32]
+  mov    r14, [rip+fmtunder(p610)+40]
+  mov    r15, [rip+fmtunder(p610)+48]
+  mov    rdi, [rip+fmtunder(p610)+56]
+  mov    rsi, [rip+fmtunder(p610)+64]
+  mov    rbx, [rip+fmtunder(p610)+72]
   and    r12, rax
   and    r13, rax
   and    r14, rax
@@ -1112,8 +1118,8 @@ mp_subadd610x2_asm:
 //  Double 2x610-bit multiprecision subtraction
 //  Operation: c [reg_p3] = c [reg_p3] - a [reg_p1] - b [reg_p2]
 //*********************************************************************** 
-.global mp_dblsub610x2_asm
-mp_dblsub610x2_asm:
+.global fmtunder(mp_dblsub610x2_asm)
+fmtunder(mp_dblsub610x2_asm):
   push   r12
   push   r13
   push   r14

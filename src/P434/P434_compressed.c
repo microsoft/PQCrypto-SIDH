@@ -6,6 +6,7 @@
 
 #include "P434_compressed_api.h" 
 #define COMPRESS
+#define COMPRESS_SPEED
 #include "P434_internal.h"
 
 
@@ -171,8 +172,12 @@ const unsigned int ph2_path[PLEN_2] = { // w_2 = 4
 27, 27, 28, 28, 28, 28, 28, 29, 30, 31, 32, 33, 34, 34, 35
 };
 
-const unsigned int ph3_path[PLEN_3] = { // w_3 = 5
+const unsigned int ph3_path[PLEN_3] = {
+#if W_3 == 4
+0, 0, 1, 2, 3, 4, 4, 5, 5, 6, 7, 7, 8, 9, 10, 10, 11, 12, 13, 14, 14, 14, 15, 16, 17, 18, 19, 19, 19, 19, 20, 21, 22, 23, 24, 25
+#elif W_3 == 5        
 0, 0, 1, 2, 3, 4, 5, 5, 6, 6, 7, 8, 8, 9, 10, 11, 11, 12, 13, 14, 15, 15, 16, 17, 18, 19, 20, 20, 20
+#endif      
 };
 
 // Entangled bases related static tables and parameters
@@ -357,7 +362,7 @@ const uint64_t v_3_torsion[20][2 * NWORDS64_FIELD] =
 #define EphemeralKeyGeneration_A      EphemeralKeyGeneration_A_SIDHp434_Compressed
 #define EphemeralKeyGeneration_B      EphemeralKeyGeneration_B_SIDHp434_Compressed
 #define EphemeralSecretAgreement_A    EphemeralSecretAgreement_A_SIDHp434_Compressed
-#define EphemeralSecretAgreement_B    EphemeralSecretAgreement_B_SIDHp434_Compressed 
+#define EphemeralSecretAgreement_B    EphemeralSecretAgreement_B_SIDHp434_Compressed
 #define crypto_kem_keypair            crypto_kem_keypair_SIKEp434_compressed
 #define crypto_kem_enc                crypto_kem_enc_SIKEp434_compressed
 #define crypto_kem_dec                crypto_kem_dec_SIKEp434_compressed
