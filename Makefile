@@ -1,4 +1,4 @@
-####  Makefile for compilation on Linux  ####
+####  Makefile for compilation on Unix-like operative systems  ####
 
 OPT=-O3     # Optimization option by default
 
@@ -11,15 +11,6 @@ endif
 
 ARCHITECTURE=_AMD64_
 USE_OPT_LEVEL=_FAST_
-
-OS_ARGS=__LINUX__
-
-ifeq "$(OS)" "LINUX"
-    OS_ARGS=__LINUX__
-else ifeq "$(OS)" "OSX"
-    OS_ARGS=__LINUX__ -D __ASM_UNDER__
-endif
-
 ifeq "$(ARCH)" "x64"
     ARCHITECTURE=_AMD64_
     USE_OPT_LEVEL=_FAST_
@@ -34,9 +25,6 @@ else ifeq "$(ARCH)" "ARM64"
     ARCHITECTURE=_ARM64_
     USE_OPT_LEVEL=_FAST_
     ARM_TARGET=YES
-else ifeq "$(ARCH)" "S390X"
-    ARCHITECTURE=_S390X_
-    USE_OPT_LEVEL=_GENERIC_
 endif
 
 ifeq "$(OPT_LEVEL)" "GENERIC"
@@ -64,23 +52,17 @@ endif
 AR=ar rcs
 RANLIB=ranlib
 
-ifeq "$(ARCHITECTURE)" "_S390X_"
-	ADDITIONAL_SETTINGS+=-march=z10
-	ENDIANNESS=_BIG_ENDIAN_
-else
-	ADDITIONAL_SETTINGS+=-march=native
-	ENDIANNESS=_LITTLE_ENDIAN_
-endif
-
+ADDITIONAL_SETTINGS=-march=native
 ifeq "$(CC)" "clang"
 ifeq "$(ARM_TARGET)" "YES"
     ADDITIONAL_SETTINGS=
 endif
 endif
+ifeq "$(ARCHITECTURE)" "_S390X_"
+	ADDITIONAL_SETTINGS=-march=z10
+endif
 
-ADDITIONAL_SETTINGS+= -std=c99
-
-CFLAGS=$(OPT) $(ADDITIONAL_SETTINGS) -D $(ARCHITECTURE) -D $(ENDIANNESS) -D $(OS_ARGS) -D $(USE_OPT_LEVEL) $(MULX) $(ADX)
+CFLAGS=$(OPT) -std=gnu11 $(ADDITIONAL_SETTINGS) -D $(ARCHITECTURE) -D __NIX__ -D $(USE_OPT_LEVEL) $(MULX) $(ADX)
 LDFLAGS=-lm
 ifeq "$(USE_OPT_LEVEL)" "_GENERIC_"
     EXTRA_OBJECTS_434=objs434/fp_generic.o
@@ -94,9 +76,9 @@ ifeq "$(ARCHITECTURE)" "_AMD64_"
     EXTRA_OBJECTS_610=objs610/fp_x64.o objs610/fp_x64_asm.o
     EXTRA_OBJECTS_751=objs751/fp_x64.o objs751/fp_x64_asm.o
 else ifeq "$(ARCHITECTURE)" "_ARM64_"
-    EXTRA_OBJECTS_434=objs434/fp_generic.o
+    EXTRA_OBJECTS_434=objs434/fp_arm64.o objs434/fp_arm64_asm.o
     EXTRA_OBJECTS_503=objs503/fp_arm64.o objs503/fp_arm64_asm.o
-    EXTRA_OBJECTS_610=objs610/fp_generic.o
+    EXTRA_OBJECTS_610=objs610/fp_arm64.o objs610/fp_arm64_asm.o
     EXTRA_OBJECTS_751=objs751/fp_arm64.o objs751/fp_arm64_asm.o
 endif
 endif
@@ -108,7 +90,6 @@ OBJECTS_434_COMP=objs434comp/P434_compressed.o $(EXTRA_OBJECTS_434) objs/random.
 OBJECTS_503_COMP=objs503comp/P503_compressed.o $(EXTRA_OBJECTS_503) objs/random.o objs/fips202.o
 OBJECTS_610_COMP=objs610comp/P610_compressed.o $(EXTRA_OBJECTS_610) objs/random.o objs/fips202.o
 OBJECTS_751_COMP=objs751comp/P751_compressed.o $(EXTRA_OBJECTS_751) objs/random.o objs/fips202.o
-
 
 all: lib434 lib503 lib610 lib751 lib434comp lib503comp lib610comp lib751comp tests KATS
 
@@ -143,7 +124,6 @@ objs610comp/%.o: src/P610/%.c
 objs751comp/%.o: src/P751/%.c
 	@mkdir -p $(@D)
 	$(CC) -c $(CFLAGS) $< -o $@
-
 
 ifeq "$(USE_OPT_LEVEL)" "_GENERIC_"		
     objs434/fp_generic.o: src/P434/generic/fp_generic.c
@@ -182,9 +162,12 @@ ifeq "$(ARCHITECTURE)" "_AMD64_"
 
     objs751/fp_x64_asm.o: src/P751/AMD64/fp_x64_asm.S
 	    $(CC) -c $(CFLAGS) src/P751/AMD64/fp_x64_asm.S -o objs751/fp_x64_asm.o
-else ifeq "$(ARCHITECTURE)" "_ARM64_"
-    objs434/fp_generic.o: src/P434/generic/fp_generic.c
-	    $(CC) -c $(CFLAGS) src/P434/generic/fp_generic.c -o objs434/fp_generic.o
+else ifeq "$(ARCHITECTURE)" "_ARM64_"	
+    objs434/fp_arm64.o: src/P434/ARM64/fp_arm64.c
+	    $(CC) -c $(CFLAGS) src/P434/ARM64/fp_arm64.c -o objs434/fp_arm64.o
+
+    objs434/fp_arm64_asm.o: src/P434/ARM64/fp_arm64_asm.S
+	    $(CC) -c $(CFLAGS) src/P434/ARM64/fp_arm64_asm.S -o objs434/fp_arm64_asm.o
 
     objs503/fp_arm64.o: src/P503/ARM64/fp_arm64.c
 	    $(CC) -c $(CFLAGS) src/P503/ARM64/fp_arm64.c -o objs503/fp_arm64.o
@@ -192,8 +175,11 @@ else ifeq "$(ARCHITECTURE)" "_ARM64_"
     objs503/fp_arm64_asm.o: src/P503/ARM64/fp_arm64_asm.S
 	    $(CC) -c $(CFLAGS) src/P503/ARM64/fp_arm64_asm.S -o objs503/fp_arm64_asm.o
 
-    objs610/fp_generic.o: src/P610/generic/fp_generic.c
-	    $(CC) -c $(CFLAGS) src/P610/generic/fp_generic.c -o objs610/fp_generic.o
+    objs610/fp_arm64.o: src/P610/ARM64/fp_arm64.c
+	    $(CC) -c $(CFLAGS) src/P610/ARM64/fp_arm64.c -o objs610/fp_arm64.o
+
+    objs610/fp_arm64_asm.o: src/P610/ARM64/fp_arm64_asm.S
+	    $(CC) -c $(CFLAGS) src/P610/ARM64/fp_arm64_asm.S -o objs610/fp_arm64_asm.o
 
     objs751/fp_arm64.o: src/P751/ARM64/fp_arm64.c
 	    $(CC) -c $(CFLAGS) src/P751/ARM64/fp_arm64.c -o objs751/fp_arm64.o
@@ -258,7 +244,6 @@ lib751comp: $(OBJECTS_751_COMP)
 	$(AR) lib751comp/libsidh.a $^
 	$(RANLIB) lib751comp/libsidh.a
 
-
 tests: lib434 lib434comp lib503 lib503comp lib610 lib610comp lib751 lib751comp
 	$(CC) $(CFLAGS) -L./lib434 tests/arith_tests-p434.c tests/test_extras.c -lsidh $(LDFLAGS) -o arith_tests-p434 $(ARM_SETTING)
 	$(CC) $(CFLAGS) -L./lib503 tests/arith_tests-p503.c tests/test_extras.c -lsidh $(LDFLAGS) -o arith_tests-p503 $(ARM_SETTING)
@@ -276,7 +261,6 @@ tests: lib434 lib434comp lib503 lib503comp lib610 lib610comp lib751 lib751comp
 	$(CC) $(CFLAGS) -L./lib503comp tests/test_SIKEp503_compressed.c tests/test_extras.c -lsidh $(LDFLAGS) -o sike503_compressed/test_SIKE $(ARM_SETTING)
 	$(CC) $(CFLAGS) -L./lib610comp tests/test_SIKEp610_compressed.c tests/test_extras.c -lsidh $(LDFLAGS) -o sike610_compressed/test_SIKE $(ARM_SETTING)
 	$(CC) $(CFLAGS) -L./lib751comp tests/test_SIKEp751_compressed.c tests/test_extras.c -lsidh $(LDFLAGS) -o sike751_compressed/test_SIKE $(ARM_SETTING)
-
 
 # AES
 AES_OBJS=objs/aes.o objs/aes_c.o
@@ -317,8 +301,7 @@ lib751comp_for_KATs: $(OBJECTS_751_COMP) $(AES_OBJS)
 	$(AR) lib751comp/libsidh_for_testing.a $^
 	$(RANLIB) lib751comp/libsidh_for_testing.a
 
-
-KATS: lib434_for_KATs lib503_for_KATs lib610_for_KATs lib751_for_KATs lib434comp_for_KATs lib503comp_for_KATs lib610comp_for_KATs lib751comp_for_KATs 
+KATS: lib434_for_KATs lib503_for_KATs lib610_for_KATs lib751_for_KATs lib434comp_for_KATs lib503comp_for_KATs lib610comp_for_KATs lib751comp_for_KATs
 	$(CC) $(CFLAGS) -L./lib434 tests/PQCtestKAT_kem434.c tests/rng/rng.c -lsidh_for_testing $(LDFLAGS) -o sike434/PQCtestKAT_kem $(ARM_SETTING)
 	$(CC) $(CFLAGS) -L./lib503 tests/PQCtestKAT_kem503.c tests/rng/rng.c -lsidh_for_testing $(LDFLAGS) -o sike503/PQCtestKAT_kem $(ARM_SETTING)
 	$(CC) $(CFLAGS) -L./lib610 tests/PQCtestKAT_kem610.c tests/rng/rng.c -lsidh_for_testing $(LDFLAGS) -o sike610/PQCtestKAT_kem $(ARM_SETTING)
@@ -327,7 +310,6 @@ KATS: lib434_for_KATs lib503_for_KATs lib610_for_KATs lib751_for_KATs lib434comp
 	$(CC) $(CFLAGS) -L./lib503comp tests/PQCtestKAT_kem503_compressed.c tests/rng/rng.c -lsidh_for_testing $(LDFLAGS) -o sike503_compressed/PQCtestKAT_kem $(ARM_SETTING)
 	$(CC) $(CFLAGS) -L./lib610comp tests/PQCtestKAT_kem610_compressed.c tests/rng/rng.c -lsidh_for_testing $(LDFLAGS) -o sike610_compressed/PQCtestKAT_kem $(ARM_SETTING)
 	$(CC) $(CFLAGS) -L./lib751comp tests/PQCtestKAT_kem751_compressed.c tests/rng/rng.c -lsidh_for_testing $(LDFLAGS) -o sike751_compressed/PQCtestKAT_kem $(ARM_SETTING)
-
 
 check: tests
 
