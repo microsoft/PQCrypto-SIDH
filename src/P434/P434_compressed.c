@@ -6,7 +6,6 @@
 
 #include "P434_compressed_api.h" 
 #define COMPRESS
-#define COMPRESS_SPEED
 #include "P434_internal.h"
 
 
@@ -24,10 +23,16 @@
          
 const uint64_t p434[NWORDS64_FIELD]              = { 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFDC1767AE2FFFFFF, 
                                                      0x7BC65C783158AEA3, 0x6CFC5FD681C52056, 0x0002341F27177344 };
-const uint64_t p434p1[NWORDS64_FIELD]            = { 0x0000000000000000, 0x0000000000000000, 0x0000000000000000, 0xFDC1767AE3000000,
-                                                     0x7BC65C783158AEA3, 0x6CFC5FD681C52056, 0x0002341F27177344 };
 const uint64_t p434x2[NWORDS64_FIELD]            = { 0xFFFFFFFFFFFFFFFE, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFB82ECF5C5FFFFFF,
                                                      0xF78CB8F062B15D47, 0xD9F8BFAD038A40AC, 0x0004683E4E2EE688 }; 
+const uint64_t p434x4[NWORDS64_FIELD]            = { 0xFFFFFFFFFFFFFFFC, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xF705D9EB8BFFFFFF, 
+                                                     0xEF1971E0C562BA8F, 0xB3F17F5A07148159, 0x0008D07C9C5DCD11 }; 
+const uint64_t p434p1[NWORDS64_FIELD]            = { 0x0000000000000000, 0x0000000000000000, 0x0000000000000000, 0xFDC1767AE3000000,
+                                                     0x7BC65C783158AEA3, 0x6CFC5FD681C52056, 0x0002341F27177344 };  
+const uint64_t p434x16p[2*NWORDS64_FIELD]        = { 0x0000000000000010, 0x0000000000000000, 0x0000000000000000, 0x47D130A3A0000000, 
+                                                     0x873470F9D4EA2B80, 0x6074052FC75BF530, 0x54497C1B1D119772, 0xC55F373D2CDCA412, 
+                                                     0x732CA2221C664B96, 0x6445AB96AF6359A5, 0x221708AB42ABE1B4, 0xAE3D3D0063244F01, 
+                                                     0x18B920F2ECF68816, 0x0000004DB194809D }; 
 // Order of Alice's subgroup
 const uint64_t Alice_order[NWORDS64_ORDER]       = { 0x0000000000000000, 0x0000000000000000, 0x0000000000000000, 0x0000000001000000 }; 
 // Order of Bob's subgroup
@@ -346,6 +351,9 @@ const uint64_t v_3_torsion[20][2 * NWORDS64_FIELD] =
 #define fp2zero                       fp2zero434
 #define fp2add                        fp2add434
 #define fp2sub                        fp2sub434
+#define mp_sub_p2                     mp_sub434_p2
+#define mp_sub_p4                     mp_sub434_p4
+#define sub_p4                        mp_sub_p4
 #define fp2neg                        fp2neg434
 #define fp2div2                       fp2div2_434
 #define fp2correction                 fp2correction434
@@ -362,7 +370,7 @@ const uint64_t v_3_torsion[20][2 * NWORDS64_FIELD] =
 #define EphemeralKeyGeneration_A      EphemeralKeyGeneration_A_SIDHp434_Compressed
 #define EphemeralKeyGeneration_B      EphemeralKeyGeneration_B_SIDHp434_Compressed
 #define EphemeralSecretAgreement_A    EphemeralSecretAgreement_A_SIDHp434_Compressed
-#define EphemeralSecretAgreement_B    EphemeralSecretAgreement_B_SIDHp434_Compressed
+#define EphemeralSecretAgreement_B    EphemeralSecretAgreement_B_SIDHp434_Compressed 
 #define crypto_kem_keypair            crypto_kem_keypair_SIKEp434_compressed
 #define crypto_kem_enc                crypto_kem_enc_SIKEp434_compressed
 #define crypto_kem_dec                crypto_kem_dec_SIKEp434_compressed

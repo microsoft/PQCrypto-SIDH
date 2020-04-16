@@ -19,6 +19,7 @@
 #define NROUNDS 24
 #define ROL(a, offset) ((a << offset) ^ (a >> (64-offset)))
 
+
 static uint64_t load64(const unsigned char *x)
 {
   return LETOH_64(*((uint64_t*)x));

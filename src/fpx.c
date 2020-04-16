@@ -6,106 +6,64 @@
 
 #include <string.h>
 
-static void digits_decode(const unsigned char* os, digit_t* digits, int osLen, int digitsLen)
-{
-    digits[digitsLen - 1] = 0;
-    memcpy((unsigned char*)digits, os, osLen);
-#ifdef _BIG_ENDIAN_
-    for (int i = 0, pos = 0; i < digitsLen; ++i)
-        digits[i] = BSWAP_DIGIT(digits[i]);
-#endif
-}
-
-static void digits_encode(const digit_t* digits, unsigned char* os, int digitsLen, int osLen)
-{
-#ifdef _LITTLE_ENDIAN_
-    memcpy(os, (const unsigned char*)digits, osLen);
-#else
-    int fd = osLen / sizeof(digit_t);
-    int rem = osLen % sizeof(digit_t);
-    for (int i = 0; i < fd; ++i)
-        ((digit_t*) os)[i] = BSWAP_DIGIT(digits[i]);
-    if (rem) {
-        digit_t ld = BSWAP_DIGIT(digits[fd]);
-        memcpy(os + fd*sizeof(digit_t), (unsigned char*) &ld, rem);
-    }
-#endif
-}
-
 
 void clear_words(void* mem, digit_t nwords)
 { // Clear digits from memory. "nwords" indicates the number of digits to be zeroed.
   // This function uses the volatile type qualifier to inform the compiler not to optimize out the memory clearing.
-    unsigned int i;
     volatile digit_t *v = mem; 
 
-    for (i = 0; i < nwords; i++) {
+    for (unsigned int i = 0; i < nwords; i++) {
         v[i] = 0;
     }
 }
 
 
-unsigned int cmp_f2elm(const f2elm_t x, const f2elm_t y)
-{ // Is x != y? return 1 (TRUE) if condition is true, 0 (FALSE) otherwise.
-  // SECURITY NOTE: This function does not run in constant-time.
-    int i;
-    f2elm_t a, b;
-    
-    fp2copy(x, a);
-    fp2copy(y, b);
-    fp2correction(a);
-    fp2correction(b);    
+__inline static void encode_to_bytes(const digit_t* x, unsigned char* enc, int nbytes)
+{ // Encoding digits to bytes according to endianness
+#ifdef _BIG_ENDIAN_
+    int ndigits = nbytes / sizeof(digit_t);
+    int rem = nbytes % sizeof(digit_t);
 
-    for (i = NWORDS_FIELD-1; i >= 0; i--) {
-        if (a[0][i] != b[0][i] || a[1][i] != b[1][i] )
-            return 1;
+    for (int i = 0; i < ndigits; i++)
+        ((digit_t*)enc)[i] = BSWAP_DIGIT(x[i]);
+    if (rem) {
+        digit_t ld = BSWAP_DIGIT(x[ndigits]);
+        memcpy(enc + ndigits*sizeof(digit_t), (unsigned char*)&ld, rem);
     }
-    return 0;
+#else    
+    memcpy(enc, (const unsigned char*)x, nbytes);
+#endif
 }
 
 
-static __inline unsigned int is_felm_even(const felm_t x)
-{ // Is x even? return 1 (TRUE) if condition is true, 0 (FALSE) otherwise.
-    return (unsigned int)((x[0] & 1) ^ 1);
-}
+__inline static void decode_to_digits(const unsigned char* x, digit_t* dec, int nbytes, int ndigits)
+{ // Decoding bytes to digits according to endianness
 
-
-static __inline unsigned int is_felm_lt(const felm_t x, const felm_t y)
-{ // Is x < y? return 1 (TRUE) if condition is true, 0 (FALSE) otherwise.
-  // SECURITY NOTE: This function does not run in constant-time.
-    int i;
-
-    for (i = NWORDS_FIELD-1; i >= 0; i--) {
-        if (x[i] < y[i]) { 
-            return true;
-        } else if (x[i] > y[i]) {
-            return false;
-        }
-    }
-    return false;
+    dec[ndigits - 1] = 0;
+    memcpy((unsigned char*)dec, x, nbytes);
+#ifdef _BIG_ENDIAN_
+    for (int i = 0; i < ndigits; i++)
+        dec[i] = BSWAP_DIGIT(dec[i]);
+#endif
 }
 
 
 static void fp2_encode(const f2elm_t x, unsigned char *enc)
 { // Conversion of GF(p^2) element from Montgomery to standard representation, and encoding by removing leading 0 bytes
-    unsigned int i;
     f2elm_t t;
 
     from_fp2mont(x, t);
-    digits_encode(t[0], enc, NWORDS_FIELD, FP2_ENCODED_BYTES / 2);
-    digits_encode(t[1], enc + FP2_ENCODED_BYTES / 2, NWORDS_FIELD, FP2_ENCODED_BYTES / 2);
+    encode_to_bytes(t[0], enc, FP2_ENCODED_BYTES / 2);
+    encode_to_bytes(t[1], enc + FP2_ENCODED_BYTES / 2, FP2_ENCODED_BYTES / 2);
 }
 
 
-static void fp2_decode(const unsigned char *enc, f2elm_t x)
+static void fp2_decode(const unsigned char *x, f2elm_t dec)
 { // Parse byte sequence back into GF(p^2) element, and conversion to Montgomery representation
-    unsigned int i;
 
-    for (i = 0; i < 2*(MAXBITS_FIELD / 8); i++) ((unsigned char *)x)[i] = 0;
-
-    digits_decode(enc, x[0], FP2_ENCODED_BYTES / 2, NWORDS_FIELD);
-    digits_decode(enc + FP2_ENCODED_BYTES / 2, x[1], FP2_ENCODED_BYTES / 2, NWORDS_FIELD);
-    to_fp2mont(x, x);
+    decode_to_digits(x, dec[0], FP2_ENCODED_BYTES / 2, NWORDS_FIELD);
+    decode_to_digits(x + FP2_ENCODED_BYTES / 2, dec[1], FP2_ENCODED_BYTES / 2, NWORDS_FIELD);
+    to_fp2mont(dec, dec);
 }
 
 
@@ -154,7 +112,6 @@ void copy_words(const digit_t* a, digit_t* c, const unsigned int nwords)
     for (i = 0; i < nwords; i++)                      
         c[i] = a[i];
 }
-
 
 void fpmul_mont(const felm_t ma, const felm_t mb, felm_t mc)
 { // Multiprecision multiplication, c = a*b mod p.
@@ -237,15 +194,48 @@ void fp2correction(f2elm_t a)
 
 __inline static void mp_addfast(const digit_t* a, const digit_t* b, digit_t* c)
 { // Multiprecision addition, c = a+b.    
-#if (OS_TARGET == OS_WIN) || defined(GENERIC_IMPLEMENTATION) || (TARGET == TARGET_ARM) || (TARGET == TARGET_ARM64 && (NBITS_FIELD == 434 || NBITS_FIELD == 610))
+#if (OS_TARGET == OS_WIN) || defined(GENERIC_IMPLEMENTATION) || (TARGET == TARGET_ARM)
 
     mp_add(a, b, c, NWORDS_FIELD);
     
-#elif (OS_TARGET == OS_LINUX)                 
+#elif (OS_TARGET == OS_NIX)                 
     
     mp_add_asm(a, b, c);    
 
 #endif
+}
+
+
+__inline static void mp2_add(const f2elm_t a, const f2elm_t b, f2elm_t c)       
+{ // GF(p^2) addition without correction, c = a+b in GF(p^2). 
+    mp_addfast(a[0], b[0], c[0]);
+    mp_addfast(a[1], b[1], c[1]);
+}
+
+
+__inline static void mp2_sub_p2(const f2elm_t a, const f2elm_t b, f2elm_t c)       
+{ // GF(p^2) subtraction with correction with 2*p, c = a-b+2p in GF(p^2).    
+    mp_sub_p2(a[0], b[0], c[0]);  
+    mp_sub_p2(a[1], b[1], c[1]);
+}
+
+
+__inline static void mp2_sub_p4(const f2elm_t a, const f2elm_t b, f2elm_t c)       
+{ // GF(p^2) subtraction with correction with 4*p, c = a-b+4p in GF(p^2). 
+    mp_sub_p4(a[0], b[0], c[0]);  
+    mp_sub_p4(a[1], b[1], c[1]); 
+}
+
+
+__inline unsigned int mp_add(const digit_t* a, const digit_t* b, digit_t* c, const unsigned int nwords)
+{ // Multiprecision addition, c = a+b, where lng(a) = lng(b) = nwords. Returns the carry bit.
+    unsigned int i, carry = 0;
+        
+    for (i = 0; i < nwords; i++) {                      
+        ADDC(carry, a[i], b[i], carry, c[i]);
+    }
+
+    return carry;
 }
 
 
@@ -256,7 +246,7 @@ void fp2sqr_mont(const f2elm_t a, f2elm_t c)
     felm_t t1, t2, t3;
     
     mp_addfast(a[0], a[1], t1);                      // t1 = a0+a1 
-    fpsub(a[0], a[1], t2);                           // t2 = a0-a1
+    sub_p4(a[0], a[1], t2);                          // t2 = a0-a1
     mp_addfast(a[0], a[0], t3);                      // t3 = 2a0
     fpmul_mont(t1, t2, c[0]);                        // c0 = (a0+a1)(a0-a1)
     fpmul_mont(t3, a[1], c[1]);                      // c1 = 2a0*a1
@@ -276,7 +266,7 @@ __inline unsigned int mp_sub(const digit_t* a, const digit_t* b, digit_t* c, con
 
 __inline static void mp_subaddfast(const digit_t* a, const digit_t* b, digit_t* c)
 { // Multiprecision subtraction followed by addition with p*2^MAXBITS_FIELD, c = a-b+(p*2^MAXBITS_FIELD) if a-b < 0, otherwise c=a-b. 
-#if (OS_TARGET == OS_WIN) || defined(GENERIC_IMPLEMENTATION) || (TARGET == TARGET_ARM) || (TARGET == TARGET_ARM64 && (NBITS_FIELD == 434 || NBITS_FIELD == 610))
+#if (OS_TARGET == OS_WIN) || defined(GENERIC_IMPLEMENTATION) || (TARGET == TARGET_ARM)
     felm_t t1;
 
     digit_t mask = 0 - (digit_t)mp_sub(a, b, c, 2*NWORDS_FIELD);
@@ -284,7 +274,7 @@ __inline static void mp_subaddfast(const digit_t* a, const digit_t* b, digit_t* 
         t1[i] = ((digit_t*)PRIME)[i] & mask;
     mp_addfast((digit_t*)&c[NWORDS_FIELD], t1, (digit_t*)&c[NWORDS_FIELD]);
 
-#elif (OS_TARGET == OS_LINUX)               
+#elif (OS_TARGET == OS_NIX)               
 
     mp_subaddx2_asm(a, b, c);     
 
@@ -294,12 +284,12 @@ __inline static void mp_subaddfast(const digit_t* a, const digit_t* b, digit_t* 
 
 __inline static void mp_dblsubfast(const digit_t* a, const digit_t* b, digit_t* c)
 { // Multiprecision subtraction, c = c-a-b, where lng(a) = lng(b) = 2*NWORDS_FIELD.
-#if (OS_TARGET == OS_WIN) || defined(GENERIC_IMPLEMENTATION) || (TARGET == TARGET_ARM) || (TARGET == TARGET_ARM64 && (NBITS_FIELD == 434 || NBITS_FIELD == 610))
+#if (OS_TARGET == OS_WIN) || defined(GENERIC_IMPLEMENTATION) || (TARGET == TARGET_ARM)
 
     mp_sub(c, a, c, 2*NWORDS_FIELD);
     mp_sub(c, b, c, 2*NWORDS_FIELD);
 
-#elif (OS_TARGET == OS_LINUX)                 
+#elif (OS_TARGET == OS_NIX)                 
 
     mp_dblsubx2_asm(a, b, c);
 
@@ -777,18 +767,6 @@ void from_fp2mont(const f2elm_t ma, f2elm_t c)
 }
 
 
-__inline unsigned int mp_add(const digit_t* a, const digit_t* b, digit_t* c, const unsigned int nwords)
-{ // Multiprecision addition, c = a+b, where lng(a) = lng(b) = nwords. Returns the carry bit.
-    unsigned int i, carry = 0;
-        
-    for (i = 0; i < nwords; i++) {                      
-        ADDC(carry, a[i], b[i], carry, c[i]);
-    }
-
-    return carry;
-}
-
-
 void mp_shiftleft(digit_t* x, unsigned int shift, const unsigned int nwords)
 {
     unsigned int i, j = 0;
@@ -833,8 +811,6 @@ void mp_shiftl1(digit_t* x, const unsigned int nwords)
 
 #ifdef COMPRESS
 
-#include <string.h>
-
 static __inline unsigned int is_felm_zero(const felm_t x)
 { // Is x = 0? return 1 (TRUE) if condition is true, 0 (FALSE) otherwise.
   // SECURITY NOTE: This function does not run in constant-time.
@@ -851,11 +827,11 @@ void mul3(unsigned char *a)
 { // Computes a = 3*a
   // The input is assumed to be OBOB_BITS-2 bits long and stored in SECRETKEY_B_BYTES
     digit_t temp1[NWORDS_ORDER] = {0}, temp2[NWORDS_ORDER] = {0};
-    
-    digits_decode(a, temp1, SECRETKEY_B_BYTES, NWORDS_ORDER); // const unsigned char* os, digit_t* digits, int osLen, int digitsLen)
+        
+    decode_to_digits(a, temp1, SECRETKEY_B_BYTES, NWORDS_ORDER);
     mp_add(temp1, temp1, temp2, NWORDS_ORDER);               // temp2 = 2*a
     mp_add(temp1, temp2, temp1, NWORDS_ORDER);               // temp1 = 3*a
-    digits_encode(temp1, a, NWORDS_ORDER, SECRETKEY_B_BYTES);
+    encode_to_bytes(temp1, a, SECRETKEY_B_BYTES);
     
     clear_words((void*)temp1, NWORDS_ORDER);
     clear_words((void*)temp2, NWORDS_ORDER);
@@ -1018,8 +994,46 @@ static __inline void power2_setup(digit_t* x, int mark, const unsigned int nword
         }
         mark -= RADIX;
         i += 1;
-    }
+    }    
+}
+
+
+unsigned int cmp_f2elm(const f2elm_t x, const f2elm_t y)
+{ // Is x != y? return 1 (TRUE) if condition is true, 0 (FALSE) otherwise.
+  // SECURITY NOTE: This function does not run in constant-time.
+    f2elm_t a, b;
     
+    fp2copy(x, a);
+    fp2copy(y, b);
+    fp2correction(a);
+    fp2correction(b);    
+
+    for (int i = NWORDS_FIELD-1; i >= 0; i--) {
+        if (a[0][i] != b[0][i] || a[1][i] != b[1][i] )
+            return 1;
+    }
+    return 0;
+}
+
+
+static __inline unsigned int is_felm_even(const felm_t x)
+{ // Is x even? return 1 (TRUE) if condition is true, 0 (FALSE) otherwise.
+    return (unsigned int)((x[0] & 1) ^ 1);
+}
+
+
+static __inline unsigned int is_felm_lt(const felm_t x, const felm_t y)
+{ // Is x < y? return 1 (TRUE) if condition is true, 0 (FALSE) otherwise.
+  // SECURITY NOTE: This function does not run in constant-time.
+
+    for (int i = NWORDS_FIELD-1; i >= 0; i--) {
+        if (x[i] < y[i]) { 
+            return true;
+        } else if (x[i] > y[i]) {
+            return false;
+        }
+    }
+    return false;
 }
 
 

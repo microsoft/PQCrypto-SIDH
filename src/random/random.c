@@ -9,7 +9,7 @@
 #if defined(__WINDOWS__)
     #include <windows.h>
     #include <bcrypt.h>
-#elif defined(__LINUX__)
+#elif defined(__NIX__)
     #include <unistd.h>
     #include <fcntl.h>
     static int lock = -1;
@@ -33,7 +33,7 @@ int randombytes(unsigned char* random_array, unsigned long long nbytes)
         return failed;
     }
 
-#elif defined(__LINUX__)
+#elif defined(__NIX__)
     int r, n = (int)nbytes, count = 0;
     
     if (lock == -1) {

@@ -8,7 +8,7 @@
 #if (OS_TARGET == OS_WIN)
     #include <intrin.h>
 #endif
-#if (OS_TARGET == OS_LINUX) && (TARGET == TARGET_ARM || TARGET == TARGET_ARM64)
+#if (OS_TARGET == OS_NIX) && (TARGET == TARGET_ARM || TARGET == TARGET_ARM64)
     #include <time.h>
 #endif
 #include <stdlib.h>
@@ -31,19 +31,20 @@ int64_t cpucycles(void)
     return __rdtsc();
 #elif (OS_TARGET == OS_WIN) && (TARGET == TARGET_ARM)
     return __rdpmccntr64();
-#elif (OS_TARGET == OS_LINUX) && (TARGET == TARGET_AMD64 || TARGET == TARGET_x86)
+#elif (OS_TARGET == OS_NIX) && (TARGET == TARGET_AMD64 || TARGET == TARGET_x86)
     unsigned int hi, lo;
-    __asm__ volatile ("rdtsc\n\t" : "=a" (lo), "=d"(hi));
+
+    asm volatile ("rdtsc\n\t" : "=a" (lo), "=d"(hi));
     return ((int64_t)lo) | (((int64_t)hi) << 32);
-#elif (OS_TARGET == OS_LINUX) && (TARGET == TARGET_ARM || TARGET == TARGET_ARM64 )
+#elif (OS_TARGET == OS_NIX) && (TARGET == TARGET_S390X)
+    uint64_t tod;
+    __asm__ volatile("stckf %0\n" : "=Q" (tod) : : "cc");
+    return (tod);
+#elif (OS_TARGET == OS_NIX) && (TARGET == TARGET_ARM || TARGET == TARGET_ARM64)
     struct timespec time;
 
     clock_gettime(CLOCK_REALTIME, &time);
     return (int64_t)(time.tv_sec*1e9 + time.tv_nsec);
-#elif (OS_TARGET == OS_LINUX && TARGET == TARGET_S390X)
-    uint64_t tod;
-    __asm__ volatile("stckf %0\n" : "=Q" (tod) : : "cc");
-    return (tod);
 #else
     return 0;            
 #endif

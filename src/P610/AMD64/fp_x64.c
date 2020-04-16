@@ -10,7 +10,52 @@
 // Global constants
 extern const uint64_t p610[NWORDS_FIELD];
 extern const uint64_t p610p1[NWORDS_FIELD]; 
-extern const uint64_t p610x2[NWORDS_FIELD]; 
+extern const uint64_t p610x2[NWORDS_FIELD];   
+extern const uint64_t p610x4[NWORDS_FIELD];
+
+
+__inline void mp_sub610_p2(const digit_t* a, const digit_t* b, digit_t* c)
+{ // Multiprecision subtraction with correction with 2*p, c = a-b+2p.    
+#if (OS_TARGET == OS_WIN) || defined(GENERIC_IMPLEMENTATION) || (TARGET == TARGET_ARM) || (TARGET == TARGET_ARM64 && NBITS_FIELD == 610)
+    unsigned int i, borrow = 0;
+
+    for (i = 0; i < NWORDS_FIELD; i++) {
+        SUBC(borrow, a[i], b[i], borrow, c[i]); 
+    }
+
+    borrow = 0;
+    for (i = 0; i < NWORDS_FIELD; i++) {
+        ADDC(borrow, c[i], ((digit_t*)p610x2)[i], borrow, c[i]); 
+    }
+    
+#elif (OS_TARGET == OS_NIX)                 
+    
+    mp_sub610_p2_asm(a, b, c);    
+
+#endif
+} 
+
+
+__inline void mp_sub610_p4(const digit_t* a, const digit_t* b, digit_t* c)
+{ // Multiprecision subtraction with correction with 4*p, c = a-b+4p.    
+#if (OS_TARGET == OS_WIN) || defined(GENERIC_IMPLEMENTATION) || (TARGET == TARGET_ARM) || (TARGET == TARGET_ARM64 && NBITS_FIELD == 610)
+    unsigned int i, borrow = 0;
+
+    for (i = 0; i < NWORDS_FIELD; i++) {
+        SUBC(borrow, a[i], b[i], borrow, c[i]); 
+    }
+
+    borrow = 0;
+    for (i = 0; i < NWORDS_FIELD; i++) {
+        ADDC(borrow, c[i], ((digit_t*)p610x4)[i], borrow, c[i]); 
+    }
+    
+#elif (OS_TARGET == OS_NIX)                 
+    
+    mp_sub610_p4_asm(a, b, c);    
+
+#endif
+} 
 
 
 __inline void fpadd610(const digit_t* a, const digit_t* b, digit_t* c)
@@ -37,7 +82,7 @@ __inline void fpadd610(const digit_t* a, const digit_t* b, digit_t* c)
         ADDC(carry, c[i], ((digit_t*)p610x2)[i] & mask, carry, c[i]); 
     } 
     
-#elif (OS_TARGET == OS_LINUX)                 
+#elif (OS_TARGET == OS_NIX)                 
     
     fpadd610_asm(a, b, c);    
 
@@ -64,7 +109,7 @@ __inline void fpsub610(const digit_t* a, const digit_t* b, digit_t* c)
         ADDC(borrow, c[i], ((digit_t*)p610x2)[i] & mask, borrow, c[i]); 
     }
     
-#elif (OS_TARGET == OS_LINUX)                 
+#elif (OS_TARGET == OS_NIX)                 
     
     fpsub610_asm(a, b, c);    
 
@@ -417,7 +462,7 @@ void mp_mul(const digit_t* a, const digit_t* b, digit_t* c, const unsigned int n
     c[18] = uv[0];
     c[19] = uv[1];
 
-#elif (OS_TARGET == OS_LINUX)
+#elif (OS_TARGET == OS_NIX)
     
     mul610_asm(a, b, c);
 
@@ -672,7 +717,7 @@ void rdc_mont(digit_t* ma, digit_t* mc)
     ADDC(carry, uv[1], 0, carry, uv[1]); 
     ADDC(0, uv[1], ma[19], carry, mc[9]); 
     
-#elif (OS_TARGET == OS_LINUX)                 
+#elif (OS_TARGET == OS_NIX)                 
     
     rdc610_asm(ma, mc);    
 
