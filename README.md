@@ -1,7 +1,7 @@
-# SIDH v3.2 (C Edition)
+# SIDH v3.3 (C Edition)
 
 The **SIDH** library is an efficient supersingular isogeny-based cryptography library written in C language.
-**Version v3.2** of the library includes the ephemeral Diffie-Hellman key exchange scheme "SIDH" [1,2], and the CCA-secure
+**Version v3.3** of the library includes the ephemeral Diffie-Hellman key exchange scheme "SIDH" [1,2], and the CCA-secure
 key encapsulation mechanism "SIKE" [3]. These schemes are conjectured to be secure against quantum computer attacks.
 
 Concretely, the SIDH library includes the following KEM schemes:
@@ -25,17 +25,8 @@ It also includes the following compressed KEM schemes:
 * SIKEp610_compressed: matching the post-quantum security of AES192 (level 3).
 * SIKEp751_compressed: matching the post-quantum security of AES256 (level 5).
 
-And the following compressed ephemeral key exchange schemes:
-
-* SIDHp434_compressed: matching the post-quantum security of AES128 (level 1).
-* SIDHp503_compressed: matching the post-quantum security of SHA3-256 (level 2).
-* SIDHp610_compressed: matching the post-quantum security of AES192 (level 3).
-* SIDHp751_compressed: matching the post-quantum security of AES256 (level 5).
-
 The compressed schemes exhibit reduced public keys at the expense of longer computing times.
-Their implementation is based on [11], which in turn is based on and improves upon [9] and [10].
-Note that the supported compressed schemes are not compatible with the compression variant submitted to the NIST PQC
-standardization process (round 2), which is based on [10].
+Their implementation is based on [11,12], which in turn are based on and improves upon [9] and [10].
 
 The library was developed by [Microsoft Research](http://research.microsoft.com/) for experimentation purposes.
 
@@ -46,8 +37,10 @@ The library was developed by [Microsoft Research](http://research.microsoft.com/
 * [`Optimized x64 implementation for p434`](src/P434/AMD64/): optimized implementation of the field arithmetic over the prime p434 for x64 platforms.     
 * [`Optimized x64 implementation for p503`](src/P503/AMD64/): optimized implementation of the field arithmetic over the prime p503 for x64 platforms.  
 * [`Optimized x64 implementation for p610`](src/P610/AMD64/): optimized implementation of the field arithmetic over the prime p610 for x64 platforms. 
-* [`Optimized x64 implementation for p751`](src/P751/AMD64/): optimized implementation of the field arithmetic over the prime p751 for x64 platforms.      
-* [`Optimized ARMv8 implementation for p503`](src/P503/ARM64/): optimized implementation of the field arithmetic over the prime p503 for 64-bit ARMv8 platforms.    
+* [`Optimized x64 implementation for p751`](src/P751/AMD64/): optimized implementation of the field arithmetic over the prime p751 for x64 platforms.        
+* [`Optimized ARMv8 implementation for p434`](src/P434/ARM64/): optimized implementation of the field arithmetic over the prime p434 for 64-bit ARMv8 platforms.   
+* [`Optimized ARMv8 implementation for p503`](src/P503/ARM64/): optimized implementation of the field arithmetic over the prime p503 for 64-bit ARMv8 platforms.   
+* [`Optimized ARMv8 implementation for p610`](src/P610/ARM64/): optimized implementation of the field arithmetic over the prime p610 for 64-bit ARMv8 platforms.    
 * [`Optimized ARMv8 implementation for p751`](src/P751/ARM64/): optimized implementation of the field arithmetic over the prime p751 for 64-bit ARMv8 platforms.
 * [`Generic implementation for p434`](src/P434/generic/): implementation of the field arithmetic over the prime p434 in portable C.
 * [`Generic implementation for p503`](src/P503/generic/): implementation of the field arithmetic over the prime p503 in portable C.
@@ -70,23 +63,24 @@ The library was developed by [Microsoft Research](http://research.microsoft.com/
 - Supports four security levels matching the post-quantum security of AES128, SHA3-256, AES192 and AES256.
 - Protected against timing and cache-timing attacks through regular, constant-time implementation of 
   all operations on secret key material.
-- Support for Windows OS using Microsoft Visual Studio and Linux OS using GNU GCC and clang.     
+- Support for Windows OS using Microsoft Visual Studio, Linux OS and MacOS X using GNU GCC and clang.     
 - Provides basic implementation of the underlying arithmetic functions using portable C to enable support
-  on a wide range of platforms including x64, x86, ARM and S390X. 
+  on a wide range of platforms including x64, x86 and ARM. 
 - Provides optimized implementations of the underlying arithmetic functions for x64 platforms with optional, 
-  high-performance x64 assembly for Linux. 
+  high-performance x64 assembly for Linux and Mac OS X. 
 - Provides an optimized implementation of the underlying arithmetic functions for 64-bit ARM platforms using 
   assembly for Linux.
 - Includes Known Answer Tests (KATs), and testing/benchmarking code.
 
-## New in Version 3.2
+## New in Version 3.3
  
-- Added four new parameter sets for compressed SIDH and four new parameter sets for compressed SIKE [11]. 
+- New improved versions of the four parameter sets for compressed SIDH and compressed SIKE [11,12]. 
+- Added support for Mac OS X to the optimized assembly implementations for x64 platforms.
 
 ## Supported Platforms
 
-**SIDH v3.2** is supported on a wide range of platforms including x64, x86 and ARM devices running Windows 
-or Linux OS. We have tested the library with Microsoft Visual Studio 2015, GNU GCC v5.4, and clang v3.8.
+**SIDH v3.3** is supported on a wide range of platforms including x64, x86 and ARM devices running Windows,
+Linux or Mac OS X. We have tested the library with Microsoft Visual Studio 2015, GNU GCC v5.4, and clang v3.8.
 See instructions below to choose an implementation option and compile on one of the supported platforms.
 
 ## Implementation Options
@@ -121,10 +115,10 @@ according to the targeted platform (for example, MULX/ADX are not supported on S
 is supported on Haswell, and both MULX and ADX are supported on Broadwell, Skylake and Kaby Lake architectures). 
 Note that USE_ADX can only be set to `TRUE` if `USE_MULX=TRUE`.
 
-Options for x86/ARM/S390X:
+Options for x86/ARM:
 
 ```sh
-$ make ARCH=[x86/ARM/S390X] CC=[gcc/clang]
+$ make ARCH=[x86/ARM] CC=[gcc/clang]
 ```
 
 Options for ARM64:
@@ -154,10 +148,6 @@ $ ./sike434_compressed/test_SIKE
 $ ./sike503_compressed/test_SIKE
 $ ./sike610_compressed/test_SIKE
 $ ./sike751_compressed/test_SIKE
-$ ./sidh434_compressed/test_SIDH
-$ ./sidh503_compressed/test_SIDH
-$ ./sidh610_compressed/test_SIDH
-$ ./sidh751_compressed/test_SIDH
 ```
 
 To run the KEM implementations against the KATs, execute:
@@ -202,6 +192,7 @@ The library includes some third party modules that are licensed differently. In 
 
 ## Contributors
 
+- Basil Hess.
 - Geovandro Pereira.
 - Joost Renes.
 
@@ -237,8 +228,11 @@ The preprint version is available [`here`](https://eprint.iacr.org/2016/963).
 [10]  Gustavo H.M. Zanon, Marcos A. Simplicio Jr, Geovandro C.C.F. Pereira, Javad Doliskani and Paulo S.L.M. Barreto, "Faster key compression for isogeny-based cryptosystems". IEEE Transactions on Computers, Vol. 68(5), 2019. 
 The preprint version is available [`here`](https://eprint.iacr.org/2017/1143).  
 
-[11]  Michael Naehrig and Joost Renes, "Dual Isogenies and Their Application to Public-key Compression for Isogeny-based Cryptography". Advances in Cryptology - ASIACRYPT 2019 (to appear), 2019.
+[11]  Michael Naehrig and Joost Renes, "Dual Isogenies and Their Application to Public-key Compression for Isogeny-based Cryptography". Advances in Cryptology - ASIACRYPT 2019, LNCS 11922, pp. 243-272, 2019.
 The preprint version is available [`here`](https://eprint.iacr.org/2019/499).
+
+[12]  Geovandro C.C.F. Pereira, Javad Doliskani and David Jao, "x-only point addition formula and faster torsion basis generation in compressed SIKE".
+The preprint version is available [`here`](https://eprint.iacr.org/2020/431).
 
 # Contributing
 
