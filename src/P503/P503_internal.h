@@ -10,21 +10,12 @@
 #include "../config.h"
  
 
-#if (TARGET == TARGET_AMD64)
+#if (TARGET == TARGET_AMD64) || (TARGET == TARGET_ARM64) || (TARGET == TARGET_S390X)
     #define NWORDS_FIELD    8               // Number of words of a 503-bit field element
     #define p503_ZERO_WORDS 3               // Number of "0" digits in the least significant part of p503 + 1     
-#elif (TARGET == TARGET_x86)
+#elif (TARGET == TARGET_x86) || (TARGET == TARGET_ARM)
     #define NWORDS_FIELD    16 
     #define p503_ZERO_WORDS 7
-#elif (TARGET == TARGET_ARM)
-    #define NWORDS_FIELD    16
-    #define p503_ZERO_WORDS 7
-#elif (TARGET == TARGET_ARM64)
-    #define NWORDS_FIELD    8
-    #define p503_ZERO_WORDS 3
-#elif (TARGET == TARGET_S390X)
-    #define NWORDS_FIELD    8
-    #define p503_ZERO_WORDS 3
 #endif
     
 
@@ -63,9 +54,7 @@
     #define MASK3_BOB               0xFF
     #define ORDER_A_ENCODED_BYTES   SECRETKEY_A_BYTES
     #define ORDER_B_ENCODED_BYTES   SECRETKEY_B_BYTES
-#ifdef COMPRESS_SPEED
     #define PARTIALLY_COMPRESSED_CHUNK_CT     (4*ORDER_A_ENCODED_BYTES + FP2_ENCODED_BYTES + 2)
-#endif
     #define COMPRESSED_CHUNK_CT     (3*ORDER_A_ENCODED_BYTES + FP2_ENCODED_BYTES + 2)
     #define UNCOMPRESSEDPK_BYTES    378
     // Table sizes used by the Entangled basis generation
@@ -127,6 +116,12 @@ void mp_add503_asm(const digit_t* a, const digit_t* b, digit_t* c);
 // Multiprecision subtraction, c = a-b, where lng(a) = lng(b) = nwords. Returns the borrow bit 
 unsigned int mp_sub(const digit_t* a, const digit_t* b, digit_t* c, const unsigned int nwords);
 
+// 503-bit multiprecision subtraction, c = a-b+2p or c = a-b+4p
+extern void mp_sub503_p2(const digit_t* a, const digit_t* b, digit_t* c);
+extern void mp_sub503_p4(const digit_t* a, const digit_t* b, digit_t* c);
+void mp_sub503_p2_asm(const digit_t* a, const digit_t* b, digit_t* c); 
+void mp_sub503_p4_asm(const digit_t* a, const digit_t* b, digit_t* c); 
+
 // 2x503-bit multiprecision subtraction followed by addition with p503*2^512, c = a-b+(p503*2^512) if a-b < 0, otherwise c=a-b 
 void mp_subaddx2_asm(const digit_t* a, const digit_t* b, digit_t* c);
 void mp_subadd503x2_asm(const digit_t* a, const digit_t* b, digit_t* c);
@@ -163,12 +158,10 @@ bool fpequal503_non_constant_time(const digit_t* a, const digit_t* b);
 // Modular addition, c = a+b mod p503
 extern void fpadd503(const digit_t* a, const digit_t* b, digit_t* c);
 extern void fpadd503_asm(const digit_t* a, const digit_t* b, digit_t* c);
-void fpadd503_inline_asm(const digit_t* a, const digit_t* b, const digit_t* p, digit_t* c);
 
 // Modular subtraction, c = a-b mod p503
 extern void fpsub503(const digit_t* a, const digit_t* b, digit_t* c);
 extern void fpsub503_asm(const digit_t* a, const digit_t* b, digit_t* c);
-void fpsub503_inline_asm(const digit_t* a, const digit_t* b, const digit_t* p, digit_t* c);
 
 // Modular negation, a = -a mod p503        
 extern void fpneg503(digit_t* a);  
@@ -186,7 +179,6 @@ void rdc503_asm(digit_t* ma, digit_t* mc);
 // Field multiplication using Montgomery arithmetic, c = a*b*R^-1 mod p503, where R=2^768
 void fpmul503_mont(const digit_t* a, const digit_t* b, digit_t* c);
 void mul503_asm(const digit_t* a, const digit_t* b, digit_t* c);
-void mul503_inline_asm(const digit_t* a, const digit_t* b, digit_t* c);
    
 // Field squaring using Montgomery arithmetic, c = a*b*R^-1 mod p503, where R=2^768
 void fpsqr503_mont(const digit_t* ma, digit_t* mc);

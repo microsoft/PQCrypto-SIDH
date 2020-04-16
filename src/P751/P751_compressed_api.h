@@ -1,11 +1,11 @@
 /********************************************************************************************
 * SIDH: an efficient supersingular isogeny cryptography library
 *
-* Abstract: API header file for P751 using compression with ciphertext vs decaps. speed tradeoff
+* Abstract: API header file for P751 using compression
 *********************************************************************************************/  
 
-#ifndef P751_COMPRESSED_SPEED_API_H
-#define P751_COMPRESSED_SPEED_API_H
+#ifndef P751_COMPRESSED_API_H
+#define P751_COMPRESSED_API_H
     
 
 /*********************** Key encapsulation mechanism API ***********************/

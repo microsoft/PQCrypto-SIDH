@@ -63,7 +63,7 @@ void Traverse_w_div_e(const f2elm_t r, int j, int k, int z, const unsigned int *
     } else {
         fp2_conj(r, rp);
         fp2correction(rp);
-        for (int t = 0; t < ell; t++) { 
+        for (int t = 0; t < ell; t++) {
             if (memcmp((unsigned char*)&T[(Dlen - 1)*ell][2*t], rp, 2*NBITS_TO_NBYTES(NBITS_FIELD)) == 0) {
                 D[k] = t;
                 break;

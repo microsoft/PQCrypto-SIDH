@@ -537,13 +537,13 @@ static void FullIsogeny_A_dual(unsigned char* PrivateKeyA, f2elm_t As[][5], f2el
     fp2add(C24, C24, A24);
     
     // Retrieve kernel point
-    digits_decode(PrivateKeyA, SecretKeyA, SECRETKEY_A_BYTES, NWORDS_ORDER);
+    decode_to_digits(PrivateKeyA, SecretKeyA, SECRETKEY_A_BYTES, NWORDS_ORDER);
     LADDER3PT(XPA, XQA, XRA, SecretKeyA, ALICE, R, A);
     fp2inv_mont(R->Z);
     fp2mul_mont(R->X,R->Z,R->X);
     fpcopy((digit_t*)&Montgomery_one, R->Z[0]);
     fpzero(R->Z[1]);    
-    fp2_encode(R->X, &PrivateKeyA[SECRETKEY_A_BYTES + CRYPTO_PUBLICKEYBYTES]); // privA ||= x(KA) = x(PA + sk_A*QA)
+    fp2_encode(R->X, &PrivateKeyA[SECRETKEY_A_BYTES + CRYPTO_PUBLICKEYBYTES]);  // privA ||= x(KA) = x(PA + sk_A*QA)
     
 #if (OALICE_BITS % 2 == 1)
     point_proj_t S;
@@ -551,7 +551,7 @@ static void FullIsogeny_A_dual(unsigned char* PrivateKeyA, f2elm_t As[][5], f2el
     xDBLe(R, S, A24, C24, (int)(OALICE_BITS-1));
     get_2_isog(S, A24, C24);
     eval_2_isog(R, S);
-    fp2copy(S->X, As[MAX_Alice][2]);    // These 2 are unused anyway
+    fp2copy(S->X, As[MAX_Alice][2]);
     fp2copy(S->Z, As[MAX_Alice][3]);
 #endif
 
@@ -587,8 +587,8 @@ static void FullIsogeny_A_dual(unsigned char* PrivateKeyA, f2elm_t As[][5], f2el
     eval_dual_4_isog_shared(coeff[2], coeff[3], coeff[4], *(As+MAX_Alice-1)+2);
     fp2copy(A24, As[MAX_Alice][0]);
     fp2copy(C24, As[MAX_Alice][1]);
-    fp2inv_mont_bingcd(C24); // a24 is public, thus non-constant time inversion is ok here
-    fp2mul_mont(A24,C24,a24);
+    fp2inv_mont_bingcd(C24);
+    fp2mul_mont(A24, C24, a24);
 }
 
 
@@ -611,8 +611,8 @@ static void BuildOrdinary3nBasis_Decomp_dual(const f2elm_t A24, point_proj_t *Rs
     bitEll[1] = (bitsEll >> 1) & 0x1;    
     
     // Elligator2 both x-coordinates
-    Elligator2(A24, r[0]-1, Rs[0]->X, &bitEll[0], DECOMPRESSION);
-    Elligator2(A24, r[1]-1, Rs[1]->X, &bitEll[1], DECOMPRESSION);
+    Elligator2(A24, (unsigned int)r[0]-1, Rs[0]->X, &bitEll[0], DECOMPRESSION);
+    Elligator2(A24, (unsigned int)r[1]-1, Rs[1]->X, &bitEll[1], DECOMPRESSION);
     // Get x-coordinate of difference
     BiQuad_affine(A24, Rs[0]->X, Rs[1]->X, Rs[2]);
 }
@@ -645,13 +645,13 @@ static void PKADecompression_dual(const unsigned char* SecretKeyB, const unsigne
     fpcopy((digit_t*)Montgomery_one, (Rs[1]->Z)[0]);
 
     swap_points(Rs[0], Rs[1], 0-(digit_t)bit);
-    digits_decode(SecretKeyB, SKin, SECRETKEY_B_BYTES, NWORDS_ORDER);    
+    decode_to_digits(SecretKeyB, SKin, SECRETKEY_B_BYTES, NWORDS_ORDER);    
     to_Montgomery_mod_order(SKin, t1, (digit_t*)Bob_order, (digit_t*)&Montgomery_RB2, (digit_t*)&Montgomery_RB1);    // Converting to Montgomery representation 
-    digits_decode(&CompressedPKA[0], temp, ORDER_B_ENCODED_BYTES, NWORDS_ORDER);    
+    decode_to_digits(&CompressedPKA[0], temp, ORDER_B_ENCODED_BYTES, NWORDS_ORDER);    
     to_Montgomery_mod_order(temp, t2, (digit_t*)Bob_order, (digit_t*)&Montgomery_RB2, (digit_t*)&Montgomery_RB1);
-    digits_decode(&CompressedPKA[ORDER_B_ENCODED_BYTES], temp, ORDER_B_ENCODED_BYTES, NWORDS_ORDER);    
+    decode_to_digits(&CompressedPKA[ORDER_B_ENCODED_BYTES], temp, ORDER_B_ENCODED_BYTES, NWORDS_ORDER);    
     to_Montgomery_mod_order(temp, t3, (digit_t*)Bob_order, (digit_t*)&Montgomery_RB2, (digit_t*)&Montgomery_RB1);
-    digits_decode(&CompressedPKA[2*ORDER_B_ENCODED_BYTES], temp, ORDER_B_ENCODED_BYTES, NWORDS_ORDER);    
+    decode_to_digits(&CompressedPKA[2*ORDER_B_ENCODED_BYTES], temp, ORDER_B_ENCODED_BYTES, NWORDS_ORDER);    
     to_Montgomery_mod_order(temp, t4, (digit_t*)Bob_order, (digit_t*)&Montgomery_RB2, (digit_t*)&Montgomery_RB1);
     if (bit == 0) {    
         Montgomery_multiply_mod_order(t1, t3, t3, (digit_t*)Bob_order, (digit_t*)&Montgomery_RB2);
@@ -672,7 +672,6 @@ static void PKADecompression_dual(const unsigned char* SecretKeyB, const unsigne
         from_Montgomery_mod_order(t3, t3, (digit_t*)Bob_order, (digit_t*)&Montgomery_RB2);    // Converting back from Montgomery representation 
         Ladder3pt_dual(Rs,t3,BOB,R,A24);
     }
-
     Double(R, R, A24, OALICE_BITS);    // x, z := Double(A24, x, 1, eA);
 }
 
@@ -681,7 +680,7 @@ static void Compress_PKA_dual(digit_t *d0, digit_t *c0, digit_t *d1, digit_t *c1
 {
     unsigned int bit;
     digit_t temp[NWORDS_ORDER] = {0}, inv[NWORDS_ORDER];
-    unsigned char mask = (unsigned char)-1;
+    unsigned char mask = (unsigned char)(-1);
     f2elm_t A;
 
     fp2add(a24,a24,A);
@@ -700,16 +699,16 @@ static void Compress_PKA_dual(digit_t *d0, digit_t *c0, digit_t *d1, digit_t *c1
         Montgomery_neg(d0, (digit_t*)&Bob_order);
         Montgomery_multiply_mod_order(d0, inv, temp, (digit_t*)Bob_order, (digit_t*)&Montgomery_RB2);
         from_Montgomery_mod_order(temp, temp, (digit_t*)Bob_order, (digit_t*)&Montgomery_RB2);                    // Converting back from Montgomery representation
-        digits_encode(temp, &CompressedPKA[0], NWORDS_ORDER, ORDER_B_ENCODED_BYTES);
+        encode_to_bytes(temp, &CompressedPKA[0], ORDER_B_ENCODED_BYTES);
         CompressedPKA[ORDER_B_ENCODED_BYTES-1] &= mask;
         Montgomery_neg(c1, (digit_t*)&Bob_order);
         Montgomery_multiply_mod_order(c1, inv, temp, (digit_t*)Bob_order, (digit_t*)&Montgomery_RB2);
         from_Montgomery_mod_order(temp, temp, (digit_t*)Bob_order, (digit_t*)&Montgomery_RB2);
-        digits_encode(temp, &CompressedPKA[ORDER_B_ENCODED_BYTES], NWORDS_ORDER, ORDER_B_ENCODED_BYTES);        
+        encode_to_bytes(temp, &CompressedPKA[ORDER_B_ENCODED_BYTES], ORDER_B_ENCODED_BYTES);        
         CompressedPKA[2*ORDER_B_ENCODED_BYTES-1] &= mask;
         Montgomery_multiply_mod_order(c0, inv, temp, (digit_t*)Bob_order, (digit_t*)&Montgomery_RB2);
         from_Montgomery_mod_order(temp, temp, (digit_t*)Bob_order, (digit_t*)&Montgomery_RB2);
-        digits_encode(temp, &CompressedPKA[2*ORDER_B_ENCODED_BYTES], NWORDS_ORDER, ORDER_B_ENCODED_BYTES);        
+        encode_to_bytes(temp, &CompressedPKA[2*ORDER_B_ENCODED_BYTES], ORDER_B_ENCODED_BYTES);        
         CompressedPKA[3*ORDER_B_ENCODED_BYTES-1] &= mask;
         CompressedPKA[3*ORDER_B_ENCODED_BYTES + FP2_ENCODED_BYTES] = 0x00;
     } else {  // Storing [d1*d0inv, c1*d0inv, c0*d0inv] and setting bit "NBITS_ORDER" to 1
@@ -717,16 +716,16 @@ static void Compress_PKA_dual(digit_t *d0, digit_t *c0, digit_t *d1, digit_t *c1
         Montgomery_neg(d1, (digit_t*)&Bob_order);
         Montgomery_multiply_mod_order(d1, inv, temp, (digit_t*)Bob_order, (digit_t*)&Montgomery_RB2);
         from_Montgomery_mod_order(temp, temp, (digit_t*)Bob_order, (digit_t*)&Montgomery_RB2);                     // Converting back from Montgomery representation         
-        digits_encode(temp, &CompressedPKA[0], NWORDS_ORDER, ORDER_B_ENCODED_BYTES);        
+        encode_to_bytes(temp, &CompressedPKA[0], ORDER_B_ENCODED_BYTES);        
         CompressedPKA[ORDER_B_ENCODED_BYTES-1] &= mask;
         Montgomery_multiply_mod_order(c1, inv, temp, (digit_t*)Bob_order, (digit_t*)&Montgomery_RB2);
         from_Montgomery_mod_order(temp, temp, (digit_t*)Bob_order, (digit_t*)&Montgomery_RB2);
-        digits_encode(temp, &CompressedPKA[ORDER_B_ENCODED_BYTES], NWORDS_ORDER, ORDER_B_ENCODED_BYTES);        
+        encode_to_bytes(temp, &CompressedPKA[ORDER_B_ENCODED_BYTES], ORDER_B_ENCODED_BYTES);        
         CompressedPKA[2*ORDER_B_ENCODED_BYTES-1] &= mask;
         Montgomery_neg(c0, (digit_t*)&Bob_order);
         Montgomery_multiply_mod_order(c0, inv, temp, (digit_t*)Bob_order, (digit_t*)&Montgomery_RB2);
         from_Montgomery_mod_order(temp, temp, (digit_t*)Bob_order, (digit_t*)&Montgomery_RB2);
-        digits_encode(temp, &CompressedPKA[2*ORDER_B_ENCODED_BYTES], NWORDS_ORDER, ORDER_B_ENCODED_BYTES);
+        encode_to_bytes(temp, &CompressedPKA[2*ORDER_B_ENCODED_BYTES], ORDER_B_ENCODED_BYTES);
         CompressedPKA[3*ORDER_B_ENCODED_BYTES-1] &= mask;
         CompressedPKA[3*ORDER_B_ENCODED_BYTES + FP2_ENCODED_BYTES] = 0x80;
     }
@@ -946,7 +945,7 @@ static void FullIsogeny_B_dual(const unsigned char* PrivateKeyB, f2elm_t Ds[][2]
     fp2add(A24minus, A24minus, A24plus);
     
     // Retrieve kernel point
-    digits_decode(PrivateKeyB, SecretKeyB, SECRETKEY_B_BYTES, NWORDS_ORDER);    
+    decode_to_digits(PrivateKeyB, SecretKeyB, SECRETKEY_B_BYTES, NWORDS_ORDER);    
     LADDER3PT(XPB, XQB, XRB, SecretKeyB, BOB, R, A);
     
     // Traverse tree
@@ -980,7 +979,7 @@ static void FullIsogeny_B_dual(const unsigned char* PrivateKeyB, f2elm_t Ds[][2]
 
     fp2add(A24plus, A24minus, A);
     fp2sub(A24plus, A24minus, A24plus);
-    fp2inv_mont_bingcd(A24plus); // A is going to be public, thus should be ok to use non-constant time inversion
+    fp2inv_mont_bingcd(A24plus);
     fp2mul_mont(A24plus, A, A);
     fp2add(A, A, A);    // A = 2*(A24plus+A24mins)/(A24plus-A24minus) 
 }
@@ -1038,19 +1037,19 @@ static void BuildEntangledXonly_Decomp(const f2elm_t A, point_proj_t *R, unsigne
 static void PKBDecompression_dual(const unsigned char* SecretKeyA, const unsigned char* CompressedPKB, point_proj_t R, f2elm_t A, unsigned char* tphiBKA_t)
 {
     uint64_t mask = (digit_t)(-1);
-    unsigned char qnr,ind;
+    unsigned char qnr, ind;
     f2elm_t A24,  Adiv2 = {0};
-    digit_t tmp1[2*NWORDS_ORDER] = {0}, tmp2[2*NWORDS_ORDER] = {0}, inv[NWORDS_ORDER] = {0}, scal[2*NWORDS_ORDER] = {0}, comp_temp[NWORDS_ORDER] = {0};
+    digit_t tmp1[2*NWORDS_ORDER] = {0}, tmp2[2*NWORDS_ORDER] = {0}, inv[NWORDS_ORDER] = {0}, scal[2*NWORDS_ORDER] = {0};
     digit_t SKin[NWORDS_ORDER] = {0}, a0[NWORDS_ORDER] = {0}, a1[NWORDS_ORDER] = {0}, b0[NWORDS_ORDER] = {0}, b1[NWORDS_ORDER] = {0};
     point_proj_t Rs[3] = {0};
 
     mask >>= (MAXBITS_ORDER - OALICE_BITS);
 
     fp2_decode(&CompressedPKB[4*ORDER_A_ENCODED_BYTES], A);
-    qnr = CompressedPKB[4*ORDER_A_ENCODED_BYTES + FP2_ENCODED_BYTES] & 0x1;
+    qnr = CompressedPKB[4*ORDER_A_ENCODED_BYTES + FP2_ENCODED_BYTES] & 0x01;
     ind = CompressedPKB[4*ORDER_A_ENCODED_BYTES + FP2_ENCODED_BYTES + 1];
 
-    BuildEntangledXonly_Decomp(A,Rs,qnr,ind);
+    BuildEntangledXonly_Decomp(A, Rs, qnr, ind);
     fpcopy((digit_t*)Montgomery_one, (Rs[0]->Z)[0]);
     fpcopy((digit_t*)Montgomery_one, (Rs[1]->Z)[0]);
     
@@ -1060,12 +1059,11 @@ static void PKBDecompression_dual(const unsigned char* SecretKeyA, const unsigne
     fp2div2(A24, A24);
     fp2div2(A24, A24);
        
-    digits_decode(SecretKeyA, SKin, SECRETKEY_A_BYTES, NWORDS_ORDER);       
-    digits_decode(&CompressedPKB[0], a0, ORDER_A_ENCODED_BYTES, NWORDS_ORDER);
-    digits_decode(&CompressedPKB[ORDER_A_ENCODED_BYTES], b0, ORDER_A_ENCODED_BYTES, NWORDS_ORDER);
-    digits_decode(&CompressedPKB[2*ORDER_A_ENCODED_BYTES], a1, ORDER_A_ENCODED_BYTES, NWORDS_ORDER);
-    digits_decode(&CompressedPKB[3*ORDER_A_ENCODED_BYTES], b1, ORDER_A_ENCODED_BYTES, NWORDS_ORDER);
-
+    decode_to_digits(SecretKeyA, SKin, SECRETKEY_A_BYTES, NWORDS_ORDER);       
+    decode_to_digits(&CompressedPKB[0], a0, ORDER_A_ENCODED_BYTES, NWORDS_ORDER);
+    decode_to_digits(&CompressedPKB[ORDER_A_ENCODED_BYTES], b0, ORDER_A_ENCODED_BYTES, NWORDS_ORDER);
+    decode_to_digits(&CompressedPKB[2*ORDER_A_ENCODED_BYTES], a1, ORDER_A_ENCODED_BYTES, NWORDS_ORDER);
+    decode_to_digits(&CompressedPKB[3*ORDER_A_ENCODED_BYTES], b1, ORDER_A_ENCODED_BYTES, NWORDS_ORDER);
 
     if ( (a0[0] & 1) == 1) {
         multiply((digit_t*)SKin, b1, tmp1, NWORDS_ORDER);
@@ -1105,7 +1103,8 @@ static void PKBDecompression_dual(const unsigned char* SecretKeyA, const unsigne
     
     fp2_encode(R->X, tphiBKA_t);
     fp2_encode(R->Z, &tphiBKA_t[FP2_ENCODED_BYTES]);
-    memcpy(&tphiBKA_t[2*FP2_ENCODED_BYTES], inv, ORDER_A_ENCODED_BYTES);    
+    //memcpy(&tphiBKA_t[2*FP2_ENCODED_BYTES], inv, ORDER_A_ENCODED_BYTES);
+    encode_to_bytes(inv, &tphiBKA_t[2*FP2_ENCODED_BYTES], ORDER_A_ENCODED_BYTES);
 }
 
 
@@ -1125,26 +1124,29 @@ static void Compress_PKB_dual(digit_t *d0, digit_t *c0, digit_t *d1, digit_t *c1
     
     multiply(d1, Dinv, tmp, NWORDS_ORDER); // a0' = 3^n * d1 / D
     tmp[NWORDS_ORDER-1] &= (digit_t)mask;   
-    memcpy(CompressedPKB, tmp, ORDER_A_ENCODED_BYTES);
+    //memcpy(CompressedPKB, tmp, ORDER_A_ENCODED_BYTES);
+    encode_to_bytes(tmp, CompressedPKB, ORDER_A_ENCODED_BYTES);
     
     Montgomery_neg(d0, (digit_t*)Alice_order);
     multiply(d0, Dinv, tmp, NWORDS_ORDER); // b0' = 3^n * (- d0 / D)
     tmp[NWORDS_ORDER-1] &= (digit_t)mask;     
-    memcpy(&CompressedPKB[ORDER_A_ENCODED_BYTES], tmp, ORDER_A_ENCODED_BYTES);
+    //memcpy(&CompressedPKB[ORDER_A_ENCODED_BYTES], tmp, ORDER_A_ENCODED_BYTES);
+    encode_to_bytes(tmp, &CompressedPKB[ORDER_A_ENCODED_BYTES], ORDER_A_ENCODED_BYTES);
     
     Montgomery_neg(c1, (digit_t*)Alice_order);
     multiply(c1, Dinv, tmp, NWORDS_ORDER); // a1' = 3^n * (- c1 / D)
     tmp[NWORDS_ORDER-1] &= (digit_t)mask;  
-    memcpy(&CompressedPKB[2*ORDER_A_ENCODED_BYTES], tmp, ORDER_A_ENCODED_BYTES);
+    //memcpy(&CompressedPKB[2*ORDER_A_ENCODED_BYTES], tmp, ORDER_A_ENCODED_BYTES);
+    encode_to_bytes(tmp, &CompressedPKB[2*ORDER_A_ENCODED_BYTES], ORDER_A_ENCODED_BYTES);
     
     multiply(c0, Dinv, tmp, NWORDS_ORDER); // b1' = 3^n * (c0 / D)
     tmp[NWORDS_ORDER-1] &= (digit_t)mask;  
-    memcpy(&CompressedPKB[3*ORDER_A_ENCODED_BYTES], tmp, ORDER_A_ENCODED_BYTES);
+    //memcpy(&CompressedPKB[3*ORDER_A_ENCODED_BYTES], tmp, ORDER_A_ENCODED_BYTES);
+    encode_to_bytes(tmp, &CompressedPKB[3*ORDER_A_ENCODED_BYTES], ORDER_A_ENCODED_BYTES);
     
     fp2_encode(A, &CompressedPKB[4*ORDER_A_ENCODED_BYTES]);
     CompressedPKB[4*ORDER_A_ENCODED_BYTES + FP2_ENCODED_BYTES] = qnr;
     CompressedPKB[4*ORDER_A_ENCODED_BYTES + FP2_ENCODED_BYTES + 1] = ind;
-
 }
 
 
@@ -1158,13 +1160,13 @@ int EphemeralKeyGeneration_B(const unsigned char* PrivateKeyB, unsigned char* Co
     point_t Pw, Qw;
 
     FullIsogeny_B_dual(PrivateKeyB, Ds, A);
-    BuildOrdinary2nBasis_dual(A, Ds, Rs, &qnr, &ind); // Generate a basis in E_A and pulls it back to E_A6. Rs[0] and Rs[1] affinized.
+    BuildOrdinary2nBasis_dual(A, Ds, Rs, &qnr, &ind);  // Generate a basis in E_A and pulls it back to E_A6. Rs[0] and Rs[1] affinized.
 
     // Maps from y^2 = x^3 + 6x^2 + x into y^2 = x^3 -11x + 14
     fpadd((digit_t*)Montgomery_one, (Rs[0]->X)[0], (Rs[0]->X)[0]);
-    fpadd((digit_t*)Montgomery_one, (Rs[0]->X)[0], (Rs[0]->X)[0]); // Weierstrass form 
+    fpadd((digit_t*)Montgomery_one, (Rs[0]->X)[0], (Rs[0]->X)[0]);  // Weierstrass form 
     fpadd((digit_t*)Montgomery_one, (Rs[1]->X)[0], (Rs[1]->X)[0]);
-    fpadd((digit_t*)Montgomery_one, (Rs[1]->X)[0], (Rs[1]->X)[0]); // Weierstrass form 
+    fpadd((digit_t*)Montgomery_one, (Rs[1]->X)[0], (Rs[1]->X)[0]);  // Weierstrass form 
 
     fpcopy((digit_t*)A_basis_zero + 0*NWORDS_FIELD, Pw->x[0]);
     fpcopy((digit_t*)A_basis_zero + 1*NWORDS_FIELD, Pw->x[1]);
@@ -1254,7 +1256,8 @@ int validate_ciphertext(const unsigned char* ephemeralsk_, const unsigned char* 
     point_proj_t phis[3] = {0}, R, S, pts[MAX_INT_POINTS_BOB];
     f2elm_t XPB, XQB, XRB, coeff[3], A24plus = {0}, A24minus = {0}, A = {0}, comp1 = {0}, comp2 = {0}, one = {0};
     unsigned int i, row, m, index = 0, pts_index[MAX_INT_POINTS_BOB], npts = 0, ii = 0;
-    digit_t temp[2*NWORDS_ORDER] = {0};    
+    digit_t temp[NWORDS_ORDER] = {0};
+    digit_t sk[NWORDS_ORDER] = {0};    
                 
     fpcopy((digit_t*)&Montgomery_one, one[0]);    
     
@@ -1262,8 +1265,7 @@ int validate_ciphertext(const unsigned char* ephemeralsk_, const unsigned char* 
     init_basis((digit_t*)B_gen, XPB, XQB, XRB);
 
     fp2_decode(xKA, phis[0]->X);
-    fpcopy((digit_t*)&Montgomery_one, phis[0]->Z[0]); // phi[0] <- PA + skA*QA
-    
+    fpcopy((digit_t*)&Montgomery_one, phis[0]->Z[0]); // phi[0] <- PA + skA*QA    
 
     // Initialize constants: A24minus = A-2C, A24plus = A+2C, where A=6, C=1
     fpcopy((digit_t*)&Montgomery_one, A24plus[0]);
@@ -1273,7 +1275,8 @@ int validate_ciphertext(const unsigned char* ephemeralsk_, const unsigned char* 
     fp2add(A24minus, A24minus, A24plus); // A24plus = 8
     
     // Retrieve kernel point
-    LADDER3PT(XPB, XQB, XRB, (digit_t*)ephemeralsk_, BOB, R, A);
+    decode_to_digits(ephemeralsk_, sk, SECRETKEY_B_BYTES, NWORDS_ORDER);
+    LADDER3PT(XPB, XQB, XRB, sk, BOB, R, A);
     
     // Traverse tree
     index = 0;
@@ -1298,23 +1301,20 @@ int validate_ciphertext(const unsigned char* ephemeralsk_, const unsigned char* 
         npts -= 1;
     }    
     get_3_isog(R, A24minus, A24plus, coeff);         
-    eval_3_isog(phis[0], coeff); // phis[0] <- phiB(PA + skA*QA)
+    eval_3_isog(phis[0], coeff);  // phis[0] <- phiB(PA + skA*QA)
 
     fp2_decode(&CompressedPKB[4*ORDER_A_ENCODED_BYTES], A);
     
     // Single equation check: t*(phiP + skA*phiQ) =? t*3^n*((a0+skA*a1)*S1 + (b0+skA*b1)*S2) for t in {(a0+skA*a1)^-1, (b0+skA*b1)^-1}
     
     fp2_decode(tphiBKA_t, S->X);
-    fp2_decode(&tphiBKA_t[FP2_ENCODED_BYTES], S->Z); // recover t*3^n*((a0+skA*a1)*S1 + (b0+skA*b1)*S2)
-    
-    digits_decode(&tphiBKA_t[2*FP2_ENCODED_BYTES], temp, ORDER_A_ENCODED_BYTES, NWORDS_ORDER);
-
-    Ladder(phis[0], temp, A, OALICE_BITS, R);  // t*(phiP + skA*phiQ)
+    fp2_decode(&tphiBKA_t[FP2_ENCODED_BYTES], S->Z);  // Recover t*3^n*((a0+skA*a1)*S1 + (b0+skA*b1)*S2)    
+    decode_to_digits(&tphiBKA_t[2*FP2_ENCODED_BYTES], temp, ORDER_A_ENCODED_BYTES, NWORDS_ORDER);
+    Ladder(phis[0], temp, A, OALICE_BITS, R);         // t*(phiP + skA*phiQ)
         
     fp2mul_mont(R->X, S->Z, comp1);
     fp2mul_mont(R->Z, S->X, comp2);             
     if (cmp_f2elm(comp1, comp2)) {
-        //printf("\nFailed comparison #1\n");
         return 0;    
     }
 

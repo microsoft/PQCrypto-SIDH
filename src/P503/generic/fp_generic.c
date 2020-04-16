@@ -10,7 +10,38 @@
 // Global constants
 extern const uint64_t p503[NWORDS_FIELD];
 extern const uint64_t p503p1[NWORDS_FIELD]; 
-extern const uint64_t p503x2[NWORDS_FIELD]; 
+extern const uint64_t p503x2[NWORDS_FIELD];  
+extern const uint64_t p503x4[NWORDS_FIELD];
+
+
+__inline void mp_sub503_p2(const digit_t* a, const digit_t* b, digit_t* c)
+{ // Multiprecision subtraction with correction with 2*p, c = a-b+2p.
+    unsigned int i, borrow = 0;
+
+    for (i = 0; i < NWORDS_FIELD; i++) {
+        SUBC(borrow, a[i], b[i], borrow, c[i]); 
+    }
+
+    borrow = 0;
+    for (i = 0; i < NWORDS_FIELD; i++) {
+        ADDC(borrow, c[i], ((digit_t*)p503x2)[i], borrow, c[i]); 
+    }
+} 
+
+
+__inline void mp_sub503_p4(const digit_t* a, const digit_t* b, digit_t* c)
+{ // Multiprecision subtraction with correction with 4*p, c = a-b+4p.
+    unsigned int i, borrow = 0;
+
+    for (i = 0; i < NWORDS_FIELD; i++) {
+        SUBC(borrow, a[i], b[i], borrow, c[i]); 
+    }
+
+    borrow = 0;
+    for (i = 0; i < NWORDS_FIELD; i++) {
+        ADDC(borrow, c[i], ((digit_t*)p503x4)[i], borrow, c[i]); 
+    }
+} 
 
 
 __inline void fpadd503(const digit_t* a, const digit_t* b, digit_t* c)
