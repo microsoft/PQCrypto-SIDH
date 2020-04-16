@@ -173,11 +173,11 @@ Open the solution file [`SIDH.sln`](Visual%20Studio/SIDH/SIDH.sln) in Visual Stu
 
 ### Running the tests:
 
-After building the solution file, there should be the following executable files: `arith_tests-P434.exe`, `arith_tests-P503.exe`, `arith_tests-P610.exe` and `arith_tests-P751.exe`, to run tests for the underlying arithmetic, `test-SIDHp[SET].exe` to run tests for the key exchange, and `test-SIKEp[SET].exe` to run tests for the KEM, where SET = {434, 503, 610, 751, 434_compressed, 503_compressed, 610_compressed, 751_compressed}.
+After building the solution file, there should be the following executable files: `arith_tests-P434.exe`, `arith_tests-P503.exe`, `arith_tests-P610.exe` and `arith_tests-P751.exe`, to run tests for the underlying arithmetic, `test-SIDHp[SET].exe` to run tests for the key exchange, and `test-SIKEp[SET].exe` to run tests for the KEM, where SET = {434, 503, 610, 751}.
 
 ### Using the library:
 
-After building the solution file, add the generated `P434.lib`, `P503.lib`, `P610.lib` and `P751.lib` library files to the set of References for a project, and add [`P434_api.h`](src/P434/P434_api.h), [`P503_api.h`](src/P503/P503_api.h), [`P610_api.h`](src/P610/P610_api.h), [`P751_api.h`](src/P751/P751_api.h), [`P434_compressed_api.h`](src/P434/P434_compressed_api.h), [`P503_compressed_api.h`](src/P503/P503_compressed_api.h), [`P610_compressed_api.h`](src/P610/P610_compressed_api.h) and [`P751_compressed_api.h`](src/P751/P751_compressed_api.h) to the list of header files of a project.
+After building the solution file, add the generated `P434.lib`, `P503.lib`, `P610.lib` and `P751.lib` library files to the set of References for a project, and add [`P434_api.h`](src/P434/P434_api.h), [`P503_api.h`](src/P503/P503_api.h), [`P610_api.h`](src/P610/P610_api.h), [`P751_api.h`](src/P751/P751_api.h) to the list of header files of a project.
 
 ## License
 
