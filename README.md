@@ -74,8 +74,10 @@ The library was developed by [Microsoft Research](http://research.microsoft.com/
 
 ## New in Version 3.3
  
-- New improved versions of the four parameter sets for compressed SIDH and compressed SIKE [11,12]. 
-- Added support for Mac OS X to the optimized assembly implementations for x64 platforms.
+- Improved versions of the four parameter sets for compressed SIDH and compressed SIKE [11,12].
+- Optimized implementations of the field arithmetic for 64-bit ARMv8 processors for Linux.
+- General optimizations to the field arithmetic.
+- Support for Mac OS X for the optimized x64 assembly implementations.
 
 ## Supported Platforms
 
