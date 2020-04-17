@@ -18,7 +18,7 @@ int crypto_kem_keypair(unsigned char *pk, unsigned char *sk)
     random_mod_order_A(sk + MSG_BYTES);    // Even random number
 
     // Generate public key pk
-    EphemeralKeyGeneration_A(sk + MSG_BYTES, pk);
+    EphemeralKeyGeneration_A_extended(sk + MSG_BYTES, pk);
 
     // Append public key pk to secret key sk
     memcpy(&sk[MSG_BYTES + SECRETKEY_A_BYTES], pk, CRYPTO_PUBLICKEYBYTES);
@@ -44,7 +44,7 @@ int crypto_kem_enc(unsigned char *ct, unsigned char *ss, const unsigned char *pk
     FormatPrivKey_B(ephemeralsk);
     
     // Encrypt
-    EphemeralKeyGeneration_B(ephemeralsk, ct); 
+    EphemeralKeyGeneration_B_extended(ephemeralsk, ct, 1); 
     EphemeralSecretAgreement_B(ephemeralsk, pk, jinvariant);  
     shake256(h, MSG_BYTES, jinvariant, FP2_ENCODED_BYTES);          
     for (int i = 0; i < MSG_BYTES; i++) {
@@ -65,12 +65,12 @@ int crypto_kem_dec(unsigned char *ss, const unsigned char *ct, const unsigned ch
   //          compressed ciphertext message ct      (CRYPTO_CIPHERTEXTBYTES = PARTIALLY_COMPRESSED_CHUNK_CT + MSG_BYTES bytes) 
   // Outputs: shared secret ss                      (CRYPTO_BYTES bytes)
     unsigned char ephemeralsk_[SECRETKEY_B_BYTES] = {0};
-    unsigned char jinvariant_[FP2_ENCODED_BYTES] = {0}, h_[MSG_BYTES];
+    unsigned char jinvariant_[FP2_ENCODED_BYTES + 2*FP2_ENCODED_BYTES + SECRETKEY_A_BYTES] = {0}, h_[MSG_BYTES];
     unsigned char temp[CRYPTO_CIPHERTEXTBYTES + MSG_BYTES] = {0};   
-    unsigned char tphiBKA_t[2*FP2_ENCODED_BYTES + SECRETKEY_A_BYTES];
+    unsigned char* tphiBKA_t = &jinvariant_[FP2_ENCODED_BYTES];
     
     // Decrypt 
-    EphemeralSecretAgreement_A(sk + MSG_BYTES, ct, jinvariant_, tphiBKA_t);  
+    EphemeralSecretAgreement_A_extended(sk + MSG_BYTES, ct, jinvariant_, 1);  
     shake256(h_, MSG_BYTES, jinvariant_, FP2_ENCODED_BYTES);   
     
     for (int i = 0; i < MSG_BYTES; i++) {
@@ -83,8 +83,7 @@ int crypto_kem_dec(unsigned char *ss, const unsigned char *ct, const unsigned ch
     FormatPrivKey_B(ephemeralsk_);
     
     // Generate shared secret ss <- H(m||ct) or output ss <- H(s||ct)
-    // No need to recompress here 
-    // Just check if x(phi(P) + t*phi(Q)) == x((a0 + t*a1)*R1 + (b0 + t*b1)*R2)    
+    // No need to recompress, just check if x(phi(P) + t*phi(Q)) == x((a0 + t*a1)*R1 + (b0 + t*b1)*R2)    
     if (validate_ciphertext(ephemeralsk_, ct, &sk[MSG_BYTES + SECRETKEY_A_BYTES + CRYPTO_PUBLICKEYBYTES], tphiBKA_t) == 0) {
         memcpy(temp, sk, MSG_BYTES);
     }
