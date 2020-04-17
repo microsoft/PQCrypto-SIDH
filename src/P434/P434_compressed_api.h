@@ -13,7 +13,7 @@
 #define CRYPTO_SECRETKEYBYTES     350      // MSG_BYTES + SECRETKEY_A_BYTES + CRYPTO_PUBLICKEYBYTES + FP2_ENCODED_BYTES bytes
 #define CRYPTO_PUBLICKEYBYTES     197      // 3*ORDER_B_ENCODED_BYTES + FP2_ENCODED_BYTES + 3 bytes for shared elligator 
 #define CRYPTO_BYTES               16
-#define CRYPTO_CIPHERTEXTBYTES    236     // PARTIALLY_COMPRESSED_CHUNK_CT + MSG_BYTES bytes
+#define CRYPTO_CIPHERTEXTBYTES    236      // PARTIALLY_COMPRESSED_CHUNK_CT + MSG_BYTES bytes
 
 // Algorithm name
 #define CRYPTO_ALGNAME "SIKEp434_compressed"  
@@ -35,7 +35,6 @@ int crypto_kem_enc_SIKEp434_compressed(unsigned char *ct, unsigned char *ss, con
 //          ciphertext message ct (CRYPTO_CIPHERTEXTBYTES = 236 bytes) 
 // Outputs: shared secret ss      (CRYPTO_BYTES = 16 bytes)
 int crypto_kem_dec_SIKEp434_compressed(unsigned char *ss, const unsigned char *ct, const unsigned char *sk);
-
 
 
 // Encoding of keys for KEM-based isogeny system "SIKEp434_compressed" (wire format):
@@ -73,7 +72,7 @@ void random_mod_order_B_SIDHp434(unsigned char* random_digits);
 // Alice's ephemeral public key generation
 // Input:  a private key PrivateKeyA in the range [0, 2^216 - 1], stored in 27 bytes. 
 // Output: the public key PublicKeyA consisting of 3 values of length OALICE_BITS, one element in GF(p434^2) and 2 bytes encoded in 197 bytes.
-int EphemeralKeyGeneration_A_SIDHp434_Compressed(unsigned char* PrivateKeyA, unsigned char* PublicKeyA);
+int EphemeralKeyGeneration_A_SIDHp434_Compressed(const unsigned char* PrivateKeyA, unsigned char* PublicKeyA);
 
 // Bob's ephemeral key-pair generation
 // It produces a private key PrivateKeyB and computes the public key PublicKeyB.
@@ -86,7 +85,7 @@ int EphemeralKeyGeneration_B_SIDHp434_Compressed(const unsigned char* PrivateKey
 // Inputs: Alice's PrivateKeyA is an integer in the range [0, 2^216 - 1], stored in 27 bytes. 
 //         Bob's PublicKeyB consists of 3 values of length OALICE_BITS, one element in GF(p434^2) and 2 bytes encoded in 197 bytes.
 // Output: a shared secret SharedSecretA that consists of one element in GF(p434^2) encoded in 110 bytes.
-int EphemeralSecretAgreement_A_SIDHp434_Compressed(const unsigned char* PrivateKeyA, const unsigned char* PublicKeyB, unsigned char* SharedSecretA, unsigned char* phiBKA_t);
+int EphemeralSecretAgreement_A_SIDHp434_Compressed(const unsigned char* PrivateKeyA, const unsigned char* PublicKeyB, unsigned char* SharedSecretA);
 
 // Bob's ephemeral shared secret computation
 // It produces a shared secret key SharedSecretB using his secret key PrivateKeyB and Alice's public key PublicKeyA
