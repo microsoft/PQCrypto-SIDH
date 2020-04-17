@@ -17,6 +17,9 @@ ifeq "$(ARCH)" "x64"
 else ifeq "$(ARCH)" "x86"
     ARCHITECTURE=_X86_
     USE_OPT_LEVEL=_GENERIC_
+else ifeq "$(ARCH)" "s390x"
+    ARCHITECTURE=_S390X_
+    USE_OPT_LEVEL=_GENERIC_
 else ifeq "$(ARCH)" "ARM"
     ARCHITECTURE=_ARM_
     USE_OPT_LEVEL=_GENERIC_
@@ -257,6 +260,10 @@ tests: lib434 lib434comp lib503 lib503comp lib610 lib610comp lib751 lib751comp
 	$(CC) $(CFLAGS) -L./lib503 tests/test_SIKEp503.c tests/test_extras.c -lsidh $(LDFLAGS) -o sike503/test_SIKE $(ARM_SETTING)
 	$(CC) $(CFLAGS) -L./lib610 tests/test_SIKEp610.c tests/test_extras.c -lsidh $(LDFLAGS) -o sike610/test_SIKE $(ARM_SETTING)
 	$(CC) $(CFLAGS) -L./lib751 tests/test_SIKEp751.c tests/test_extras.c -lsidh $(LDFLAGS) -o sike751/test_SIKE $(ARM_SETTING)
+	$(CC) $(CFLAGS) -L./lib434comp tests/test_SIDHp434_compressed.c tests/test_extras.c -lsidh $(LDFLAGS) -o sidh434_compressed/test_SIDH $(ARM_SETTING)
+	$(CC) $(CFLAGS) -L./lib503comp tests/test_SIDHp503_compressed.c tests/test_extras.c -lsidh $(LDFLAGS) -o sidh503_compressed/test_SIDH $(ARM_SETTING)
+	$(CC) $(CFLAGS) -L./lib610comp tests/test_SIDHp610_compressed.c tests/test_extras.c -lsidh $(LDFLAGS) -o sidh610_compressed/test_SIDH $(ARM_SETTING)
+	$(CC) $(CFLAGS) -L./lib751comp tests/test_SIDHp751_compressed.c tests/test_extras.c -lsidh $(LDFLAGS) -o sidh751_compressed/test_SIDH $(ARM_SETTING)
 	$(CC) $(CFLAGS) -L./lib434comp tests/test_SIKEp434_compressed.c tests/test_extras.c -lsidh $(LDFLAGS) -o sike434_compressed/test_SIKE $(ARM_SETTING)
 	$(CC) $(CFLAGS) -L./lib503comp tests/test_SIKEp503_compressed.c tests/test_extras.c -lsidh $(LDFLAGS) -o sike503_compressed/test_SIKE $(ARM_SETTING)
 	$(CC) $(CFLAGS) -L./lib610comp tests/test_SIKEp610_compressed.c tests/test_extras.c -lsidh $(LDFLAGS) -o sike610_compressed/test_SIKE $(ARM_SETTING)

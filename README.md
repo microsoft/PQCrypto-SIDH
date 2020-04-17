@@ -25,6 +25,13 @@ It also includes the following compressed KEM schemes:
 * SIKEp610_compressed: matching the post-quantum security of AES192 (level 3).
 * SIKEp751_compressed: matching the post-quantum security of AES256 (level 5).
 
+And the following compressed ephemeral key exchange schemes:
+
+* SIDHp434_compressed: matching the post-quantum security of AES128 (level 1).
+* SIDHp503_compressed: matching the post-quantum security of SHA3-256 (level 2).
+* SIDHp610_compressed: matching the post-quantum security of AES192 (level 3).
+* SIDHp751_compressed: matching the post-quantum security of AES256 (level 5).
+
 The compressed schemes exhibit reduced public keys at the expense of longer computing times.
 Their implementation is based on [11,12], which in turn are based on and improves upon [9] and [10].
 
@@ -63,9 +70,9 @@ The library was developed by [Microsoft Research](http://research.microsoft.com/
 - Supports four security levels matching the post-quantum security of AES128, SHA3-256, AES192 and AES256.
 - Protected against timing and cache-timing attacks through regular, constant-time implementation of 
   all operations on secret key material.
-- Support for Windows OS using Microsoft Visual Studio, Linux OS and MacOS X using GNU GCC and clang.     
+- Support for Windows OS using Microsoft Visual Studio, Linux OS and Mac OS X using GNU GCC and clang.     
 - Provides basic implementation of the underlying arithmetic functions using portable C to enable support
-  on a wide range of platforms including x64, x86 and ARM. 
+  on a wide range of platforms including x64, x86, ARM and s390x. 
 - Provides optimized implementations of the underlying arithmetic functions for x64 platforms with optional, 
   high-performance x64 assembly for Linux and Mac OS X. 
 - Provides an optimized implementation of the underlying arithmetic functions for 64-bit ARM platforms using 
@@ -78,10 +85,11 @@ The library was developed by [Microsoft Research](http://research.microsoft.com/
 - Optimized implementations of the field arithmetic for 64-bit ARMv8 processors for Linux.
 - General optimizations to the field arithmetic.
 - Support for Mac OS X for the optimized x64 assembly implementations.
+- Support for big endian platforms, specifically IBM s390x processors.
 
 ## Supported Platforms
 
-**SIDH v3.3** is supported on a wide range of platforms including x64, x86 and ARM devices running Windows,
+**SIDH v3.3** is supported on a wide range of platforms including x64, x86, ARM and s390x processors running Windows,
 Linux or Mac OS X. We have tested the library with Microsoft Visual Studio 2015, GNU GCC v5.4, and clang v3.8.
 See instructions below to choose an implementation option and compile on one of the supported platforms.
 
@@ -89,7 +97,7 @@ See instructions below to choose an implementation option and compile on one of 
 
  The following implementation options are available:
 - Portable implementations enabled by setting `OPT_LEVEL=GENERIC`. 
-- Optimized x64 assembly implementations for Linux enabled by setting `ARCH=x64` and `OPT_LEVEL=FAST`.
+- Optimized x64 assembly implementations for Linux\Mac OS X enabled by setting `ARCH=x64` and `OPT_LEVEL=FAST`.
 - Optimized ARMv8 assembly implementation for Linux enabled by setting `ARCH=ARM64` and `OPT_LEVEL=FAST`.
 
 Follow the instructions in the sections "_Instructions for Linux_" or "_Instructions for Windows_" below to configure these different implementation options.
@@ -117,10 +125,10 @@ according to the targeted platform (for example, MULX/ADX are not supported on S
 is supported on Haswell, and both MULX and ADX are supported on Broadwell, Skylake and Kaby Lake architectures). 
 Note that USE_ADX can only be set to `TRUE` if `USE_MULX=TRUE`.
 
-Options for x86/ARM:
+Options for x86/ARM/s390x:
 
 ```sh
-$ make ARCH=[x86/ARM] CC=[gcc/clang]
+$ make ARCH=[x86/ARM/s390x] CC=[gcc/clang]
 ```
 
 Options for ARM64:
@@ -150,6 +158,10 @@ $ ./sike434_compressed/test_SIKE
 $ ./sike503_compressed/test_SIKE
 $ ./sike610_compressed/test_SIKE
 $ ./sike751_compressed/test_SIKE
+$ ./sidh434_compressed/test_SIDH
+$ ./sidh503_compressed/test_SIDH
+$ ./sidh610_compressed/test_SIDH
+$ ./sidh751_compressed/test_SIDH
 ```
 
 To run the KEM implementations against the KATs, execute:
