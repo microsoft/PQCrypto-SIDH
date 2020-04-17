@@ -13,7 +13,7 @@
 #define CRYPTO_SECRETKEYBYTES     407      // MSG_BYTES + SECRETKEY_A_BYTES + CRYPTO_PUBLICKEYBYTES + FP2_ENCODED_BYTES bytes
 #define CRYPTO_PUBLICKEYBYTES     225      // 3*ORDER_B_ENCODED_BYTES + FP2_ENCODED_BYTES + 2 bytes for shared elligator
 #define CRYPTO_BYTES               24
-#define CRYPTO_CIPHERTEXTBYTES    280      // COMPRESSED_CHUNK_CT + MSG_BYTES bytes     
+#define CRYPTO_CIPHERTEXTBYTES    280      // PARTIALLY_COMPRESSED_CHUNK_CT + MSG_BYTES bytes     
 
 // Algorithm name
 #define CRYPTO_ALGNAME "SIKEp503_compressed"  
@@ -35,7 +35,6 @@ int crypto_kem_enc_SIKEp503_compressed(unsigned char *ct, unsigned char *ss, con
 //          ciphertext message ct (CRYPTO_CIPHERTEXTBYTES = 280 bytes) 
 // Outputs: shared secret ss      (CRYPTO_BYTES = 24 bytes)
 int crypto_kem_dec_SIKEp503_compressed(unsigned char *ss, const unsigned char *ct, const unsigned char *sk);
-
 
 
 // Encoding of keys for KEM-based isogeny system "SIKEp503" (wire format):
@@ -73,7 +72,7 @@ void random_mod_order_B_SIDHp503(unsigned char* random_digits);
 // Alice's ephemeral public key generation
 // Input:  a private key PrivateKeyA in the range [0, 2^250 - 1], stored in 32 bytes. 
 // Output: the public key PublicKeyA consisting of 3 GF(p503^2) elements encoded in 225 bytes.
-int EphemeralKeyGeneration_A_SIDHp503_Compressed(unsigned char* PrivateKeyA, unsigned char* PublicKeyA);
+int EphemeralKeyGeneration_A_SIDHp503_Compressed(const unsigned char* PrivateKeyA, unsigned char* PublicKeyA);
 
 // Bob's ephemeral key-pair generation
 // It produces a private key PrivateKeyB and computes the public key PublicKeyB.
@@ -86,7 +85,7 @@ int EphemeralKeyGeneration_B_SIDHp503_Compressed(const unsigned char* PrivateKey
 // Inputs: Alice's PrivateKeyA is an integer in the range [0, 2^250 - 1], stored in 32 bytes. 
 //         Bob's PublicKeyB consists of 3 GF(p503^2) elements encoded in 225 bytes.
 // Output: a shared secret SharedSecretA that consists of one element in GF(p503^2) encoded in 126 bytes.
-int EphemeralSecretAgreement_A_SIDHp503_Compressed(const unsigned char* PrivateKeyA, const unsigned char* PublicKeyB, unsigned char* SharedSecretA, unsigned char* phiBKA_t);
+int EphemeralSecretAgreement_A_SIDHp503_Compressed(const unsigned char* PrivateKeyA, const unsigned char* PublicKeyB, unsigned char* SharedSecretA);
 
 // Bob's ephemeral shared secret computation
 // It produces a shared secret key SharedSecretB using his secret key PrivateKeyB and Alice's public key PublicKeyA
