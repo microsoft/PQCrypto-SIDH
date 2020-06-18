@@ -6,6 +6,7 @@
 
 #include "../src/config.h"
 #include "../src/P434/P434_internal.h"
+#include "../src/internal.h"
 #include "test_extras.h"
 #include <stdio.h>
 

@@ -46,7 +46,7 @@ int crypto_kem_dec_SIKEp610_compressed(unsigned char *ss, const unsigned char *c
 // private keys are encoded in 491 octets in little endian format. 
 // Public keys pk consist of 3 values of length OBOB_BITS, one element in GF(p610^2) and 2 bytes. In the SIKE API, pk is encoded in 274 octets.
 // Ciphertexts ct consist of the concatenation of 4 values of length OALICE_BITS, one element in GF(p610^2), 2 bytes and a 24-byte value. In the SIKE API, 
-// ct is encoded in 274 + 24 = 336 octets.  
+// ct is encoded in 4*39 + 154 + 2 + 24 = 336 octets.  
 // Shared keys ss consist of a value of 24 octets.
 
 

@@ -563,6 +563,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\config.h" />
+    <ClInclude Include="..\..\src\internal.h" />
     <ClInclude Include="..\..\src\P610\P610_api.h" />
     <ClInclude Include="..\..\src\P610\P610_internal.h" />
     <ClInclude Include="..\..\src\random\random.h" />

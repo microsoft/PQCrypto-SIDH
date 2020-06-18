@@ -12,9 +12,29 @@ void clear_words(void* mem, digit_t nwords)
   // This function uses the volatile type qualifier to inform the compiler not to optimize out the memory clearing.
     volatile digit_t *v = mem; 
 
-    for (unsigned int i = 0; i < nwords; i++) {
+    for (unsigned int i = 0; i < nwords; i++)
         v[i] = 0;
-    }
+}
+
+
+int8_t ct_compare(const uint8_t *a, const uint8_t *b, unsigned int len) 
+{ // Compare two byte arrays in constant time.
+  // Returns 0 if the byte arrays are equal, -1 otherwise.
+    uint8_t r = 0;
+
+    for (unsigned int i = 0; i < len; i++)
+        r |= a[i] ^ b[i];
+
+    return (-(int8_t)r) >> (8*sizeof(uint8_t)-1);
+}
+
+
+void ct_cmov(uint8_t *r, const uint8_t *a, unsigned int len, int8_t selector) 
+{ // Conditional move in constant time.
+  // If and only if selector = -1 then load r with a.
+
+    for (unsigned int i = 0; i < len; i++)
+        r[i] ^= selector & (a[i] ^ r[i]);
 }
 
 

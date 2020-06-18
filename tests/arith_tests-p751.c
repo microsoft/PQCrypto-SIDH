@@ -6,6 +6,7 @@
 
 #include "../src/config.h"
 #include "../src/P751/P751_internal.h"
+#include "../src/internal.h"
 #include "test_extras.h"
 #include <stdio.h>
 

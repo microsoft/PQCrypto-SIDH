@@ -6,6 +6,7 @@
 
 #include "P434_api.h" 
 #include "P434_internal.h"
+#include "../internal.h"
 
 
 // Encoding of field elements, elements over Z_order, elements over GF(p^2) and elliptic curve points:

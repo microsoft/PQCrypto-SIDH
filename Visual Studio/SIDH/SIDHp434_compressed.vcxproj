@@ -645,6 +645,7 @@
     <ClCompile Include="..\..\src\sha3\fips202.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src\internal.h" />
     <ClInclude Include="..\..\src\P434\P434_compressed_api.h" />
     <ClInclude Include="..\..\src\P434\P434_internal.h" />
     <ClInclude Include="..\..\src\random\random.h" />

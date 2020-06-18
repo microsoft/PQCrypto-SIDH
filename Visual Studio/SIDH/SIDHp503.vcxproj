@@ -580,6 +580,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src\internal.h" />
     <ClInclude Include="..\..\src\P503\P503_api.h" />
     <ClInclude Include="..\..\src\P503\P503_internal.h" />
     <ClInclude Include="..\..\src\random\random.h" />

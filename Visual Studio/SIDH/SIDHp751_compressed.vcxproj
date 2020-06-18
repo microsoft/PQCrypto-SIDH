@@ -612,6 +612,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\config.h" />
+    <ClInclude Include="..\..\src\internal.h" />
     <ClInclude Include="..\..\src\P751\P751_compressed_api.h" />
     <ClInclude Include="..\..\src\P751\P751_internal.h" />
     <ClInclude Include="..\..\src\random\random.h" />

@@ -7,6 +7,7 @@
 #include "P503_compressed_api.h" 
 #define COMPRESS
 #include "P503_internal.h"
+#include "../internal.h"
 
 
 // Encoding of field elements, elements over Z_order, elements over GF(p^2) and elliptic curve points:

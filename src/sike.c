@@ -82,12 +82,11 @@ int crypto_kem_dec(unsigned char *ss, const unsigned char *ct, const unsigned ch
     shake256(ephemeralsk_, SECRETKEY_A_BYTES, temp, CRYPTO_PUBLICKEYBYTES+MSG_BYTES);
     ephemeralsk_[SECRETKEY_A_BYTES - 1] &= MASK_ALICE;
     
-    // Generate shared secret ss <- H(m||ct) or output ss <- H(s||ct)
+    // Generate shared secret ss <- H(m||ct), or output ss <- H(s||ct) in case of ct verification failure
     EphemeralKeyGeneration_A(ephemeralsk_, c0_);
-    if (memcmp(c0_, ct, CRYPTO_PUBLICKEYBYTES) != 0) {
-        memcpy(temp, sk, MSG_BYTES);
-    }
-    memcpy(&temp[MSG_BYTES], ct, CRYPTO_CIPHERTEXTBYTES);
+    // If selector = 0 then do ss = H(m||ct), else if selector = -1 load s to do ss = H(s||ct)
+    int8_t selector = ct_compare(c0_, ct, CRYPTO_PUBLICKEYBYTES);
+    ct_cmov(temp, sk, MSG_BYTES, selector);
     shake256(ss, CRYPTO_BYTES, temp, CRYPTO_CIPHERTEXTBYTES+MSG_BYTES);
 
     return 0;

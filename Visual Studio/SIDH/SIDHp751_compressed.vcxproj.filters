@@ -89,5 +89,8 @@
     <ClInclude Include="..\..\src\P751\P751_compressed_api.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\internal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
