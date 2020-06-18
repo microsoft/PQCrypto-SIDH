@@ -87,6 +87,7 @@ int crypto_kem_dec(unsigned char *ss, const unsigned char *ct, const unsigned ch
     // If selector = 0 then do ss = H(m||ct), else if selector = -1 load s to do ss = H(s||ct)
     int8_t selector = ct_compare(c0_, ct, CRYPTO_PUBLICKEYBYTES);
     ct_cmov(temp, sk, MSG_BYTES, selector);
+    memcpy(&temp[MSG_BYTES], ct, CRYPTO_CIPHERTEXTBYTES);
     shake256(ss, CRYPTO_BYTES, temp, CRYPTO_CIPHERTEXTBYTES+MSG_BYTES);
 
     return 0;
