@@ -201,8 +201,5 @@ void fp2inv434_mont(f2elm_t a);
 // GF(p434^2) inversion, a = (a0-i*a1)/(a0^2+a1^2), GF(p434) inversion done using the binary GCD 
 void fp2inv434_mont_bingcd(f2elm_t a);
 
-// n-way Montgomery inversion
-void mont_n_way_inv(const f2elm_t* vec, const int n, f2elm_t* out);
-
 
 #endif
