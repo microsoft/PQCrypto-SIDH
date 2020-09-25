@@ -408,48 +408,27 @@ void Traverse_w_notdiv_e_fullsigned(const f2elm_t r, int j, int k, int z, const 
 void solve_dlog(const f2elm_t r, int *D, digit_t* d, int ell)
 { // Computes the discrete log of input r = g^d where g = e(P,Q)^ell^e, and P,Q are torsion generators in the initial curve
   // Return the integer d  
-    felm_t rproj[2];    
     if (ell == 2) {
 #if (OALICE_BITS % W_2 == 0)
     #if defined(COMPRESSED_TABLES)
         #if defined(FULL_SIGNED)
             Traverse_w_div_e_fullsigned(r, 0, 0, PLEN_2 - 1, ph2_path, (const f2elm_t *)&ph2_T, D, DLEN_2, ELL2_W, W_2);            
-        ////#else
-        ////    toproj(r, rproj);  
-        ////    Traverse_w_div_e_comp(rproj, 0, 0, PLEN_2 - 1, ph2_path, (const felm_t *)&ph2_T, D, DLEN_2, ELL2_W, W_2);
         #endif
     #else        
         Traverse_w_div_e(r, 0, 0, PLEN_2 - 1, ph2_path, (const f2elm_t *)&ph2_T, D, DLEN_2, ELL2_W, W_2);
     #endif        
-/*
 #else
-    #ifdef COMPRESSED_TABLES
-        toproj(r, rproj);
-        Traverse_w_notdiv_e_comp(rproj, 0, 0, PLEN_2 - 1, ph2_path, (const felm_t *)&ph2_T1, (const felm_t *)&ph2_T2, D, DLEN_2, ell, ELL2_W, ELL2_EMODW, W_2, OALICE_BITS);
-    #else
-        Traverse_w_notdiv_e(r, 0, 0, PLEN_2 - 1, ph2_path, (const f2elm_t *)&ph2_T1, (const f2elm_t *)&ph2_T2, D, DLEN_2, ell, ELL2_W, ELL2_EMODW, W_2, OALICE_BITS);
-    #endif
-*/
+    Traverse_w_notdiv_e(r, 0, 0, PLEN_2 - 1, ph2_path, (const f2elm_t *)&ph2_T1, (const f2elm_t *)&ph2_T2, D, DLEN_2, ell, ELL2_W, ELL2_EMODW, W_2, OALICE_BITS);
 #endif
         from_base(D, d, DLEN_2, ELL2_W);
     } else if (ell == 3) {
 
 #if (OBOB_EXPON % W_3 == 0)
-/*
-    #if defined(COMPRESSED_TABLES)
-        toproj(r, rproj);       
-        Traverse_w_div_e_comp(rproj, 0, 0, PLEN_3 - 1, ph3_path, (const felm_t *)&ph3_T, D, DLEN_3, ELL3_W, W_3);
-    #else            
-        Traverse_w_div_e(r, 0, 0, PLEN_3 - 1, ph3_path, (const f2elm_t *)&ph3_T, D, DLEN_3, ELL3_W, W_3);
-    #endif
-*/
+    Traverse_w_div_e(r, 0, 0, PLEN_3 - 1, ph3_path, (const f2elm_t *)&ph3_T, D, DLEN_3, ELL3_W, W_3);
 #else          
     #if defined(COMPRESSED_TABLES)
-        #if defined(FULL_SIGNED)
+        #if defined(FULL_SIGNED)        
             Traverse_w_notdiv_e_fullsigned(r, 0, 0, PLEN_3 - 1, ph3_path, (const felm_t *)&ph3_T1, (const felm_t *)&ph3_T2, D, DLEN_3, ell, ELL3_W, ELL3_EMODW, W_3, OBOB_EXPON);                    
-        ////#else
-        ////    toproj(r, rproj);            
-        ////    Traverse_w_notdiv_e_comp(rproj, 0, 0, PLEN_3 - 1, ph3_path, (const felm_t *)&ph3_T1, (const felm_t *)&ph3_T2, D, DLEN_3, ell, ELL3_W, ELL3_EMODW, W_3, OBOB_EXPON);                    
         #endif
     #else
         Traverse_w_notdiv_e(r, 0, 0, PLEN_3 - 1, ph3_path, (const f2elm_t *)&ph3_T1, (const f2elm_t *)&ph3_T2, D, DLEN_3, ell, ELL3_W, ELL3_EMODW, W_3, OBOB_EXPON);        
