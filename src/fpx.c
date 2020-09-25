@@ -1057,6 +1057,21 @@ static __inline unsigned int is_felm_lt(const felm_t x, const felm_t y)
 }
 
 
+static __inline unsigned int is_orderelm_lt(const digit_t *x, const digit_t *y)
+{ // Is x < y? return 1 (TRUE) if condition is true, 0 (FALSE) otherwise.
+  // SECURITY NOTE: This function does not run in constant-time.
+
+    for (int i = NWORDS_ORDER-1; i >= 0; i--) {
+        if (x[i] < y[i]) { 
+            return true;
+        } else if (x[i] > y[i]) {
+            return false;
+        }
+    }
+    return false;
+}
+
+
 static __inline void fpinv_mont_bingcd_partial(const felm_t a, felm_t x1, unsigned int* k)
 { // Partial Montgomery inversion via the binary GCD algorithm.
     felm_t u, v, x2;

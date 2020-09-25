@@ -78,6 +78,9 @@
     // Length of the optimal strategy path for Pohlig-Hellman
     #define PLEN_2 94   
     #define PLEN_3 61 
+    // Compressed tables are in use with different algorithm choices: FULL_SIGNED, and HYBRID
+    #define COMPRESSED_TABLES
+    #define FULL_SIGNED
 #endif
 
 
