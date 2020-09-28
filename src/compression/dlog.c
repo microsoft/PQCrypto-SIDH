@@ -4,6 +4,37 @@
 * Abstract: Pohlig-Hellman with optimal strategy
 *********************************************************************************************/
 
+/*
+void from_base(int *D, digit_t *r, int Dlen, int base) 
+{ // Convert a number in base "base": (D[k-1]D[k-2]...D[1]D[0])_base < 2^(NWORDS_ORDER*RADIX)into decimal 
+  // Output: r = D[k-1]*base^(k-1) + ... + D[1]*base + D[0] 
+    digit_t ell[NWORDS_ORDER] = {0}, digit[NWORDS_ORDER] = {0}, temp[NWORDS_ORDER] = {0};
+    int ellw;
+    
+    ell[0] = base;
+    r[0] = D[Dlen-1]*ell[0]; 
+    for (int i = Dlen-2; i >= 1; i--) {
+        ellw = base;
+        digit[0] = (digit_t)D[i];
+        mp_add(r, digit, r, NWORDS_ORDER);
+        if ((base & (int)0x1) == 0x0) {
+            while (ellw > 1) {
+                mp_add(r, r, r, NWORDS_ORDER);   
+                ellw /= 2;
+            }
+        } else {
+            while (ellw > 1) {
+                mp_add(r, r, temp, NWORDS_ORDER);
+                mp_add(r, temp, r, NWORDS_ORDER);
+                ellw /= 3;
+            }
+        }
+    }
+    digit[0] = (digit_t)D[0];
+    mp_add(r, digit, r, NWORDS_ORDER);
+}
+*/
+
 
 void from_base(int *D, digit_t *r, int Dlen, int base) 
 { // Convert a number in base "base" with signed digits: (D[k-1]D[k-2]...D[1]D[0])_base < 2^(NWORDS_ORDER*RADIX) into decimal 
@@ -84,40 +115,6 @@ void from_base(int *D, digit_t *r, int Dlen, int base)
 }
 
 
-/*
-void from_base(int *D, digit_t *r, int Dlen, int base) 
-{ // Convert a number in base "base": (D[k-1]D[k-2]...D[1]D[0])_base < 2^(NWORDS_ORDER*RADIX)into decimal 
-  // Output: r = D[k-1]*base^(k-1) + ... + D[1]*base + D[0] 
-    digit_t ell[NWORDS_ORDER] = {0}, digit[NWORDS_ORDER] = {0}, temp[NWORDS_ORDER] = {0};
-    int ellw;
-    
-    ell[0] = base;
-    r[0] = D[Dlen-1]*ell[0]; 
-    for (int i = Dlen-2; i >= 1; i--) {
-        ellw = base;
-        digit[0] = (digit_t)D[i];
-        mp_add(r, digit, r, NWORDS_ORDER);
-        if ((base & (int)0x1) == 0x0) {
-            while (ellw > 1) {
-                mp_add(r, r, r, NWORDS_ORDER);   
-                ellw /= 2;
-            }
-        } else {
-            while (ellw > 1) {
-                mp_add(r, r, temp, NWORDS_ORDER);
-                mp_add(r, temp, r, NWORDS_ORDER);
-                ellw /= 3;
-            }
-        }
-    }
-    digit[0] = (digit_t)D[0];
-    mp_add(r, digit, r, NWORDS_ORDER);
-}
-*/
-
-
-
-
 
 void Traverse_w_div_e(const f2elm_t r, int j, int k, int z, const unsigned int *P, const f2elm_t *T, int *D, int Dlen, int ell, int w)
 {// Traverse a Pohlig-Hellman optimal strategy to solve a discrete log in a group of order ell^e
@@ -155,6 +152,7 @@ void Traverse_w_div_e(const f2elm_t r, int j, int k, int z, const unsigned int *
         }
     }
 }
+
 
 
 
@@ -209,11 +207,13 @@ void Traverse_w_notdiv_e(const f2elm_t r, int j, int k, int z, const unsigned in
 }
 
 
-// Using compressed tables with two options: FULL SIGNED and HYBRID
+
 #ifdef COMPRESSED_TABLES
+// Choose correct algorithm for compressed tables:
+// For ell=2, either ELL2_FULL_SIGNED or ELL2_HYBRID
+// For ell=3, either ELL3_FULL_SIGNED or ELL3_POWERS_OF_ELL
+#if defined(ELL2_FULL_SIGNED) || defined(ELL3_FULL_SIGNED)
 
-
-#ifdef FULL_SIGNED
 
 void Traverse_w_div_e_fullsigned(const f2elm_t r, int j, int k, int z, const unsigned int *P, const f2elm_t *CT, int *D, 
                                  int Dlen, int ellw, int w)
@@ -254,11 +254,6 @@ void Traverse_w_div_e_fullsigned(const f2elm_t r, int j, int k, int z, const uns
         fp2copy(r, rp);
         fp2correction(rp);
 
-        // for (int i=1; i<=ellw/2; i++) {
-        //     print_fp2((const felm_t *)&CT[(Dlen - 1)*(ellw/2)][2*(i-1)], 1);
-        //     printf("\n");
-        // }
-
         if (is_felm_zero(rp[1]) && memcmp((unsigned char *)&rp[0],&Montgomery_one,NBITS_TO_NBYTES(NBITS_FIELD)) == 0) {
             D[k] = 0;
         } else {
@@ -277,10 +272,8 @@ void Traverse_w_div_e_fullsigned(const f2elm_t r, int j, int k, int z, const uns
                 }                    
             }  
         }
-        //printf("\nD[%d]=%d", k, D[k]);
     }
 }
-
 
 
 void Traverse_w_notdiv_e_fullsigned(const f2elm_t r, int j, int k, int z, const unsigned int *P, const f2elm_t CT1, const f2elm_t CT2, int *D, int Dlen, int ell, int ellw, int ell_emodw, int w, int e)
@@ -330,23 +323,7 @@ void Traverse_w_notdiv_e_fullsigned(const f2elm_t r, int j, int k, int z, const 
     } else {
         fp2copy(r, rp);
         fp2correction(rp);    
-        // printf("\nLeaf element:\n");
-        // print_fp2(rp, 1);   
-        // printf("\n");
 
-        // for (int i=1; i<=ellw/2; i++) {
-        //     print_fp2((const felm_t *)&CT2[2*(Dlen - 1)*(ellw/2) + 2*(i-1)], 1);
-        //     printf("\n");
-        // }      
-        // printf("\n");    
-
-        // for (int i=1; i<=ellw/2; i++) {
-        //     fp2copy((const felm_t *)&CT2[(Dlen - 1)*(ellw/2)][2*(i-1)], alpha);
-        //     fpneg(alpha[1]);
-        //     fp2correction(alpha);
-        //     print_fp2(alpha,1);
-        //     printf("\n");
-        // }                  
         if (is_felm_zero(rp[1]) && memcmp((unsigned char *)&rp[0],&Montgomery_one,NBITS_TO_NBYTES(NBITS_FIELD)) == 0) {
             D[k] = 0;              
         } else {            
@@ -383,85 +360,65 @@ void Traverse_w_notdiv_e_fullsigned(const f2elm_t r, int j, int k, int z, const 
                 }
             }   
         }
-        //printf("\n D[%d]=%d", k, D[k]);
     }
 }
+#endif  //Closing ELL2_FUL_SIGNED or ELL3_FULL_SIGNED
 
 
-
-//#elif HYBRID
-// Two functions needed: Traverse with w divides e and Not
-// Closing HYBRID
-
-// Closing FULL_SIGNED and HYBRID
-#endif
-
-
-
-// Closing COMPRESSED_TABLES
-#endif
-
-
-
+#endif  // Closing COMPRESSED_TABLES
 
 
 void solve_dlog(const f2elm_t r, int *D, digit_t* d, int ell)
 { // Computes the discrete log of input r = g^d where g = e(P,Q)^ell^e, and P,Q are torsion generators in the initial curve
   // Return the integer d  
     if (ell == 2) {
-#if (OALICE_BITS % W_2 == 0)
-    #if defined(COMPRESSED_TABLES)
-        #if defined(FULL_SIGNED)
-            Traverse_w_div_e_fullsigned(r, 0, 0, PLEN_2 - 1, ph2_path, (const f2elm_t *)&ph2_T, D, DLEN_2, ELL2_W, W_2);            
+        #if (OALICE_BITS % W_2 == 0)
+            #if defined(COMPRESSED_TABLES)
+                #if defined(ELL2_FULL_SIGNED)
+                    Traverse_w_div_e_fullsigned(r, 0, 0, PLEN_2 - 1, ph2_path, (const f2elm_t *)&ph2_T, D, DLEN_2, ELL2_W, W_2);            
+                #elif defined(ELL2_HYBRID)
+                    // TO BE IMPLEMENTED
+                #endif
+            #else        
+                Traverse_w_div_e(r, 0, 0, PLEN_2 - 1, ph2_path, (const f2elm_t *)&ph2_T, D, DLEN_2, ELL2_W, W_2);
+            #endif        
+        #else
+            #if defined(COMPRESSED_TABLES)
+                #if defined(ELL2_FULL_SIGNED)
+                    Traverse_w_notdiv_e_fullsigned(r, 0, 0, PLEN_2 - 1, ph2_path, (const f2elm_t *)&ph2_T1, (const f2elm_t *)&ph2_T2, D, DLEN_2, ell, ELL2_W, ELL2_EMODW, W_2, OALICE_BITS);
+                #elif defined(ELL2_HYBRID)
+                    // TO BE IMPLEMENTED: Hybrid algorihtm for ell=2 and w not dividing e
+                #endif
+            #else        
+                Traverse_w_notdiv_e(r, 0, 0, PLEN_2 - 1, ph2_path, (const f2elm_t *)&ph2_T, D, DLEN_2, ELL2_W, W_2);
+            #endif
         #endif
-    #else        
-        Traverse_w_div_e(r, 0, 0, PLEN_2 - 1, ph2_path, (const f2elm_t *)&ph2_T, D, DLEN_2, ELL2_W, W_2);
-    #endif        
-#else
-    Traverse_w_notdiv_e(r, 0, 0, PLEN_2 - 1, ph2_path, (const f2elm_t *)&ph2_T1, (const f2elm_t *)&ph2_T2, D, DLEN_2, ell, ELL2_W, ELL2_EMODW, W_2, OALICE_BITS);
-#endif
         from_base(D, d, DLEN_2, ELL2_W);
     } else if (ell == 3) {
-
-#if (OBOB_EXPON % W_3 == 0)
-    Traverse_w_div_e(r, 0, 0, PLEN_3 - 1, ph3_path, (const f2elm_t *)&ph3_T, D, DLEN_3, ELL3_W, W_3);
-#else          
-    #if defined(COMPRESSED_TABLES)
-        #if defined(FULL_SIGNED)        
-            Traverse_w_notdiv_e_fullsigned(r, 0, 0, PLEN_3 - 1, ph3_path, (const felm_t *)&ph3_T1, (const felm_t *)&ph3_T2, D, DLEN_3, ell, ELL3_W, ELL3_EMODW, W_3, OBOB_EXPON);                    
-        #endif
-    #else
-        Traverse_w_notdiv_e(r, 0, 0, PLEN_3 - 1, ph3_path, (const f2elm_t *)&ph3_T1, (const f2elm_t *)&ph3_T2, D, DLEN_3, ell, ELL3_W, ELL3_EMODW, W_3, OBOB_EXPON);        
-    #endif
-#endif     
+        #if (OBOB_EXPON % W_3 == 0)
+            #if defined(COMPRESSED_TABLES)
+                #if defined(ELL3_FULL_SIGNED)        
+                    Traverse_w_div_e_fullsigned(r, 0, 0, PLEN_3 - 1, ph3_path, (const felm_t *)&ph3_T1, (const felm_t *)&ph3_T2, D, DLEN_3, ell, ELL3_W, ELL3_EMODW, W_3, OBOB_EXPON);                    
+                #elif defined(ELL3_POWERS_OF_ELL)
+                    //TO BE IMPLEMENTED: Powers of ell algorihtms for ell=3 and w dividing e                    
+                #endif
+            #else
+                Traverse_w_div_e(r, 0, 0, PLEN_3 - 1, ph3_path, (const f2elm_t *)&ph3_T, D, DLEN_3, ELL3_W, W_3);
+            #endif            
+        #else          
+            #if defined(COMPRESSED_TABLES)
+                #if defined(ELL3_FULL_SIGNED)        
+                    Traverse_w_notdiv_e_fullsigned(r, 0, 0, PLEN_3 - 1, ph3_path, (const felm_t *)&ph3_T1, (const felm_t *)&ph3_T2, D, DLEN_3, ell, ELL3_W, ELL3_EMODW, W_3, OBOB_EXPON);                    
+                #elif defined(ELL3_POWERS_OF_ELL)
+                    //TO BE IMPLEMENTED: Powers of ell algorihtms for ell=3 and w not dividing e
+                #endif
+            #else
+                Traverse_w_notdiv_e(r, 0, 0, PLEN_3 - 1, ph3_path, (const f2elm_t *)&ph3_T1, (const f2elm_t *)&ph3_T2, D, DLEN_3, ell, ELL3_W, ELL3_EMODW, W_3, OBOB_EXPON);        
+            #endif
+        #endif     
         from_base(D, d, DLEN_3, ELL3_W);
     }    
 }
-
-
-
-
-/*
-void solve_dlog(const f2elm_t r, int *D, digit_t* d, int ell)
-{ // Computes the discrete log of input r = g^d where g = e(P,Q)^ell^e, and P,Q are torsion generators in the initial curve
-  // Return the integer d  
-    if (ell == 2) {
-#if (OALICE_BITS % W_2 == 0)
-        Traverse_w_div_e(r, 0, 0, PLEN_2 - 1, ph2_path, (const f2elm_t *)&ph2_T, D, DLEN_2, ELL2_W, W_2);                        
-#else
-        Traverse_w_notdiv_e(r, 0, 0, PLEN_2 - 1, ph2_path, (const f2elm_t *)&ph2_T1, (const f2elm_t *)&ph2_T2, D, DLEN_2, ell, ELL2_W, ELL2_EMODW, W_2, OALICE_BITS);
-#endif
-        from_base(D, d, DLEN_2, ELL2_W);
-    } else if (ell == 3) {
-#if (OBOB_EXPON % W_3 == 0)
-            Traverse_w_div_e(r, 0, 0, PLEN_3 - 1, ph3_path, (const f2elm_t *)&ph3_T, D, DLEN_3, ELL3_W, W_3);
-#else          
-            Traverse_w_notdiv_e(r, 0, 0, PLEN_3 - 1, ph3_path, (const f2elm_t *)&ph3_T1, (const f2elm_t *)&ph3_T2, D, DLEN_3, ell, ELL3_W, ELL3_EMODW, W_3, OBOB_EXPON);        
-#endif     
-        from_base(D, d, DLEN_3, ELL3_W);
-    }    
-}
-*/
 
 
 void ph2(const point_full_proj_t phiP, const point_full_proj_t phiQ, const point_t PS, const point_t QS, const f2elm_t A, digit_t* c0, digit_t* d0, digit_t* c1, digit_t* d1)

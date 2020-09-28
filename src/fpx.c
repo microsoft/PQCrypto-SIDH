@@ -842,6 +842,16 @@ static __inline unsigned int is_felm_zero(const felm_t x)
     return 1;
 }
 
+static __inline unsigned int is_felm_one(const felm_t x)
+{ // Is x = 0? return 1 (TRUE) if condition is true, 0 (FALSE) otherwise.
+  // SECURITY NOTE: This function does not run in constant-time.
+    unsigned int i;
+
+    for (i = 0; i < NWORDS_FIELD; i++) {
+        if (x[i] != 0) return 0;
+    }
+    return 1;
+}
 
 void mul3(unsigned char *a) 
 { // Computes a = 3*a
@@ -918,6 +928,10 @@ void cube_Fp2_cycl(f2elm_t a, const felm_t one)
      fpsub(t0, one, t0);                 // t0 = t0 - 2
      fpmul_mont(a[0], t0, a[0]);         // a0 = t0*a0
 }
+
+
+
+
 
 
 static bool is_zero(digit_t* a, unsigned int nwords)
@@ -1468,5 +1482,5 @@ void recover_os(const f2elm_t X1, const f2elm_t Z1, const f2elm_t X2, const f2el
     fp2mul_mont(t0, Z2, t0);       // t0 = Z2*[(X1+x*Z1+2*A*Z1)*(X1*x+Z1)-2*A*Z1^2]
     fp2sub(t0, t1, Y3);            // Y3 = Z2*[(X1+x*Z1+2*A*Z1)*(X1*x+Z1)-2*A*Z1^2] - (X1-x*Z1)^2*X2
 }
-
+// Closing COMPRESSED
 #endif
