@@ -398,7 +398,7 @@ void solve_dlog(const f2elm_t r, int *D, digit_t* d, int ell)
         #if (OBOB_EXPON % W_3 == 0)
             #if defined(COMPRESSED_TABLES)
                 #if defined(ELL3_FULL_SIGNED)        
-                    Traverse_w_div_e_fullsigned(r, 0, 0, PLEN_3 - 1, ph3_path, (const felm_t *)&ph3_T1, (const felm_t *)&ph3_T2, D, DLEN_3, ell, ELL3_W, ELL3_EMODW, W_3, OBOB_EXPON);                    
+                    Traverse_w_div_e_fullsigned(r, 0, 0, PLEN_3 - 1, ph3_path, (const f2elm_t *)&ph3_T, D, DLEN_3, ELL3_W, W_3);
                 #elif defined(ELL3_POWERS_OF_ELL)
                     //TO BE IMPLEMENTED: Powers of ell algorihtms for ell=3 and w dividing e                    
                 #endif
