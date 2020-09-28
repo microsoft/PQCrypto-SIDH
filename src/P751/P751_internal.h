@@ -64,23 +64,54 @@
     // Parameters for discrete log computations
     // Binary Pohlig-Hellman reduced to smaller logs of order ell^W
     #define W_2 4
-    #define W_3 4
+    #define W_3 3
     // ell^w    
     #define ELL2_W (1 << W_2)    
-
-    #define ELL3_W 81
+    #define ELL3_W 27
     // ell^(e mod w) 
     #define ELL2_EMODW (1 << (OALICE_BITS % W_2))    
-    #define ELL3_EMODW 27
+    #define ELL3_EMODW 9
     // # of digits in the discrete log    
-    #define DLEN_2 93 // ceil(eA/W_2)
-    #define DLEN_3 60 // ceil(eB/W_3)
-    // Length of the optimal strategy path for Pohlig-Hellman
-    #define PLEN_2 94   
-    #define PLEN_3 61 
+    #define DLEN_2 (OALICE_BITS + W_2 - 1) / W_2 // ceil(eA/W_2)
+    #define DLEN_3 (OBOB_EXPON + W_3 - 1) / W_3 // ceil(eB/W_3)
     // Compressed tables are in use with different algorithm choices: FULL_SIGNED, and HYBRID
     #define COMPRESSED_TABLES
-    #define FULL_SIGNED
+    // Enable only one:
+    #define ELL2_FULL_SIGNED    // Uses signed digits to reduce table size by half
+    //#define ELL2_HYBRID         // Uses torus representation and hybrid algorithm at leaf dlogs
+    //#define W_2_HYBRID_EXP 4    // W value used for leaf_dlog_ell2_exp
+    // Enable only one:
+    #define ELL3_FULL_SIGNED    // Uses signed digits to reduce table size by half
+    //#define ELL3_POWERS_OF_ELL  // 
+
+    // Length of the optimal strategy path for Pohlig-Hellman
+    #ifdef COMPRESSED_TABLES
+        #ifdef ELL2_FULL_SIGNED
+            #if W_2 == 4
+                #define PLEN_2 94
+            #elif W_2 == 6
+                #define PLEN_2 63
+            #endif
+        #elif defined(ELL2_HYBRID)
+                //#define PLEN_2   // TO BE IMPLEMENTED
+        #endif
+        #ifdef ELL3_FULL_SIGNED
+            #if W_3 == 3
+                #define PLEN_3 81
+            #elif W_3 == 4
+                #define PLEN_3 61
+            #endif
+        #endif
+    #else
+        #if W_2 == 4
+            #define PLEN_2 94
+        #endif
+        #if W_3 == 4
+            #define PLEN_3 61
+        #elif W_3 == 5
+            #define PLEN_3 49
+        #endif
+    #endif
 #endif
 
 
