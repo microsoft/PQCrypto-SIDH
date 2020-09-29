@@ -4,36 +4,6 @@
 * Abstract: Pohlig-Hellman with optimal strategy
 *********************************************************************************************/
 
-/*
-void from_base(int *D, digit_t *r, int Dlen, int base) 
-{ // Convert a number in base "base": (D[k-1]D[k-2]...D[1]D[0])_base < 2^(NWORDS_ORDER*RADIX)into decimal 
-  // Output: r = D[k-1]*base^(k-1) + ... + D[1]*base + D[0] 
-    digit_t ell[NWORDS_ORDER] = {0}, digit[NWORDS_ORDER] = {0}, temp[NWORDS_ORDER] = {0};
-    int ellw;
-    
-    ell[0] = base;
-    r[0] = D[Dlen-1]*ell[0]; 
-    for (int i = Dlen-2; i >= 1; i--) {
-        ellw = base;
-        digit[0] = (digit_t)D[i];
-        mp_add(r, digit, r, NWORDS_ORDER);
-        if ((base & (int)0x1) == 0x0) {
-            while (ellw > 1) {
-                mp_add(r, r, r, NWORDS_ORDER);   
-                ellw /= 2;
-            }
-        } else {
-            while (ellw > 1) {
-                mp_add(r, r, temp, NWORDS_ORDER);
-                mp_add(r, temp, r, NWORDS_ORDER);
-                ellw /= 3;
-            }
-        }
-    }
-    digit[0] = (digit_t)D[0];
-    mp_add(r, digit, r, NWORDS_ORDER);
-}
-*/
 
 
 void from_base(int *D, digit_t *r, int Dlen, int base) 
@@ -116,7 +86,7 @@ void from_base(int *D, digit_t *r, int Dlen, int base)
 
 
 
-void Traverse_w_div_e(const f2elm_t r, int j, int k, int z, const unsigned int *P, const f2elm_t *T, int *D, int Dlen, int ell, int w)
+void Traverse_w_div_e(const f2elm_t r, int j, int k, int z, const unsigned int *P, const felm_t *T, int *D, int Dlen, int ell, int w)
 {// Traverse a Pohlig-Hellman optimal strategy to solve a discrete log in a group of order ell^e
  // The leaves of the tree will be used to recover the digits which are numbers from 0 to ell^w-1
  // Assume the integer w divides the exponent e
@@ -138,14 +108,14 @@ void Traverse_w_div_e(const f2elm_t r, int j, int k, int z, const unsigned int *
         
         fp2copy(r, rp);
         for (int h = k; h < k + t; h++) {
-            fp2mul_mont(rp, (const felm_t *)&T[(j + h)*ell][2*D[h]], rp);
+            fp2mul_mont(rp, T + 2*((j + h)*ell + D[h]), rp);
         }
         Traverse_w_div_e(rp, j, k + t, z - t, P, T, D, Dlen, ell, w);
     } else {
         fp2_conj(r, rp);
         fp2correction(rp);
         for (int t = 0; t < ell; t++) {
-            if (memcmp((unsigned char*)&T[(Dlen - 1)*ell][2*t], rp, 2*NBITS_TO_NBYTES(NBITS_FIELD)) == 0) {
+            if (memcmp((unsigned char*)&T[2*((Dlen - 1)*ell + t)], rp, 2*NBITS_TO_NBYTES(NBITS_FIELD)) == 0) {
                 D[k] = t;
                 break;
             }
@@ -156,7 +126,7 @@ void Traverse_w_div_e(const f2elm_t r, int j, int k, int z, const unsigned int *
 
 
 
-void Traverse_w_notdiv_e(const f2elm_t r, int j, int k, int z, const unsigned int *P, const f2elm_t *T1, const f2elm_t *T2, int *D, int Dlen, int ell, int ellw, int ell_emodw, int w, int e)
+void Traverse_w_notdiv_e(const f2elm_t r, int j, int k, int z, const unsigned int *P, const felm_t *T1, const felm_t *T2, int *D, int Dlen, int ell, int ellw, int ell_emodw, int w, int e)
 {// Traverse a Pohlig-Hellman optimal strategy to solve a discrete log in a group of order ell^e
  // Leaves are used to recover the digits which are numbers from 0 to ell^w-1 except by the last leaf that gives a digit between 0 and ell^(e mod w)
  // Assume w does not divide the exponent e
@@ -179,9 +149,9 @@ void Traverse_w_notdiv_e(const f2elm_t r, int j, int k, int z, const unsigned in
         fp2copy(r, rp);
         for (int h = k; h < k + t; h++) {
             if (j > 0)        
-                fp2mul_mont(rp, (const felm_t *)&T2[ellw*(j + h)][2*D[h]], rp);
+                fp2mul_mont(rp, T2 + 2*(ellw*(j + h) + D[h]), rp);
             else
-                fp2mul_mont(rp, (const felm_t *)&T1[ellw*(j + h)][2*D[h]], rp);
+                fp2mul_mont(rp, T1 + 2*(ellw*(j + h) + D[h]), rp);
         }
         
         Traverse_w_notdiv_e(rp, j, k + t, z - t, P, T1, T2, D, Dlen, ell, ellw, ell_emodw, w, e);
@@ -190,14 +160,14 @@ void Traverse_w_notdiv_e(const f2elm_t r, int j, int k, int z, const unsigned in
         fp2correction(rp);
         if (!(j == 0 && k == Dlen - 1)) {
             for (int t = 0; t < ellw; t++) {
-                if (memcmp((unsigned char*)&T2[ellw*(Dlen-1)][2*t], rp, 2*NBITS_TO_NBYTES(NBITS_FIELD)) == 0) {
+                if (memcmp((unsigned char*)&T2[2*(ellw*(Dlen-1) + t)], rp, 2*NBITS_TO_NBYTES(NBITS_FIELD)) == 0) {
                     D[k] = t;
                     break;             
                 }              
             }
         } else {            
             for (int t = 0; t < ell_emodw; t++) {     
-                if (memcmp((unsigned char*)&T1[ellw*(Dlen - 1)][2*t], rp, 2*NBITS_TO_NBYTES(NBITS_FIELD)) == 0) { 
+                if (memcmp((unsigned char*)&T1[2*(ellw*(Dlen - 1) + t)], rp, 2*NBITS_TO_NBYTES(NBITS_FIELD)) == 0) { 
                     D[k] = t;
                     break;                
                 }          
@@ -215,7 +185,7 @@ void Traverse_w_notdiv_e(const f2elm_t r, int j, int k, int z, const unsigned in
 #if defined(ELL2_FULL_SIGNED) || defined(ELL3_FULL_SIGNED)
 
 
-void Traverse_w_div_e_fullsigned(const f2elm_t r, int j, int k, int z, const unsigned int *P, const f2elm_t *CT, int *D, 
+void Traverse_w_div_e_fullsigned(const f2elm_t r, int j, int k, int z, const unsigned int *P, const felm_t *CT, int *D, 
                                  int Dlen, int ellw, int w)
 {// Traverse a Pohlig-Hellman optimal strategy to solve a discrete log in a group of order ell^e
  // The leaves of the tree will be used to recover the signed digits which are numbers from +/-{0,1... Ceil((ell^w-1)/2)}
@@ -241,11 +211,11 @@ void Traverse_w_div_e_fullsigned(const f2elm_t r, int j, int k, int z, const uns
         for (int h = k; h < k + t; h++) {
             if (D[h] != 0) {
                 if(D[h] < 0) {
-                    fp2copy((const felm_t *)&CT[(j + h)*(ellw/2)][2*(-D[h]-1)], alpha);
+                    fp2copy(CT + 2*((j + h)*(ellw/2) + (-D[h]-1)), alpha);
                     fpneg(alpha[1]);
                     fp2mul_mont(rp, alpha, rp);
                 } else {
-                    fp2mul_mont(rp, (const felm_t *)&CT[(j + h)*(ellw/2)][2*(D[h]-1)], rp);
+                    fp2mul_mont(rp, CT + 2*((j + h)*(ellw/2) + (D[h]-1)), rp);
                 }   
             }
         }
@@ -258,11 +228,11 @@ void Traverse_w_div_e_fullsigned(const f2elm_t r, int j, int k, int z, const uns
             D[k] = 0;
         } else {
             for (int t = 1; t <= ellw/2; t++) {
-                if (memcmp(rp, (unsigned char*)&CT[(Dlen - 1)*(ellw/2)][2*(t-1)], 2*NBITS_TO_NBYTES(NBITS_FIELD)) == 0) {
+                if (memcmp(rp, (unsigned char*)&CT[2*((Dlen - 1)*(ellw/2) + (t-1))], 2*NBITS_TO_NBYTES(NBITS_FIELD)) == 0) {
                     D[k] = -t;
                     break;
                 } else {                    
-                    fp2copy((const felm_t *)&CT[(Dlen - 1)*(ellw/2)][2*(t-1)], alpha);
+                    fp2copy(CT + 2*((Dlen - 1)*(ellw/2) + (t-1)), alpha);
                     fpneg(alpha[1]);
                     fpcorrection(alpha[1]);
                     if (memcmp(rp, alpha, 2*NBITS_TO_NBYTES(NBITS_FIELD)) == 0) {
@@ -276,7 +246,8 @@ void Traverse_w_div_e_fullsigned(const f2elm_t r, int j, int k, int z, const uns
 }
 
 
-void Traverse_w_notdiv_e_fullsigned(const f2elm_t r, int j, int k, int z, const unsigned int *P, const f2elm_t CT1, const f2elm_t CT2, int *D, int Dlen, int ell, int ellw, int ell_emodw, int w, int e)
+void Traverse_w_notdiv_e_fullsigned(const f2elm_t r, int j, int k, int z, const unsigned int *P, const felm_t *CT1, const felm_t *CT2, 
+                                    int *D, int Dlen, int ell, int ellw, int ell_emodw, int w, int e)
 { // Traverse a Pohlig-Hellman optimal strategy to solve a discrete log in a group of order ell^e
  // Leaves are used to recover the digits which are numbers from 0 to ell^w-1 except by the last leaf that gives a digit between 0 and ell^(e mod w)
  // Assume w does not divide the exponent e
@@ -301,19 +272,19 @@ void Traverse_w_notdiv_e_fullsigned(const f2elm_t r, int j, int k, int z, const 
             if (D[h] != 0) {
                 if (j > 0) {
                     if (D[h] < 0) {
-                        fp2copy((const felm_t *)&CT2[2*(j + h)*(ellw/2)+2*(-D[h]-1)], alpha);
+                        fp2copy(CT2 + 2*(j + h)*(ellw/2)+2*(-D[h]-1), alpha);
                         fpneg(alpha[1]);                        
                         fp2mul_mont(rp, alpha, rp);
                     } else {
-                        fp2mul_mont(rp, (const felm_t *)&CT2[2*(j + h)*(ellw/2) + 2*(D[h]-1)], rp);
+                        fp2mul_mont(rp, CT2 + 2*((j + h)*(ellw/2) + (D[h]-1)), rp);
                     }
                 } else {
                     if (D[h] < 0) {
-                        fp2copy((const felm_t *)&CT1[2*(j + h)*(ellw/2)+2*(-D[h]-1)], alpha);
+                        fp2copy(CT1 + 2*((j + h)*(ellw/2) + (-D[h]-1)), alpha);
                         fpneg(alpha[1]);
                         fp2mul_mont(rp, alpha, rp);                
                     } else {
-                        fp2mul_mont(rp, (const felm_t *)&CT1[2*(j + h)*(ellw/2)+2*(D[h]-1)], rp);
+                        fp2mul_mont(rp, CT1 + 2*((j + h)*(ellw/2) + (D[h]-1)), rp);
                     }
                 }
             }             
@@ -333,7 +304,7 @@ void Traverse_w_notdiv_e_fullsigned(const f2elm_t r, int j, int k, int z, const 
                         D[k] = -t;
                         break;             
                     } else {
-                        fp2copy((const felm_t *)&CT2[2*(ellw/2)*(Dlen-1)+2*(t-1)], alpha);
+                        fp2copy(CT2 + 2*((ellw/2)*(Dlen-1) + (t-1)), alpha);
                         fpneg(alpha[1]);
                         fpcorrection(alpha[1]);
                         if (memcmp(rp, alpha, 2*NBITS_TO_NBYTES(NBITS_FIELD)) == 0) {
@@ -344,11 +315,11 @@ void Traverse_w_notdiv_e_fullsigned(const f2elm_t r, int j, int k, int z, const 
                 }
             } else {            
                 for (int t = 1; t <= ell_emodw/2; t++) {     
-                    if (memcmp((unsigned char*)&CT1[2*(ellw/2)*(Dlen - 1)+2*(t-1)], rp, 2*NBITS_TO_NBYTES(NBITS_FIELD)) == 0) { 
+                    if (memcmp((unsigned char*)&CT1[2*(ellw/2)*(Dlen - 1) + 2*(t-1)], rp, 2*NBITS_TO_NBYTES(NBITS_FIELD)) == 0) { 
                         D[k] = -t;
                         break;                
                     } else {
-                        fp2copy((const felm_t *)&CT1[2*(ellw/2)*(Dlen-1)+2*(t-1)], alpha);
+                        fp2copy(CT1 + 2*((ellw/2)*(Dlen-1) + (t-1)), alpha);
                         fpneg(alpha[1]);
                         fpcorrection(alpha[1]);
                         if (memcmp(rp, alpha, 2*NBITS_TO_NBYTES(NBITS_FIELD)) == 0) {
@@ -375,22 +346,22 @@ void solve_dlog(const f2elm_t r, int *D, digit_t* d, int ell)
         #if (OALICE_BITS % W_2 == 0)
             #if defined(COMPRESSED_TABLES)
                 #if defined(ELL2_FULL_SIGNED)
-                    Traverse_w_div_e_fullsigned(r, 0, 0, PLEN_2 - 1, ph2_path, (const f2elm_t *)&ph2_T, D, DLEN_2, ELL2_W, W_2);            
+                    Traverse_w_div_e_fullsigned(r, 0, 0, PLEN_2 - 1, ph2_path, (const felm_t *)&ph2_T, D, DLEN_2, ELL2_W, W_2);            
                 #elif defined(ELL2_HYBRID)
                     // TO BE IMPLEMENTED
                 #endif
             #else        
-                Traverse_w_div_e(r, 0, 0, PLEN_2 - 1, ph2_path, (const f2elm_t *)&ph2_T, D, DLEN_2, ELL2_W, W_2);
+                Traverse_w_div_e(r, 0, 0, PLEN_2 - 1, ph2_path, (const felm_t *)&ph2_T, D, DLEN_2, ELL2_W, W_2);
             #endif        
         #else
             #if defined(COMPRESSED_TABLES)
                 #if defined(ELL2_FULL_SIGNED)
-                    Traverse_w_notdiv_e_fullsigned(r, 0, 0, PLEN_2 - 1, ph2_path, (const f2elm_t *)&ph2_T1, (const f2elm_t *)&ph2_T2, D, DLEN_2, ell, ELL2_W, ELL2_EMODW, W_2, OALICE_BITS);
+                    Traverse_w_notdiv_e_fullsigned(r, 0, 0, PLEN_2 - 1, ph2_path, (const felm_t *)&ph2_T1, (const felm_t *)&ph2_T2, D, DLEN_2, ell, ELL2_W, ELL2_EMODW, W_2, OALICE_BITS);
                 #elif defined(ELL2_HYBRID)
-                    // TO BE IMPLEMENTED: Hybrid algorihtm for ell=2 and w not dividing e
+                    // TO BE IMPLEMENTED: Hybrid algorithm for ell=2 and w not dividing e
                 #endif
             #else        
-                Traverse_w_notdiv_e(r, 0, 0, PLEN_2 - 1, ph2_path, (const f2elm_t *)&ph2_T, D, DLEN_2, ELL2_W, W_2);
+                Traverse_w_notdiv_e(r, 0, 0, PLEN_2 - 1, ph2_path, (const felm_t *)&ph2_T, D, DLEN_2, ELL2_W, W_2);
             #endif
         #endif
         from_base(D, d, DLEN_2, ELL2_W);
@@ -398,22 +369,22 @@ void solve_dlog(const f2elm_t r, int *D, digit_t* d, int ell)
         #if (OBOB_EXPON % W_3 == 0)
             #if defined(COMPRESSED_TABLES)
                 #if defined(ELL3_FULL_SIGNED)        
-                    Traverse_w_div_e_fullsigned(r, 0, 0, PLEN_3 - 1, ph3_path, (const f2elm_t *)&ph3_T, D, DLEN_3, ELL3_W, W_3);
+                    Traverse_w_div_e_fullsigned(r, 0, 0, PLEN_3 - 1, ph3_path, (const felm_t *)&ph3_T, D, DLEN_3, ELL3_W, W_3);
                 #elif defined(ELL3_POWERS_OF_ELL)
-                    //TO BE IMPLEMENTED: Powers of ell algorihtms for ell=3 and w dividing e                    
+                    //TO BE IMPLEMENTED: Powers of ell algorithms for ell=3 and w dividing e                    
                 #endif
             #else
-                Traverse_w_div_e(r, 0, 0, PLEN_3 - 1, ph3_path, (const f2elm_t *)&ph3_T, D, DLEN_3, ELL3_W, W_3);
+                Traverse_w_div_e(r, 0, 0, PLEN_3 - 1, ph3_path, (const felm_t *)&ph3_T, D, DLEN_3, ELL3_W, W_3);
             #endif            
         #else          
             #if defined(COMPRESSED_TABLES)
                 #if defined(ELL3_FULL_SIGNED)        
                     Traverse_w_notdiv_e_fullsigned(r, 0, 0, PLEN_3 - 1, ph3_path, (const felm_t *)&ph3_T1, (const felm_t *)&ph3_T2, D, DLEN_3, ell, ELL3_W, ELL3_EMODW, W_3, OBOB_EXPON);                    
                 #elif defined(ELL3_POWERS_OF_ELL)
-                    //TO BE IMPLEMENTED: Powers of ell algorihtms for ell=3 and w not dividing e
+                    //TO BE IMPLEMENTED: Powers of ell algorithms for ell=3 and w not dividing e
                 #endif
             #else
-                Traverse_w_notdiv_e(r, 0, 0, PLEN_3 - 1, ph3_path, (const f2elm_t *)&ph3_T1, (const f2elm_t *)&ph3_T2, D, DLEN_3, ell, ELL3_W, ELL3_EMODW, W_3, OBOB_EXPON);        
+                Traverse_w_notdiv_e(r, 0, 0, PLEN_3 - 1, ph3_path, (const felm_t *)&ph3_T1, (const felm_t *)&ph3_T2, D, DLEN_3, ell, ELL3_W, ELL3_EMODW, W_3, OBOB_EXPON);        
             #endif
         #endif     
         from_base(D, d, DLEN_3, ELL3_W);

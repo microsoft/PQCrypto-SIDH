@@ -63,18 +63,18 @@
     #define TABLE_V3_LEN 20
     // Parameters for discrete log computations
     // Binary Pohlig-Hellman reduced to smaller logs of order ell^W
-    #define W_2 5//5
-    #define W_3 3//4
+    #define W_2 5
+    #define W_3 3
     // ell^w    
     #define ELL2_W (1 << W_2)    
-    #define ELL3_W 27//81
+    #define ELL3_W 27
     // ell^(e mod w) 
     #define ELL2_EMODW (1 << (OALICE_BITS % W_2))    
     #define ELL3_EMODW 1
 
     // # of digits in the discrete log    
-    #define DLEN_2 (OALICE_BITS+W_2-1)/W_2 //54 // ceil(eA/W_2)
-    #define DLEN_3 (OBOB_EXPON+W_3-1)/W_3 //35 // ceil(eB/W_3)
+    #define DLEN_2 ((OALICE_BITS+W_2-1)/W_2)  // ceil(eA/W_2)
+    #define DLEN_3 ((OBOB_EXPON+W_3-1)/W_3)   // ceil(eB/W_3)
 
  // Compressed tables are in use with different algorithm choices: FULL_SIGNED, and HYBRID
     #define COMPRESSED_TABLES
