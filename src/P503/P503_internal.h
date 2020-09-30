@@ -74,44 +74,21 @@
     // # of digits in the discrete log    
     #define DLEN_2 ((OALICE_BITS + W_2 - 1) / W_2) // ceil(eA/W_2)
     #define DLEN_3 ((OBOB_EXPON + W_3 - 1) / W_3) // ceil(eB/W_3)
-    // Compressed tables are in use with different algorithm choices: FULL_SIGNED, and HYBRID
+    // Use compressed tables: FULL_SIGNED
     #define COMPRESSED_TABLES
-    // Enable only one:
     #define ELL2_FULL_SIGNED    // Uses signed digits to reduce table size by half
-    //#define ELL2_HYBRID         // Uses torus representation and hybrid algorithm at leaf dlogs
-    //#define W_2_HYBRID_EXP 4    // W value used for leaf_dlog_ell2_exp
-    // Enable only one:
     #define ELL3_FULL_SIGNED    // Uses signed digits to reduce table size by half
-    //#define ELL3_POWERS_OF_ELL  // 
-
     // Length of the optimal strategy path for Pohlig-Hellman
     #ifdef COMPRESSED_TABLES
         #ifdef ELL2_FULL_SIGNED
             #if W_2 == 5
                 #define PLEN_2 51
-            #elif W_2 == 7
-                #define PLEN_2 37
-            #endif
-        #elif defined(ELL2_HYBRID)
-            #if W_2 == 6
-                #define PLEN_2 // TBD
             #endif
         #endif
         #ifdef ELL3_FULL_SIGNED
             #if W_3 == 3
                 #define PLEN_3 54
-            #elif W_3 == 4
-                #define PLEN_3 41
             #endif
-        #endif
-    #else
-        #if W_2 == 5
-            #define PLEN_2 51
-        #endif
-        #if W_3 == 4
-            #define PLEN_3 41
-        #elif W_3 == 6
-            #define PLEN_3 28
         #endif
     #endif
 #endif
