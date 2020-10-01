@@ -56,7 +56,7 @@ int cryptorun_kex()
     unsigned char PrivateKeyA[SIDH_SECRETKEYBYTES_A], PrivateKeyB[SIDH_SECRETKEYBYTES_B];
     unsigned char PublicKeyA[SIDH_PUBLICKEYBYTES], PublicKeyB[SIDH_PUBLICKEYBYTES];
     unsigned char SharedSecretA[SIDH_BYTES], SharedSecretB[SIDH_BYTES];
-    unsigned long long cycles, cycles1, cycles2;
+    unsigned long long cycles_keygen_A = 0, cycles_keygen_B = 0, cycles_shared_A = 0, cycles_shared_B = 0, cycles1, cycles2;
 
     printf("\n\nBENCHMARKING EPHEMERAL ISOGENY-BASED KEY EXCHANGE SYSTEM %s\n", SCHEME_NAME);
     printf("--------------------------------------------------------------------------------------------------------\n\n");
@@ -64,52 +64,40 @@ int cryptorun_kex()
     random_mod_order_A(PrivateKeyA);
     random_mod_order_B(PrivateKeyB);
 
-    // Benchmarking Alice's key generation
-    cycles = 0;
     for (n = 0; n < BENCH_LOOPS; n++)
     {
+        // Benchmarking Alice's key generation
         cycles1 = cpucycles();
         EphemeralKeyGeneration_A(PrivateKeyA, PublicKeyA);
         cycles2 = cpucycles();
-        cycles = cycles+(cycles2-cycles1);
-    }
-    printf("  Alice's key generation runs in ............................... %10lld ", cycles/BENCH_LOOPS); print_unit;
-    printf("\n");
+        cycles_keygen_A = cycles_keygen_A+(cycles2-cycles1);
 
-    // Benchmarking Bob's key generation
-    cycles = 0;
-    for (n = 0; n < BENCH_LOOPS; n++)
-    {
+        // Benchmarking Bob's key generation
         cycles1 = cpucycles();
         EphemeralKeyGeneration_B(PrivateKeyB, PublicKeyB);
         cycles2 = cpucycles();
-        cycles = cycles+(cycles2-cycles1);
-    }
-    printf("  Bob's key generation runs in ................................. %10lld ", cycles/BENCH_LOOPS); print_unit;
-    printf("\n");
+        cycles_keygen_B = cycles_keygen_B+(cycles2-cycles1);
 
-    // Benchmarking Alice's shared key computation
-    cycles = 0;
-    for (n = 0; n < BENCH_LOOPS; n++)
-    {
+        // Benchmarking Alice's shared key computation
         cycles1 = cpucycles();
         EphemeralSecretAgreement_A(PrivateKeyA, PublicKeyB, SharedSecretA); 
         cycles2 = cpucycles();
-        cycles = cycles+(cycles2-cycles1);
-    }
-    printf("  Alice's shared key computation runs in ....................... %10lld ", cycles/BENCH_LOOPS); print_unit;
-    printf("\n");
+        cycles_shared_A = cycles_shared_A+(cycles2-cycles1);
 
-    // Benchmarking Bob's shared key computation
-    cycles = 0;
-    for (n = 0; n < BENCH_LOOPS; n++)
-    {
+        // Benchmarking Bob's shared key computation
         cycles1 = cpucycles();
         EphemeralSecretAgreement_B(PrivateKeyB, PublicKeyA, SharedSecretB);
         cycles2 = cpucycles();
-        cycles = cycles+(cycles2-cycles1);
+        cycles_shared_B = cycles_shared_B+(cycles2-cycles1);
     }
-    printf("  Bob's shared key computation runs in ......................... %10lld ", cycles/BENCH_LOOPS); print_unit;
+
+    printf("  Alice's key generation runs in ............................... %10lld ", cycles_keygen_A/BENCH_LOOPS); print_unit;
+    printf("\n");
+    printf("  Bob's key generation runs in ................................. %10lld ", cycles_keygen_B/BENCH_LOOPS); print_unit;
+    printf("\n");
+    printf("  Alice's shared key computation runs in ....................... %10lld ", cycles_shared_A/BENCH_LOOPS); print_unit;
+    printf("\n");
+    printf("  Bob's shared key computation runs in ......................... %10lld ", cycles_shared_B/BENCH_LOOPS); print_unit;
     printf("\n");
 
     return PASSED;

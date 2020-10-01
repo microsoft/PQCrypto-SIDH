@@ -10,7 +10,7 @@
     #define BENCH_LOOPS        5      // Number of iterations per bench 
     #define TEST_LOOPS         5      // Number of iterations per test
 #else
-    #define BENCH_LOOPS       1000
+    #define BENCH_LOOPS       100
     #define TEST_LOOPS        10      
 #endif
 
@@ -56,15 +56,11 @@ int cryptorun_kem()
     unsigned char ct[CRYPTO_CIPHERTEXTBYTES] = {0};
     unsigned char ss[CRYPTO_BYTES] = {0};
     unsigned char ss_[CRYPTO_BYTES] = {0};
-    unsigned long long cycles_keygen, cycles_encaps, cycles_decaps, cycles1, cycles2;
+    unsigned long long cycles_keygen = 0, cycles_encaps = 0, cycles_decaps = 0, cycles1, cycles2;
 
     printf("\n\nBENCHMARKING ISOGENY-BASED KEY ENCAPSULATION MECHANISM %s\n", SCHEME_NAME);
     printf("--------------------------------------------------------------------------------------------------------\n\n");
 
-
-    cycles_keygen = 0;
-    cycles_encaps = 0;
-    cycles_decaps = 0;
     for (n = 0; n < BENCH_LOOPS; n++)
     {
         // Benchmarking key generation
