@@ -124,6 +124,7 @@ When `OPT_LEVEL=FAST` (i.e., assembly use enabled), the user is responsible for 
 according to the targeted platform (for example, MULX/ADX are not supported on Sandy or Ivy Bridge, only MULX 
 is supported on Haswell, and both MULX and ADX are supported on Broadwell, Skylake and Kaby Lake architectures). 
 Note that USE_ADX can only be set to `TRUE` if `USE_MULX=TRUE`.
+The option `USE_MULX=FALSE` with `USE_ADX=FALSE` is only supported on p503 and p751.
 
 Options for x86/ARM/s390x:
 
