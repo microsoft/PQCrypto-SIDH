@@ -21,6 +21,17 @@ bld/
 [Bb]in/
 [Oo]bj/
 [Ll]og/
+lib503/
+lib610/
+objs/
+objs434/
+objs434comp/
+objs503/
+objs503comp/
+objs610/
+objs610comp/
+objs751/
+objs751comp/
 
 # Visual Studio 2015 cache/options directory
 .vs/
