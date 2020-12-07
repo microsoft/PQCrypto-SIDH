@@ -1046,7 +1046,7 @@ int8_t cmp_f2elm(const f2elm_t x, const f2elm_t y)
     for (int i = NWORDS_FIELD-1; i >= 0; i--)
         r |= (a[0][i] ^ b[0][i]) | (a[1][i] ^ b[1][i]);
 
-    return (int8_t)((0-(digit_t)r) >> (8*sizeof(digit_t)-1));
+    return (int8_t)(((0-(digit_t)(r & 1)) | (0-(digit_t)(r >> 1))) >> (8*sizeof(digit_t)-1));
 }
 
 
