@@ -1036,7 +1036,7 @@ int8_t cmp_f2elm(const f2elm_t x, const f2elm_t y)
 { // Comparison of two GF(p^2) elements in constant time. 
   // Is x != y? return -1 if condition is true, 0 otherwise.
     f2elm_t a, b;      
-    uint8_t r = 0;
+    digit_t r = 0;
     
     fp2copy(x, a);
     fp2copy(y, b);
@@ -1046,7 +1046,7 @@ int8_t cmp_f2elm(const f2elm_t x, const f2elm_t y)
     for (int i = NWORDS_FIELD-1; i >= 0; i--)
         r |= (a[0][i] ^ b[0][i]) | (a[1][i] ^ b[1][i]);
 
-    return (int8_t)((-(int32_t)r) >> (8*sizeof(uint32_t)-1));
+    return (int8_t)((0-(digit_t)r) >> (8*sizeof(digit_t)-1));
 }
 
 

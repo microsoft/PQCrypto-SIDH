@@ -4,6 +4,8 @@
 * Abstract: benchmarking/testing isogeny-based key encapsulation mechanism
 *********************************************************************************************/ 
 
+#include "../src/random/random.h"
+
 
 // Benchmark and test parameters  
 #if defined(OPTIMIZED_GENERIC_IMPLEMENTATION) || (TARGET == TARGET_ARM) 
@@ -23,6 +25,8 @@ int cryptotest_kem()
     unsigned char ct[CRYPTO_CIPHERTEXTBYTES] = {0};
     unsigned char ss[CRYPTO_BYTES] = {0};
     unsigned char ss_[CRYPTO_BYTES] = {0};
+    unsigned char bytes[4];
+    uint32_t* pos = (uint32_t*)bytes;
     bool passed = true;
 
     printf("\n\nTESTING ISOGENY-BASED KEY ENCAPSULATION MECHANISM %s\n", SCHEME_NAME);
@@ -35,6 +39,17 @@ int cryptotest_kem()
         crypto_kem_dec(ss_, ct, sk);
         
         if (memcmp(ss, ss_, CRYPTO_BYTES) != 0) {
+            passed = false;
+            break;
+        }
+
+        // Testing decapsulation after changing one bit of ct
+        randombytes(bytes, 4);
+        *pos %= CRYPTO_CIPHERTEXTBYTES;
+        ct[*pos] ^= 1;
+        crypto_kem_dec(ss_, ct, sk);
+        
+        if (memcmp(ss, ss_, CRYPTO_BYTES) == 0) {
             passed = false;
             break;
         }
