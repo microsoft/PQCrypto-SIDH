@@ -124,7 +124,7 @@ static void Elligator2(const f2elm_t a24, const unsigned int r, f2elm_t x, unsig
         fpsqr_mont(temp0, temp1);              // z = N^((p + 1) div 4);
         fpcorrection(temp1);
         fpcorrection(N);
-        if (memcmp(temp1, N, NBITS_TO_NBYTES(NBITS_FIELD)) != 0) {
+        if (ct_compare((unsigned char*)temp1, (unsigned char*)N, NBITS_TO_NBYTES(NBITS_FIELD)) != 0) {
             fp2neg(x);
             fp2sub(x, A, x);                   // x = -x - A;
             if (COMPorDEC == COMPRESSION)
@@ -145,7 +145,7 @@ static void make_positive(f2elm_t x)
     felm_t zero = {0};
 
     from_fp2mont(x, x);
-    if (memcmp(x[0], zero, (size_t)nbytes) != 0) {
+    if (ct_compare((unsigned char*)x[0], (unsigned char*)zero, (size_t)nbytes) != 0) {
         if ((x[0][0] & 1) == 1)
             fp2neg(x);
     } else {
@@ -378,16 +378,16 @@ static bool FirstPoint_dual(const point_proj_t P, point_full_proj_t R, unsigned 
     // Do small DLog with respect to g_R3_S3
     fp2correction(gX[0]);
     fp2correction(gX[1]);
-    if (memcmp(gX[0][1], zero, (size_t)nbytes) == 0)    // = 1
+    if (ct_compare((unsigned char*)gX[0][1], (unsigned char*)zero, (size_t)nbytes) == 0)    // = 1
         alpha = 0;
-    else if (memcmp(gX[0][1], (digit_t*)g_R_S_im, (size_t)nbytes) == 0)    // = g_R3_S3
+    else if (ct_compare((unsigned char*)gX[0][1], (unsigned char*)g_R_S_im, (size_t)nbytes) == 0)    // = g_R3_S3
         alpha = 1;
     else    // = g_R3_S3^2
         alpha = 2;
 
-    if (memcmp(gX[1][1], zero, (size_t)nbytes) == 0)    // = 1
+    if (ct_compare((unsigned char*)gX[1][1], (unsigned char*)zero, (size_t)nbytes) == 0)    // = 1
         beta = 0;
-    else if (memcmp(gX[1][1], (digit_t*)g_R_S_im, (size_t)nbytes) == 0)    // = g_R3_S3
+    else if (ct_compare((unsigned char*)gX[1][1], (unsigned char*)g_R_S_im, (size_t)nbytes) == 0)    // = g_R3_S3
         beta = 1;
     else    // = g_R3_S3^2
         beta = 2;
@@ -427,7 +427,7 @@ static bool SecondPoint_dual(const point_proj_t P, point_full_proj_t R, unsigned
     FinalExpo3(gX, gZ);
 
     fp2correction(gX);
-    if (memcmp(gX[1], zero, (size_t)nbytes) != 0)    // Not equal to 1
+    if (ct_compare((unsigned char*)gX[1], (unsigned char*)zero, (size_t)nbytes) != 0)    // Not equal to 1
         return true;
     else
         return false;
@@ -493,7 +493,7 @@ static void makeDiff(const point_full_proj_t R, point_full_proj_t S, const point
     fp2mul_mont(D->X, t0, t0);
     fp2correction(t0);
     fp2correction(t1);
-    if (memcmp(t0[0], t1[0], (size_t)nbytes) == 0 && memcmp(t0[1], t1[1], (size_t)nbytes) == 0)
+    if (ct_compare((unsigned char*)t0[0], (unsigned char*)t1[0], (size_t)nbytes) == 0 && ct_compare((unsigned char*)t0[1], (unsigned char*)t1[1], (size_t)nbytes) == 0)
         fp2neg(S->Y);
 }
 

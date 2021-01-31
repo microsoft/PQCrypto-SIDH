@@ -171,7 +171,7 @@ const unsigned int strat_Bob[MAX_Bob-1] = {
 // Fixed traversal strategies for Pohlig-Hellman discrete logs
 const unsigned int ph2_path[PLEN_2] = {
 #ifdef COMPRESSED_TABLES
-    #ifdef ELL2_FULL_SIGNED
+    #ifdef ELL2_TORUS
         #if (W_2 == 4)
             0, 0, 1, 2, 3, 3, 4, 4, 5, 6, 6, 7, 8, 9, 9, 9, 10, 11, 12, 13, 13, 13, 14, 14, 15, 16, 17, 18, 19, 19, 19, 19, 20, 21, 22, 22, 23, 24, 25, 26, 27, 27, 28, 28, 28, 28, 28, 29, 30, 31, 32, 33, 34, 34, 35
         #endif

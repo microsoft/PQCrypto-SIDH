@@ -391,7 +391,7 @@ void CompleteMPoint(const f2elm_t A, point_proj_t P, point_full_proj_t R)
     f2elm_t zero = {0}, one = {0}, xz, yz, s2, r2, invz, temp0, temp1;
 
     fpcopy((digit_t*)&Montgomery_one, one[0]);    
-    if (memcmp(P->Z[0], zero,NBITS_TO_NBYTES(NBITS_FIELD)) != 0 || memcmp(P->Z[1], zero, NBITS_TO_NBYTES(NBITS_FIELD)) != 0) {
+    if (ct_compare((unsigned char*)P->Z[0], (unsigned char*)zero, NBITS_TO_NBYTES(NBITS_FIELD)) != 0 || ct_compare((unsigned char*)P->Z[1], (unsigned char*)zero, NBITS_TO_NBYTES(NBITS_FIELD)) != 0) {
         fp2mul_mont(P->X, P->Z, xz);       // xz = x*z;
         fpsub(P->X[0], P->Z[1], temp0[0]);
         fpadd(P->X[1], P->Z[0], temp0[1]);

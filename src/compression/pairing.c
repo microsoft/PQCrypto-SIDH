@@ -379,29 +379,6 @@ void Tate_pairings_3_torsion(const point_full_proj_t P, point_full_proj_t *Qj, f
 }
 
 
-void Tate_4_pairings_3_torsion(const point_full_proj_t P, const point_full_proj_t Q, const point_full_proj_t R1, const point_full_proj_t R2, const f2elm_t A, f2elm_t* n)
-{ // The tripling only 3-torsion Tate pairing of order 3^eB, consisting of the tripling only Miller loop and the final exponentiation. 
-  // Computes 4 pairings at once: e(P, S1), e(P, S2), e(Q, S1), e(Q,S2).
-    point_full_proj_t Qj[2] = {0}, PW, QW, QjW[2] = {0};
-    f2elm_t a, b;
-    
-    Monty2Weier(A, a, b);    
-    fp2copy(R1->X, Qj[0]->X);
-    fp2copy(R1->Y, Qj[0]->Y);
-    fp2copy(R1->Z, Qj[0]->Z);
-    fp2copy(R2->X, Qj[1]->X);
-    fp2copy(R2->Y, Qj[1]->Y);
-    fp2copy(R2->Z, Qj[1]->Z);
-    
-    PointMonty2Weier(P, PW, A);
-    PointMonty2Weier(Q, QW, A);    
-    PointMonty2Weier(Qj[0], QjW[0], A);
-    PointMonty2Weier(Qj[1], QjW[1], A);       
-    Tate_pairings_3_torsion(PW, QjW, a, n);
-    Tate_pairings_3_torsion(QW, QjW, a, n + 2);
-}
-
-
 void Tate3_pairings(point_full_proj_t *Qj, f2elm_t* f)
 {
     felm_t *x, *y, *l1, *l2, *n1, *n2, *x2, *x23, *x2p3;

@@ -61,7 +61,7 @@ void get_2_torsion_entangled_basis_compression(const f2elm_t A, point_t S1, poin
     fpsqr_mont(alpha, twoalphainv);
     fpcorrection(twoalphainv);
     fpcorrection(z);   
-    if (memcmp(twoalphainv, z, NBITS_TO_NBYTES(NBITS_FIELD)) == 0) {
+    if (ct_compare((unsigned char*)twoalphainv, (unsigned char*)z, NBITS_TO_NBYTES(NBITS_FIELD)) == 0) {
         fpcopy(alpha,y1[0]);
         fpcopy(beta,y1[1]);
     } else {
@@ -124,7 +124,7 @@ void get_2_torsion_entangled_basis_decompression(const f2elm_t A, point_t S1, po
     fpsqr_mont(alpha, twoalphainv);
     fpcorrection(twoalphainv);
     fpcorrection(z);
-    if (memcmp((unsigned char*)twoalphainv, (unsigned char*)z, NBITS_TO_NBYTES(NBITS_FIELD)) == 0) {
+    if (ct_compare((unsigned char*)twoalphainv, (unsigned char*)z, NBITS_TO_NBYTES(NBITS_FIELD)) == 0) {
         fpcopy(alpha,y1[0]);
         fpcopy(beta,y1[1]);
     } else {
@@ -138,127 +138,6 @@ void get_2_torsion_entangled_basis_decompression(const f2elm_t A, point_t S1, po
     fp2mul_mont(u0,y1,y2);   
     fpmul_mont(r,y2[0],y2[0]);
     fpmul_mont(r,y2[1],y2[1]);   // y2 = u0*r*y1
-}
-
-
-void sqrtinv2(const f2elm_t v, const f2elm_t z, f2elm_t s, f2elm_t invz)
-{ // Compute the square root of a field element v in F_{p^2} and invert a field element z.
-    int j;
-    felm_t az, bz, av, bv, Nz, Nv, av2, bv2, r, t, x, y, kk;
-    f2elm_t conjz, zero = {0};
-    
-    fpsqr_mont(z[0],az);
-    fpsqr_mont(z[1],bz);
-    fpadd(az,bz,Nz);    
-    fpcopy(v[0],av);
-    fpcopy(v[1],bv);
-
-    if (memcmp(bv,zero[0],NBITS_TO_NBYTES(NBITS_FIELD)) != 0) {
-        fpsqr_mont(av,av2);
-        fpsqr_mont(bv,bv2);
-        fpadd(av2,bv2,Nv);
-
-        fpcopy(Nv,r);
-        for (j = 0; j < OALICE_BITS - 2; j++)
-            fpsqr_mont(r,r);
-        for (j = 0; j < OBOB_EXPON; j++) {
-            fpsqr_mont(r,t);
-            fpmul_mont(r,t,r);
-        }        
-        fpsqr_mont(r,t);
-        fpcorrection(t);
-        fpcorrection(Nv);
-        if (memcmp(t,Nv,NBITS_TO_NBYTES(NBITS_FIELD)) == 0) {
-            mp_add(av,r,r,NWORDS_FIELD);            
-            
-            if ((r[0] & 0x01) != 0)
-                mp_add(r,(digit_t*)&PRIME,r,NWORDS_FIELD);
-            
-            mp_shiftr1(r,NWORDS_FIELD);
-
-            fpcopy(r,x);
-            for (j = 0; j < OALICE_BITS - 2; j++)
-                fpsqr_mont(x,x);
-            for (j = 0; j < OBOB_EXPON; j++) {
-                fpsqr_mont(x,t);
-                fpmul_mont(x,t,x);
-            }        
-            
-            if (memcmp(Nz,zero[0],NBITS_TO_NBYTES(NBITS_FIELD)) != 0) {
-                fpmul_mont(x,Nz,t);
-                fpadd(t,t,t);
-                fpinv_mont_bingcd(t); 
-                fpcopy(t,kk);
-                fpmul_mont(bv,Nz,y);
-                fpmul_mont(y,kk,y);
-                
-                fpsqr_mont(x,t);
-                fpcorrection(t);
-                fpcorrection(r);
-                if (memcmp(t,r,NBITS_TO_NBYTES(NBITS_FIELD)) == 0) {
-                    fpcopy(x,s[0]);
-                    fpcopy(y,s[1]);
-                } else {
-                    fpcopy(y,s[0]);
-                    fpcopy(x,s[1]);                    
-                }
-                fp2_conj(z,conjz);
-                fpmul_mont(x,kk,t);
-                fpadd(t,t,t);
-                fpmul_mont(t,conjz[0],invz[0]);
-                fpmul_mont(t,conjz[1],invz[1]);
-            } else {
-                fpadd(x,x,t);
-                fpinv_mont_bingcd(t);
-                fpmul_mont(bv,t,y);                
-                fpsqr_mont(x,t);
-                if (memcmp(t,r,NBITS_TO_NBYTES(NBITS_FIELD)) == 0) {
-                    fpcopy(x,s[0]);
-                    fpcopy(y,s[1]);
-                } else {
-                    fpcopy(y,s[0]);
-                    fpcopy(x,s[1]);                    
-                }
-                fp2copy(zero,invz);                
-            }
-
-        } else {
-            fp2copy(zero,s);
-            if (memcmp(Nz,zero[0],NBITS_TO_NBYTES(NBITS_FIELD)) != 0) {
-                fpinv_mont_bingcd(Nz);
-                fp2_conj(z,conjz);
-                fpmul_mont(Nz,conjz[0],invz[0]);
-                fpmul_mont(Nz,conjz[1],invz[1]);                
-            } else {
-                fp2copy(zero,invz);
-            }
-        }
-    } else {
-        fpcopy(av,r);
-        for (j = 0; j < OALICE_BITS - 2; j++)
-            fpsqr_mont(r,r);
-        for (j = 0; j < OBOB_EXPON; j++) {
-            fpsqr_mont(r,t);
-            fpmul_mont(r,t,r);
-        }            
-        fpsqr_mont(r,t);
-        if (memcmp(t,av,NBITS_TO_NBYTES(NBITS_FIELD)) == 0) {
-            fpcopy(r,s[0]);
-            fpcopy(zero[0],s[1]);
-        } else {
-            fpcopy(zero[0],s[0]);
-            fpcopy(r,s[1]);
-        }
-
-        if (memcmp(Nz,zero[0],NBITS_TO_NBYTES(NBITS_FIELD)) != 0) {
-            fp2_conj(z,conjz);
-            fpinv_mont_bingcd(Nz);
-            fpmul_mont(Nz,conjz[0],invz[0]);
-            fpmul_mont(Nz,conjz[1],invz[1]);            
-        } else {
-            fp2copy(zero,invz);
-        }
-    }
 }
 
 
@@ -302,7 +181,7 @@ void BasePoint3n(f2elm_t A, unsigned int *r, point_proj_t P, point_proj_t Q)
         fpsqr_mont(temp0,temp1);  // z = N^((p + 1) div 4);
         fpcorrection(temp1);
         fpcorrection(N);
-        if (memcmp(temp1,N,NBITS_TO_NBYTES(NBITS_FIELD)) != 0) {
+        if (ct_compare((unsigned char*)temp1,(unsigned char*)N,NBITS_TO_NBYTES(NBITS_FIELD)) != 0) {
             fp2neg(x);
             fp2sub(x,A,x);        // x = -x - A;
         }
@@ -356,7 +235,7 @@ void BasePoint3n_decompression(f2elm_t A, const unsigned char r, point_proj_t P)
     fpsqr_mont(temp0,temp1);  // z = N^((p + 1) div 4);
     fpcorrection(temp1);
     fpcorrection(N);
-    if (memcmp(temp1,N,NBITS_TO_NBYTES(NBITS_FIELD)) != 0) {
+    if (ct_compare((unsigned char*)temp1,(unsigned char*)N,NBITS_TO_NBYTES(NBITS_FIELD)) != 0) {
         fp2neg(x);
         fp2sub(x,A,x);        // x = -x - A;
     }
@@ -383,7 +262,7 @@ void BuildOrdinaryE3nBasis(f2elm_t A, point_full_proj_t R1, point_full_proj_t R2
         fp2mul_mont(Q->X,S->Z,t1w2);
         fp2correction(t2w1);
         fp2correction(t1w2);
-    } while (memcmp(t2w1[0],t1w2[0],NBITS_TO_NBYTES(NBITS_FIELD)) == 0 && memcmp(t2w1[1],t1w2[1],NBITS_TO_NBYTES(NBITS_FIELD)) == 0); // Pr[t2/w2 == t1/w1] = 1/4: E[loop length] = 4/3
+    } while (ct_compare((unsigned char*)t2w1[0],(unsigned char*)t1w2[0],NBITS_TO_NBYTES(NBITS_FIELD)) == 0 && ct_compare((unsigned char*)t2w1[1],(unsigned char*)t1w2[1],NBITS_TO_NBYTES(NBITS_FIELD)) == 0); // Pr[t2/w2 == t1/w1] = 1/4: E[loop length] = 4/3
     rs[1] = r;
 
     // NB: ideally the following point completions could share one inversion at the cost of 3 products, but this is not implemented here.

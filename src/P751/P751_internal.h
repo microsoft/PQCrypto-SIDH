@@ -63,7 +63,7 @@
     #define TABLE_V3_LEN 20
     // Parameters for discrete log computations
     // Binary Pohlig-Hellman reduced to smaller logs of order ell^W
-    #define W_2 4
+    #define W_2 4    
     #define W_3 3
     // ell^w    
     #define ELL2_W (1 << W_2)    
@@ -76,15 +76,17 @@
     #define DLEN_3 ((OBOB_EXPON + W_3 - 1) / W_3) // ceil(eB/W_3)
     // Use compressed tables: FULL_SIGNED
     #define COMPRESSED_TABLES
-    #define ELL2_FULL_SIGNED    // Uses signed digits to reduce table size by half
+    #define ELL2_TORUS
     #define ELL3_FULL_SIGNED    // Uses signed digits to reduce table size by half
     // Length of the optimal strategy path for Pohlig-Hellman
     #ifdef COMPRESSED_TABLES
-        #ifdef ELL2_FULL_SIGNED
-            #if W_2 == 4
-                #define PLEN_2 94
-            #endif
+        #if W_2 == 4
+            #define PLEN_2 94
         #endif
+        #ifdef ELL2_TORUS
+            #define W_2_1 3
+        #endif
+
         #ifdef ELL3_FULL_SIGNED
             #if W_3 == 3
                 #define PLEN_3 81
