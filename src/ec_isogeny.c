@@ -651,10 +651,6 @@ void Ladder(const point_proj_t P, const digit_t* m, const f2elm_t A, const unsig
 
     j = order_bits - 1;
     bit = (m[j >> LOG2RADIX] >> (j & (RADIX-1))) & 1;
-    while (bit == 0) {
-        j--;
-        bit = (m[j >> LOG2RADIX] >> (j & (RADIX-1))) & 1;
-    }
 
     // R0 <- P, R1 <- 2P
     fp2copy(P->X, R0->X);
@@ -662,7 +658,7 @@ void Ladder(const point_proj_t P, const digit_t* m, const f2elm_t A, const unsig
     xDBL_e(P, R1, A24, 1);    
     
     // Main loop
-    for (int i = j - 1;  i >= 0; i--) {
+    for (int i = j;  i >= 0; i--) {
         bit = (m[i >> LOG2RADIX] >> (i & (RADIX-1))) & 1;
         swap = bit ^ prevbit;
         prevbit = bit;
