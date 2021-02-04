@@ -969,7 +969,7 @@ unsigned char is_sqr_fp2(const f2elm_t a, felm_t s)
     fpsqr_mont(s,temp);          // s = z^((p+1)/4)
     fpcorrection(temp);
     fpcorrection(z);
-    if (memcmp((unsigned char*)temp, (unsigned char*)z, NBITS_TO_NBYTES(NBITS_FIELD)) != 0)  // s^2 !=? z
+    if (memcmp(temp, z, NBITS_TO_NBYTES(NBITS_FIELD)) != 0)  // s^2 !=? z
         return 0;
     
     return 1;
@@ -1483,4 +1483,114 @@ void recover_os(const f2elm_t X1, const f2elm_t Z1, const f2elm_t X2, const f2el
     fp2sub(t0, t1, Y3);            // Y3 = Z2*[(X1+x*Z1+2*A*Z1)*(X1*x+Z1)-2*A*Z1^2] - (X1-x*Z1)^2*X2
 }
 // Closing COMPRESSED
+#endif
+
+
+#ifdef ELL2_TORUS
+
+int mod(int a, unsigned int b)
+{
+    unsigned int r; 
+    if (b == 0) return 0; // avoid invalid operation
+    r = a % b;
+    while (r < 0) r += b;
+    return r;
+}
+
+
+int highest_2t(const int n) 
+{ // Find largest power 2^t dividing n
+    return (n & (~(n - 1))); 
+} 
+
+
+int highest_t(const int n) 
+{ // Find largest t s.t. 2^t divides n and 2^(t+1) does not
+    int t = 0, power2t = highest_2t(n); 
+
+    while (power2t > 1) {
+        power2t >>= 1;
+        t++;
+    }
+    return t;
+}
+
+
+void toproj(const f2elm_t a, felm_t *b) {
+    fpadd(a[0], (digit_t*)&Montgomery_one, b[0]);
+    fpcopy(a[1], b[1]);
+}
+
+
+void fromproj(const felm_t *a, felm_t *b) {
+    felm_t x, xx, y, yy, tmp1, tmp2;
+    
+    fpcopy(a[0],x);
+    fpcopy(a[1],y);
+    fpsqr_mont(x,xx);
+    fpsqr_mont(y,yy);
+    fpsub(xx,yy,tmp1);
+    fpadd(xx,yy,tmp2);
+    fpinv_mont(tmp2);
+    fpmul_mont(tmp1,tmp2,b[0]);
+    fpmul_mont(x,y,tmp1);
+    fpadd(tmp1,tmp1,tmp1);
+    fpmul_mont(tmp1,tmp2,b[1]);
+    fpcorrection(b[0]);
+    fpcorrection(b[1]);    
+}
+
+
+void inv_Fp2_cycl_proj(felm_t *proja) 
+{ // Given an Fp2 element a in the cyclotomic subgroup, compute a^-1
+    if (!is_felm_zero(proja[1])) {
+        fpneg(proja[0]);
+        fpcorrection(proja[0]);
+    }
+} 
+
+
+int reverse_bits(int t, unsigned int nbits) 
+{ // Given t = b_{n-1}2^(n-1) + ... + b_{1}2 + b_{0}, return b_{0}2^(n-1) + ... + b{n-2}2 + b_{n-1}
+    int x = t, r = 0, bits=0;
+    while (x > 0) {        
+        r = (r << 1) + (x%2);
+        x >>= 1;
+        bits++;
+    }
+    while (bits < nbits) {
+        r <<= 1;
+        bits++;
+    }
+    return r;
+}
+
+
+void sqr_Fp2_cycl_proj(felm_t *proja)
+{ // Cyclotomic squaring on projective elements of norm 1, using a^(p+1) = 1.
+    felm_t t0, t1, xy;
+
+    fpadd(proja[0],proja[1],t0);
+    fpsub(proja[0],proja[1],t1);    
+    fpmul_mont(proja[0],proja[1],xy);
+    fpmul_mont(t0,t1,proja[0]);    
+    fpadd(xy,xy,proja[1]);
+}
+
+
+void mulmixed_montproj(const felm_t *proja, const felm_t alpha, felm_t *projc)
+{   // [x,y] * [alpha, 1]
+    felm_t t0, x, y;
+
+    fpcopy(proja[0], x);
+    fpcopy(proja[1], y);
+    fpmul_mont(x,alpha,t0);
+    fpsub(t0, y, projc[0]); // x*alpha - y    
+    fpmul_mont(y, alpha, t0);
+    fpadd(x, t0, projc[1]); // x + y*alpha
+
+    fpcorrection(projc[0]);
+    fpcorrection(projc[1]);
+}
+
 #endif
