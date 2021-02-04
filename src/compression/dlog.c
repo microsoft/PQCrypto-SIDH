@@ -8,7 +8,7 @@
 
 void from_base(int *D, digit_t *r, int Dlen, int base) 
 { // Convert a number in base "base" with signed digits: (D[k-1]D[k-2]...D[1]D[0])_base < 2^(NWORDS_ORDER*RADIX) into decimal 
-  // Output: r = D[k-1]*base^(k-1) + ... + D[1]*base + D[0] 
+  // Output: r = (D[k-1]*base^(k-1) + ... + D[1]*base + D[0])_10
     digit_t ell[NWORDS_ORDER] = {0}, digit[NWORDS_ORDER] = {0}, temp[NWORDS_ORDER] = {0};    
     int ellw;
     
@@ -107,11 +107,11 @@ int ord2w_dlog(const felm_t *r, const int *logT, const felm_t *Texp)
 
     if (is_felm_zero(y)) return 0;
     if (is_felm_zero(x)) return logT[0];
-    if (ct_compare((unsigned char *)x, (unsigned char *)y, NBITS_TO_NBYTES(NBITS_FIELD)) == 0) return logT[1];
+    if (memcmp(x, y, NBITS_TO_NBYTES(NBITS_FIELD)) == 0) return logT[1];
     fpcopy(y, sum);
     fpneg(sum);
     fpcorrection(sum);
-    if (ct_compare((unsigned char *)x, (unsigned char *)sum, NBITS_TO_NBYTES(NBITS_FIELD)) == 0) return logT[2];    
+    if (memcmp(x, sum, NBITS_TO_NBYTES(NBITS_FIELD)) == 0) return logT[2];    
     for (int j = 2; j < W_2; ++j)
     {
         for (int i = 0; i < (1<<(j-1)); ++i)
@@ -125,12 +125,12 @@ int ord2w_dlog(const felm_t *r, const int *logT, const felm_t *Texp)
                     fpsub(sum, prods[(1<<k) + (i >> (j-k-1)) - 1], sum);
             }
             fpcorrection(sum);
-            if (ct_compare((unsigned char *)x, (unsigned char *)sum, NBITS_TO_NBYTES(NBITS_FIELD)) == 0) {
+            if (memcmp(x, sum, NBITS_TO_NBYTES(NBITS_FIELD)) == 0) {
                 return logT[(1<<j)+i-1];
             }
             fpneg(sum);
             fpcorrection(sum);
-            if (ct_compare((unsigned char *)x, (unsigned char *)sum, NBITS_TO_NBYTES(NBITS_FIELD)) == 0) {
+            if (memcmp(x, sum, NBITS_TO_NBYTES(NBITS_FIELD)) == 0) {
                 return logT[(1<<(j+1))-i-1-1];
             }
         }
@@ -181,8 +181,8 @@ int ord2w_dloghyb(const felm_t *h, const int *logT, const felm_t *Texp, const fe
     if (is_felm_zero(H[0][0])) { // check if compressed Fp2 element H[0] is -1
         fpneg(one);
         fpcorrection(one);
-        if ( ((ct_compare((unsigned char *)G[0],(unsigned char *)&Montgomery_one,NBITS_TO_NBYTES(NBITS_FIELD)) == 0) && (ct_compare((unsigned char *)H[1][0],(unsigned char *)H[1][1],NBITS_TO_NBYTES(NBITS_FIELD)) != 0)) ||
-             ((ct_compare((unsigned char *)G[0],(unsigned char *)one,NBITS_TO_NBYTES(NBITS_FIELD)) == 0) && (ct_compare((unsigned char *)H[1][0],(unsigned char *)H[1][1],NBITS_TO_NBYTES(NBITS_FIELD)) == 0))) { // check if G[0] != H[1]
+        if ( ((memcmp(G[0],&Montgomery_one,NBITS_TO_NBYTES(NBITS_FIELD)) == 0) && (memcmp(H[1][0],H[1][1],NBITS_TO_NBYTES(NBITS_FIELD)) != 0)) ||
+             ((memcmp(G[0],one,NBITS_TO_NBYTES(NBITS_FIELD)) == 0) && (memcmp(H[1][0],H[1][1],NBITS_TO_NBYTES(NBITS_FIELD)) == 0))) { // check if G[0] != H[1]
             for (int i = 0; i <= k; ++i) inv_Fp2_cycl_proj(H[i]);
             inv = 1;
         }
@@ -205,7 +205,7 @@ int ord2w_dloghyb(const felm_t *h, const int *logT, const felm_t *Texp, const fe
             fpmul_mont(G[(1 << (j-index+ord-2)) - (1 << (j-index+ord-3)) + (i_j >> 1)], H[j][1], one);
         }
         fpcorrection(one);
-        if (ct_compare((unsigned char *)H[j][0], (unsigned char *)one, NBITS_TO_NBYTES(NBITS_FIELD)) != 0) {
+        if (memcmp(H[j][0], one, NBITS_TO_NBYTES(NBITS_FIELD)) != 0) {
             d += 1 << (w-1);
             i_j++;
             flag = 1;
@@ -296,18 +296,18 @@ void Traverse_w_div_e_fullsigned(const f2elm_t r, int j, int k, int z, const uns
         fp2copy(r, rp);
         fp2correction(rp);
 
-        if (is_felm_zero(rp[1]) && ct_compare((unsigned char *)rp[0],(unsigned char *)&Montgomery_one,NBITS_TO_NBYTES(NBITS_FIELD)) == 0) {
+        if (is_felm_zero(rp[1]) && memcmp(rp[0],&Montgomery_one,NBITS_TO_NBYTES(NBITS_FIELD)) == 0) {
             D[k] = 0;
         } else {
             for (int t = 1; t <= ellw/2; t++) {
-                if (ct_compare((unsigned char*)rp, (unsigned char*)&CT[2*((Dlen - 1)*(ellw/2) + (t-1))], 2*NBITS_TO_NBYTES(NBITS_FIELD)) == 0) {
+                if (memcmp(rp, CT[2*((Dlen - 1)*(ellw/2) + (t-1))], 2*NBITS_TO_NBYTES(NBITS_FIELD)) == 0) {
                     D[k] = -t;
                     break;
                 } else {                    
                     fp2copy(CT + 2*((Dlen - 1)*(ellw/2) + (t-1)), alpha);
                     fpneg(alpha[1]);
                     fpcorrection(alpha[1]);
-                    if (ct_compare((unsigned char*)rp, (unsigned char*)alpha, 2*NBITS_TO_NBYTES(NBITS_FIELD)) == 0) {
+                    if (memcmp(rp, alpha, 2*NBITS_TO_NBYTES(NBITS_FIELD)) == 0) {
                         D[k] = t;
                         break;
                     }
@@ -367,19 +367,19 @@ void Traverse_w_notdiv_e_fullsigned(const f2elm_t r, int j, int k, int z, const 
         fp2copy(r, rp);
         fp2correction(rp);    
 
-        if (is_felm_zero(rp[1]) && ct_compare((unsigned char *)rp[0],(unsigned char *)&Montgomery_one,NBITS_TO_NBYTES(NBITS_FIELD)) == 0) {
+        if (is_felm_zero(rp[1]) && memcmp(rp[0],&Montgomery_one,NBITS_TO_NBYTES(NBITS_FIELD)) == 0) {
             D[k] = 0;              
         } else {            
             if (!(j == 0 && k == Dlen - 1)) {
                 for (int t = 1; t <= (ellw/2); t++) {
-                    if (ct_compare((unsigned char*)&CT2[2*(ellw/2)*(Dlen-1) + 2*(t-1)], (unsigned char*)rp, 2*NBITS_TO_NBYTES(NBITS_FIELD)) == 0) {
+                    if (memcmp(CT2[2*(ellw/2)*(Dlen-1) + 2*(t-1)], rp, 2*NBITS_TO_NBYTES(NBITS_FIELD)) == 0) {
                         D[k] = -t;
                         break;             
                     } else {
                         fp2copy(CT2 + 2*((ellw/2)*(Dlen-1) + (t-1)), alpha);
                         fpneg(alpha[1]);
                         fpcorrection(alpha[1]);
-                        if (ct_compare((unsigned char*)rp, (unsigned char*)alpha, 2*NBITS_TO_NBYTES(NBITS_FIELD)) == 0) {
+                        if (memcmp(rp, alpha, 2*NBITS_TO_NBYTES(NBITS_FIELD)) == 0) {
                             D[k] = t;
                             break;
                         }
@@ -387,14 +387,14 @@ void Traverse_w_notdiv_e_fullsigned(const f2elm_t r, int j, int k, int z, const 
                 }
             } else {            
                 for (int t = 1; t <= ell_emodw/2; t++) {     
-                    if (ct_compare((unsigned char*)&CT1[2*(ellw/2)*(Dlen - 1) + 2*(t-1)], (unsigned char*)rp, 2*NBITS_TO_NBYTES(NBITS_FIELD)) == 0) { 
+                    if (memcmp(CT1[2*(ellw/2)*(Dlen - 1) + 2*(t-1)], rp, 2*NBITS_TO_NBYTES(NBITS_FIELD)) == 0) { 
                         D[k] = -t;
                         break;                
                     } else {
                         fp2copy(CT1 + 2*((ellw/2)*(Dlen-1) + (t-1)), alpha);
                         fpneg(alpha[1]);
                         fpcorrection(alpha[1]);
-                        if (ct_compare((unsigned char*)rp, (unsigned char*)alpha, 2*NBITS_TO_NBYTES(NBITS_FIELD)) == 0) {
+                        if (memcmp(rp, alpha, 2*NBITS_TO_NBYTES(NBITS_FIELD)) == 0) {
                             D[k] = t;
                             break;
                         }                        
@@ -430,19 +430,3 @@ void solve_dlog(const f2elm_t r, int *D, digit_t* d, int ell)
 }
 
 
-void ph2(const point_full_proj_t phiP, const point_full_proj_t phiQ, const point_t PS, const point_t QS, const f2elm_t A, digit_t* c0, digit_t* d0, digit_t* c1, digit_t* d1)
-{ // Computes the 4 coefficients of the change of basis matrix between the bases {phiP,phiQ} and {PS, QS}
-  // Assume both bases generate the full 2^eA torsion
-    f2elm_t n[4] = {0};    
-    int D[DLEN_2];
-    
-    // Compute the four pairings
-    Tate_4_pairings_2_torsion(phiP, phiQ, PS, QS, A, n);   
-    
-    solve_dlog(n[0], D, d0, 2);    
-    solve_dlog(n[2], D, c0, 2);
-    mp_sub((digit_t*)Alice_order, c0, c0, NWORDS_ORDER);    
-    solve_dlog(n[1], D, d1, 2);    
-    solve_dlog(n[3], D, c1, 2);
-    mp_sub((digit_t*)Alice_order, c1, c1, NWORDS_ORDER); 
-}

@@ -969,7 +969,7 @@ unsigned char is_sqr_fp2(const f2elm_t a, felm_t s)
     fpsqr_mont(s,temp);          // s = z^((p+1)/4)
     fpcorrection(temp);
     fpcorrection(z);
-    if (ct_compare((unsigned char*)temp, (unsigned char*)z, NBITS_TO_NBYTES(NBITS_FIELD)) != 0)  // s^2 !=? z
+    if (memcmp(temp, z, NBITS_TO_NBYTES(NBITS_FIELD)) != 0)  // s^2 !=? z
         return 0;
     
     return 1;
@@ -1004,7 +1004,7 @@ void sqrt_Fp2(const f2elm_t u, f2elm_t y)
     fpcorrection(t0);
     fpcorrection(t3);
            
-    if (ct_compare((unsigned char*)t0, (unsigned char*)t3, NBITS_TO_NBYTES(NBITS_FIELD)) == 0) {
+    if (memcmp(t0, t3, NBITS_TO_NBYTES(NBITS_FIELD)) == 0) {
         fpcopy(t1, y[0]);
         fpcopy(t2, y[1]);
     } else {
