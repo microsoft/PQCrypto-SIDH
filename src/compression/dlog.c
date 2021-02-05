@@ -32,8 +32,7 @@ void from_base(int *D, digit_t *r, int Dlen, int base)
             digit[0] = (digit_t)(-D[i]);
             if ((base & 1) == 0) {
                 Montgomery_neg(digit, (digit_t*)Alice_order);
-            }
-            else {  
+            } else {  
                 mp_sub((digit_t*)Bob_order, digit, digit, NWORDS_ORDER);                            
             }
         } else {
@@ -70,8 +69,7 @@ void from_base(int *D, digit_t *r, int Dlen, int base)
         digit[0] = (digit_t)(-D[0]);
         if ((base & 1) == 0) {
             Montgomery_neg(digit, (digit_t*)Alice_order);
-        }
-        else { 
+        } else { 
             mp_sub((digit_t*)Bob_order, digit, digit, NWORDS_ORDER);            
         }
     } else {
@@ -88,7 +86,6 @@ void from_base(int *D, digit_t *r, int Dlen, int base)
 
 #ifdef COMPRESSED_TABLES
 
-
 #ifdef ELL2_TORUS
 
 int ord2w_dlog(const felm_t *r, const int *logT, const felm_t *Texp)
@@ -97,11 +94,9 @@ int ord2w_dlog(const felm_t *r, const int *logT, const felm_t *Texp)
   // Output: corresponding digit d in [-2^{w1-1},2^{w1-1}]
     felm_t x, y;
     felm_t sum = {0}, prods[1<<(W_2_1-1)] = {0};
-    f2elm_t tmp;
 
     fpcopy(r[0], x);
     fpcopy(r[1], y);
-
     fpcorrection(x);
     fpcorrection(y);
 
@@ -112,11 +107,10 @@ int ord2w_dlog(const felm_t *r, const int *logT, const felm_t *Texp)
     fpneg(sum);
     fpcorrection(sum);
     if (memcmp(x, sum, NBITS_TO_NBYTES(NBITS_FIELD)) == 0) return logT[2];    
-    for (int j = 2; j < W_2; ++j)
-    {
-        for (int i = 0; i < (1<<(j-1)); ++i)
-        {
-            if ((i % 2) == 0) fpmul_mont(y, Texp[(1<<(j-2)) + (i/2) - 1], prods[(1<<(j-2)) + (i/2) - 1]);
+    for (int j = 2; j < W_2; ++j) {
+        for (int i = 0; i < (1<<(j-1)); ++i) {
+            if ((i % 2) == 0) 
+                fpmul_mont(y, Texp[(1<<(j-2)) + (i/2) - 1], prods[(1<<(j-2)) + (i/2) - 1]);
             fpcopy(y, sum);
             for (int k = 0; k <= j-2; ++k) {
                 if (((i>>(j-k-2)) % 2) == 0) 
@@ -142,9 +136,9 @@ int ord2w_dlog(const felm_t *r, const int *logT, const felm_t *Texp)
 // Output: The signed digit D in {-ell^(w-1), ..., ell^(w-1)}
 int ord2w_dloghyb(const felm_t *h, const int *logT, const felm_t *Texp, const felm_t *G)
 {
-    int k = 0, d = 0, index = 0, ord = 0, tmp = 0, w = W_2, w2 = w - W_2_1, i_j = 0, t, pow0, pow1;
+    int k = 0, d = 0, index = 0, ord = 0, tmp = 0, w = W_2, w2 = w - W_2_1, i_j = 0, t;
     uint8_t inv = 0, flag = 0;
-    f2elm_t H[W_2_1] = {0}, tmp2; // Size of H should be max of {W_2_1, W_2 - W_2_1}
+    f2elm_t H[W_2_1] = {0}; // Size of H should be max of {W_2_1, W_2 - W_2_1}
     felm_t one = {0};
 
     fpcopy((digit_t*)&Montgomery_one, one);    
@@ -152,8 +146,7 @@ int ord2w_dloghyb(const felm_t *h, const int *logT, const felm_t *Texp, const fe
     fpcorrection(H[0][0]);
     fpcorrection(H[0][1]);
 
-    for (int i = 1; i <= w2; ++i)
-    {
+    for (int i = 1; i <= w2; ++i) {
         if (!is_felm_zero(H[0][1])) { // check if first compressed Fp2 element in H is NOT the identity
             for (int j = k; j >= 0; j--) fp2copy(H[j], H[j+1]);
             sqr_Fp2_cycl_proj(H[0]);

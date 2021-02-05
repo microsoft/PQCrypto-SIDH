@@ -1558,7 +1558,7 @@ int reverse_bits(int t, unsigned int nbits)
         x >>= 1;
         bits++;
     }
-    while (bits < nbits) {
+    while ((unsigned int)bits < nbits) {
         r <<= 1;
         bits++;
     }
