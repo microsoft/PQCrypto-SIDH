@@ -171,6 +171,7 @@ int ord2w_dloghyb(const felm_t *h, const int *logT, const felm_t *Texp, const fe
     ord = W_2_1 - t;
     tmp = ((d >> (W_2_1-ord))-1) >> 1;
     i_j = reverse_bits(tmp,ord-1);
+    fpcorrection(H[0][0]);
     if (is_felm_zero(H[0][0])) { // check if compressed Fp2 element H[0] is -1
         fpneg(one);
         fpcorrection(one);
