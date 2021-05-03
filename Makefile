@@ -130,64 +130,84 @@ objs751comp/%.o: src/P751/%.c
 
 ifeq "$(USE_OPT_LEVEL)" "_GENERIC_"		
     objs434/fp_generic.o: src/P434/generic/fp_generic.c
+	    @mkdir -p $(@D)
 	    $(CC) -c $(CFLAGS) src/P434/generic/fp_generic.c -o objs434/fp_generic.o
 
     objs503/fp_generic.o: src/P503/generic/fp_generic.c
+	    @mkdir -p $(@D)
 	    $(CC) -c $(CFLAGS) src/P503/generic/fp_generic.c -o objs503/fp_generic.o
 
     objs610/fp_generic.o: src/P610/generic/fp_generic.c
+	    @mkdir -p $(@D)
 	    $(CC) -c $(CFLAGS) src/P610/generic/fp_generic.c -o objs610/fp_generic.o
 
     objs751/fp_generic.o: src/P751/generic/fp_generic.c
+	    @mkdir -p $(@D)
 	    $(CC) -c $(CFLAGS) src/P751/generic/fp_generic.c -o objs751/fp_generic.o
 else ifeq "$(USE_OPT_LEVEL)" "_FAST_"
 ifeq "$(ARCHITECTURE)" "_AMD64_"		
     objs434/fp_x64.o: src/P434/AMD64/fp_x64.c
+	    @mkdir -p $(@D)
 	    $(CC) -c $(CFLAGS) src/P434/AMD64/fp_x64.c -o objs434/fp_x64.o
 
     objs434/fp_x64_asm.o: src/P434/AMD64/fp_x64_asm.S
+	    @mkdir -p $(@D)
 	    $(CC) -c $(CFLAGS) src/P434/AMD64/fp_x64_asm.S -o objs434/fp_x64_asm.o
 
     objs503/fp_x64.o: src/P503/AMD64/fp_x64.c
+	    @mkdir -p $(@D)
 	    $(CC) -c $(CFLAGS) src/P503/AMD64/fp_x64.c -o objs503/fp_x64.o
 
     objs503/fp_x64_asm.o: src/P503/AMD64/fp_x64_asm.S
+	    @mkdir -p $(@D)
 	    $(CC) -c $(CFLAGS) src/P503/AMD64/fp_x64_asm.S -o objs503/fp_x64_asm.o
 
     objs610/fp_x64.o: src/P610/AMD64/fp_x64.c
+	    @mkdir -p $(@D)
 	    $(CC) -c $(CFLAGS) src/P610/AMD64/fp_x64.c -o objs610/fp_x64.o
 
     objs610/fp_x64_asm.o: src/P610/AMD64/fp_x64_asm.S
+	    @mkdir -p $(@D)
 	    $(CC) -c $(CFLAGS) src/P610/AMD64/fp_x64_asm.S -o objs610/fp_x64_asm.o
 
     objs751/fp_x64.o: src/P751/AMD64/fp_x64.c
+	    @mkdir -p $(@D)
 	    $(CC) -c $(CFLAGS) src/P751/AMD64/fp_x64.c -o objs751/fp_x64.o
 
     objs751/fp_x64_asm.o: src/P751/AMD64/fp_x64_asm.S
+	    @mkdir -p $(@D)
 	    $(CC) -c $(CFLAGS) src/P751/AMD64/fp_x64_asm.S -o objs751/fp_x64_asm.o
 else ifeq "$(ARCHITECTURE)" "_ARM64_"	
     objs434/fp_arm64.o: src/P434/ARM64/fp_arm64.c
+	    @mkdir -p $(@D)
 	    $(CC) -c $(CFLAGS) src/P434/ARM64/fp_arm64.c -o objs434/fp_arm64.o
 
     objs434/fp_arm64_asm.o: src/P434/ARM64/fp_arm64_asm.S
+	    @mkdir -p $(@D)
 	    $(CC) -c $(CFLAGS) src/P434/ARM64/fp_arm64_asm.S -o objs434/fp_arm64_asm.o
 
     objs503/fp_arm64.o: src/P503/ARM64/fp_arm64.c
+	    @mkdir -p $(@D)
 	    $(CC) -c $(CFLAGS) src/P503/ARM64/fp_arm64.c -o objs503/fp_arm64.o
 
     objs503/fp_arm64_asm.o: src/P503/ARM64/fp_arm64_asm.S
+	    @mkdir -p $(@D)
 	    $(CC) -c $(CFLAGS) src/P503/ARM64/fp_arm64_asm.S -o objs503/fp_arm64_asm.o
 
     objs610/fp_arm64.o: src/P610/ARM64/fp_arm64.c
+	    @mkdir -p $(@D)
 	    $(CC) -c $(CFLAGS) src/P610/ARM64/fp_arm64.c -o objs610/fp_arm64.o
 
     objs610/fp_arm64_asm.o: src/P610/ARM64/fp_arm64_asm.S
+	    @mkdir -p $(@D)
 	    $(CC) -c $(CFLAGS) src/P610/ARM64/fp_arm64_asm.S -o objs610/fp_arm64_asm.o
 
     objs751/fp_arm64.o: src/P751/ARM64/fp_arm64.c
+	    @mkdir -p $(@D)
 	    $(CC) -c $(CFLAGS) src/P751/ARM64/fp_arm64.c -o objs751/fp_arm64.o
 
     objs751/fp_arm64_asm.o: src/P751/ARM64/fp_arm64_asm.S
+	    @mkdir -p $(@D)
 	    $(CC) -c $(CFLAGS) src/P751/ARM64/fp_arm64_asm.S -o objs751/fp_arm64_asm.o
 endif
 endif
