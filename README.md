@@ -1,7 +1,7 @@
 # SIDH v3.4 (C Edition)
 
 The **SIDH** library is an efficient supersingular isogeny-based cryptography library written in C language.
-**Version v3.3** of the library includes the ephemeral Diffie-Hellman key exchange scheme "SIDH" [1,2], and the CCA-secure
+**Version v3.4** of the library includes the ephemeral Diffie-Hellman key exchange scheme "SIDH" [1,2], and the CCA-secure
 key encapsulation mechanism "SIKE" [3]. These schemes are conjectured to be secure against quantum computer attacks.
 
 Concretely, the SIDH library includes the following KEM schemes:
@@ -87,9 +87,13 @@ The library was developed by [Microsoft Research](http://research.microsoft.com/
 - Support for Mac OS X for the optimized x64 assembly implementations.
 - Support for big endian platforms, specifically IBM s390x processors.
 
+## New in Version 3.4
+ 
+- Memory optimizations for compressed SIDH and compressed SIKE.
+
 ## Supported Platforms
 
-**SIDH v3.3** is supported on a wide range of platforms including x64, x86, ARM and s390x processors running Windows,
+**SIDH v3.4** is supported on a wide range of platforms including x64, x86, ARM and s390x processors running Windows,
 Linux or Mac OS X. We have tested the library with Microsoft Visual Studio 2015, GNU GCC v5.4, and clang v3.8.
 See instructions below to choose an implementation option and compile on one of the supported platforms.
 
