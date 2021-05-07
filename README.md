@@ -1,4 +1,4 @@
-# SIDH v3.3 (C Edition)
+# SIDH v3.4 (C Edition)
 
 The **SIDH** library is an efficient supersingular isogeny-based cryptography library written in C language.
 **Version v3.3** of the library includes the ephemeral Diffie-Hellman key exchange scheme "SIDH" [1,2], and the CCA-secure
