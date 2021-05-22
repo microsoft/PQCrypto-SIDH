@@ -204,6 +204,9 @@ const uint64_t u_entang[2*NWORDS64_FIELD] = {
 const uint64_t u0_entang[2*NWORDS64_FIELD] = {
 0x742C,0x0,0x0,0xB90FF404FC000000,0xD801A4FB559FACD4,0xE93254545F77410C,0xECEEA7BD2EDA,0x742C,0x0,0x0,0xB90FF404FC000000,0xD801A4FB559FACD4,0xE93254545F77410C,0xECEEA7BD2EDA};
 
+// Elligator constant U = min{u0+k} for k=1,2... such that u0+k is a square in F_p^2 for generating 3^n torsion bases
+const uint64_t U3[2*NWORDS64_FIELD] = {0xE858,0x0,0x0,0x721FE809F8000000,0xB00349F6AB3F59A9,0xD264A8A8BEEE8219,0x1D9DD4F7A5DB5,0x742C,0x0,0x0,0xB90FF404FC000000,0xD801A4FB559FACD4,0xE93254545F77410C,0xECEEA7BD2EDA};
+
 // Tables for quadratic residues and quadratic non residues v with 17 elements each. 
 
 const uint64_t table_r_qr[TABLE_R_LEN][NWORDS64_FIELD] = 
