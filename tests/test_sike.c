@@ -8,7 +8,7 @@
 
 
 // Benchmark and test parameters  
-#if defined(OPTIMIZED_GENERIC_IMPLEMENTATION) || (TARGET == TARGET_ARM) 
+#if defined(GENERIC_IMPLEMENTATION) || (TARGET == TARGET_ARM) 
     #define BENCH_LOOPS        5      // Number of iterations per bench 
     #define TEST_LOOPS         5      // Number of iterations per test
 #else
