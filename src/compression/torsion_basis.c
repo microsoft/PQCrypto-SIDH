@@ -34,7 +34,7 @@ static void Elligator2(const f2elm_t a24, const unsigned int r, f2elm_t x, unsig
         fpmul_mont(U[0], rmonty, v[0]);
         fpmul_mont(U[1], rmonty, v[1]);
         fpadd(v[0], (digit_t*)&Montgomery_one, v[0]);
-        fp2inv_mont_bingcd(v); // TODO: check if it is possible to avoid this inversion
+        fp2inv_mont_bingcd(v);
     }
     fp2mul_mont(A, v, x);     // x = A*v; v := 1/(1 + U*r^2) table lookup
     fp2neg(x);                // x = -A*v;
@@ -444,7 +444,6 @@ static void BuildEntangledXonly(const f2elm_t A, point_proj_t *R, unsigned char 
 }
 
 
-
 static void BuildOrdinary2nBasis_dual(const f2elm_t A, const f2elm_t Ds[][2], point_full_proj_t *Rs, unsigned char *qnr, unsigned char *ind)
 {
     unsigned int i;
@@ -476,7 +475,7 @@ static void BuildOrdinary2nBasis_dual(const f2elm_t A, const f2elm_t Ds[][2], po
 }
 
 
-static void getrvOf2mPoint_Decomp(const f2elm_t A, const unsigned char vqnr, const unsigned char ind, felm_t r, f2elm_t v) 
+static void getrvOf2mPoint_Decomp(const unsigned char vqnr, const unsigned char ind, felm_t r, f2elm_t v) 
 {// Given a Montgomery curve EA, find Elligator values r, v leading to a point of order 2^m. 
  // Use precomputed tables of size TABLE_R_LEN and switch to online computations if table runs out of elements.
     f2elm_t *tv_ptr, tmp;
@@ -512,7 +511,7 @@ static void BuildEntangledXonly_Decomp(const f2elm_t A, point_proj_t *R, unsigne
 {
     f2elm_t r, t, v;
 
-    getrvOf2mPoint_Decomp(A, qnr, ind, r[0], v);
+    getrvOf2mPoint_Decomp(qnr, ind, r[0], v);
 
     if (ind < TABLE_R_LEN) {
        // Get x0 = -A*v
