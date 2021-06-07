@@ -20,13 +20,13 @@ jobs:
   test-basic:
     runs-on: ubuntu-latest
     strategy:
-      implementation:
+      matrix:
         opt_level: ['GENERIC', 'FAST']
     steps:
     - uses: actions/checkout@v2
     - name: Build
       env: 
-        OPT_LEVEL: ${{ implementation.opt_level }}
+        OPT_LEVEL: ${{ matrix.opt_level }}
       run: make
     - name: SIKEp434
       run: make test434
@@ -47,15 +47,15 @@ jobs:
   test-sanitize:
     runs-on: ubuntu-latest
     strategy:
-      implementation:
+      matrix:
         opt_level: ['GENERIC', 'FAST']
         sanitizer: ['address', 'undefined']
     steps:
     - uses: actions/checkout@v2
     - name: Build
       env:
-        OPT_LEVEL: ${{ implementation.opt_level }}
-        EXTRA_CFLAGS: -g3 -fno-omit-frame-pointer -fno-optimize-sibling-calls -fsanitize-address-use-after-scope -fsanitize=${{ implementation.sanitizer }} -fno-sanitize-recover=${{ implementation.sanitizer }}
+        OPT_LEVEL: ${{ matrix.opt_level }}
+        EXTRA_CFLAGS: -g3 -fno-omit-frame-pointer -fno-optimize-sibling-calls -fsanitize-address-use-after-scope -fsanitize=${{ matrix.sanitizer }} -fno-sanitize-recover=${{ matrix.sanitizer }}
       run: make CC=clang-11
     - name: SIKEp434
       run: sike434/test_KEM nobench
@@ -68,7 +68,7 @@ jobs:
   test-valgrind-constant-time:
     runs-on: ubuntu-latest
     strategy:
-      implementation:
+      matrix:
         opt_level: ['GENERIC', 'FAST']
     steps:
     - uses: actions/checkout@v2
@@ -77,7 +77,7 @@ jobs:
     - name: Build
       env:
         DO_VALGRIND_CHECK: "TRUE"
-        OPT_LEVEL: ${{ implementation.opt_level }}
+        OPT_LEVEL: ${{ matrix.opt_level }}
       run: make CC=clang-11
     - name: SIKEp434
       env: 
