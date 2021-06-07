@@ -25,7 +25,7 @@ int8_t ct_compare(const uint8_t *a, const uint8_t *b, unsigned int len)
     for (unsigned int i = 0; i < len; i++)
         r |= a[i] ^ b[i];
 
-    return (int8_t)((-(int32_t)r) >> (8*sizeof(uint32_t)-1));
+    return (-(int8_t)r) >> (8*sizeof(uint8_t)-1);
 }
 
 
