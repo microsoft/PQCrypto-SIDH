@@ -58,13 +58,13 @@ jobs:
         EXTRA_CFLAGS: -g3 -fno-omit-frame-pointer -fno-optimize-sibling-calls -fsanitize-address-use-after-scope -fsanitize=${{ matrix.sanitizer }} -fno-sanitize-recover=${{ matrix.sanitizer }}
       run: make CC=clang-11
     - name: SIKEp434
-      run: sike434/test_KEM nobench
+      run: sike434/test_SIKE nobench
     - name: SIKEp503
-      run: sike503/test_KEM nobench
+      run: sike503/test_SIKE nobench
     - name: SIKEp610
-      run: sike610/test_KEM nobench
+      run: sike610/test_SIKE nobench
     - name: SIKEp751
-      run: sike751/test_KEM nobench
+      run: sike751/test_SIKE nobench
   test-valgrind-constant-time:
     runs-on: ubuntu-latest
     strategy:

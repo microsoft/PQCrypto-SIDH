@@ -331,30 +331,30 @@ check: tests
 
 test434:
 ifeq "$(DO_VALGRIND_CHECK)" "TRUE"
-	valgrind --tool=memcheck --error-exitcode=1 --max-stackframe=20480000 sike434/test_KEM
+	valgrind --tool=memcheck --error-exitcode=1 --max-stackframe=20480000 sike434/test_SIKE
 else
-	sike434/test_KEM
+	sike434/test_SIKE
 endif
 
 test503:
 ifeq "$(DO_VALGRIND_CHECK)" "TRUE"
-	valgrind --tool=memcheck --error-exitcode=1 --max-stackframe=20480000 sike503/test_KEM
+	valgrind --tool=memcheck --error-exitcode=1 --max-stackframe=20480000 sike503/test_SIKE
 else
-	sike503/test_KEM
+	sike503/test_SIKE
 endif
 
 test610:
 ifeq "$(DO_VALGRIND_CHECK)" "TRUE"
-	valgrind --tool=memcheck --error-exitcode=1 --max-stackframe=20480000 sike610/test_KEM
+	valgrind --tool=memcheck --error-exitcode=1 --max-stackframe=20480000 sike610/test_SIKE
 else
-	sike610/test_KEM
+	sike610/test_SIKE
 endif
 
 test751:
 ifeq "$(DO_VALGRIND_CHECK)" "TRUE"
-	valgrind --tool=memcheck --error-exitcode=1 --max-stackframe=20480000 sike751/test_KEM
+	valgrind --tool=memcheck --error-exitcode=1 --max-stackframe=20480000 sike751/test_SIKE
 else
-	sike751/test_KEM
+	sike751/test_SIKE
 endif
 
 .PHONY: clean
