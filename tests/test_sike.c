@@ -42,7 +42,7 @@ int cryptotest_kem()
     #ifdef DO_VALGRIND_CHECK
         if (!RUNNING_ON_VALGRIND) {
             fprintf(stderr, "This test can only usefully be run inside valgrind.\n");
-            fprintf(stderr, "valgrind sikexxx/test_KEM\n");
+            fprintf(stderr, "valgrind sikexxx/test_SIKE\n");
             exit(1);
         }
     #endif
