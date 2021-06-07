@@ -1,0 +1,97 @@
+name: Test C implementation
+
+on:
+  push:
+    paths:
+      - '.github/workflows/c.yml'
+      - Makefile
+      - 'KAT/**'
+      - 'src/**'
+      - 'tests/**'
+  pull_request:
+    paths:
+      - '.github/workflows/c.yml'
+      - Makefile
+      - 'KAT/**'
+      - 'src/**'
+      - 'tests/**'
+
+jobs:
+  test-basic:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        opt_level: ['GENERIC', 'FAST']
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build
+      env: 
+        OPT_LEVEL: ${{ matrix.opt_level }}
+      run: make
+    - name: SIKEp434
+      run: make test434
+    - name: SIKEp503
+      run: make test503
+    - name: SIKEp610
+      run: make test610
+    - name: SIKEp751
+      run: make test751
+    - name: SIKEp434 KATs
+      run: sike434/PQCtestKAT_kem
+    - name: SIKEp503 KATs
+      run: sike503/PQCtestKAT_kem
+    - name: SIKEp610 KATs
+      run: sike610/PQCtestKAT_kem
+    - name: SIKEp751 KATs
+      run: sike751/PQCtestKAT_kem
+  test-sanitize:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        opt_level: ['GENERIC', 'FAST']
+        sanitizer: ['address', 'undefined']
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build
+      env:
+        OPT_LEVEL: ${{ matrix.opt_level }}
+        EXTRA_CFLAGS: -g3 -fno-omit-frame-pointer -fno-optimize-sibling-calls -fsanitize-address-use-after-scope -fsanitize=${{ matrix.sanitizer }} -fno-sanitize-recover=${{ matrix.sanitizer }}
+      run: make CC=clang-11
+    - name: SIKEp434
+      run: sike434/test_SIKE nobench
+    - name: SIKEp503
+      run: sike503/test_SIKE nobench
+    - name: SIKEp610
+      run: sike610/test_SIKE nobench
+    - name: SIKEp751
+      run: sike751/test_SIKE nobench
+  test-valgrind-constant-time:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        opt_level: ['GENERIC', 'FAST']
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install valgrind
+      run: sudo apt-get install -y valgrind
+    - name: Build
+      env:
+        DO_VALGRIND_CHECK: "TRUE"
+        OPT_LEVEL: ${{ matrix.opt_level }}
+      run: make CC=clang-11
+    - name: SIKEp434
+      env: 
+        DO_VALGRIND_CHECK: "TRUE"
+      run: make test434
+    - name: SIKEp503
+      env: 
+        DO_VALGRIND_CHECK: "TRUE"
+      run: make test503
+    - name: SIKEp610
+      env: 
+        DO_VALGRIND_CHECK: "TRUE"
+      run: make test610
+    - name: SIKEp751
+      env: 
+        DO_VALGRIND_CHECK: "TRUE"
+      run: make test751
