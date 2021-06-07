@@ -27,7 +27,7 @@
 #endif
 
 
-int cryptotest_kem()
+int cryptotest_kem(int iterations)
 { // Testing KEM
     unsigned int i;
     unsigned char sk[CRYPTO_SECRETKEYBYTES] = {0};
@@ -138,7 +138,7 @@ int main(int argc, char **argv)
 {
     int Status = PASSED;
     
-    Status = cryptotest_kem(SYSTEM_NAME, TEST_LOOPS);  // Test key encapsulation mechanism
+    Status = cryptotest_kem(TEST_LOOPS);  // Test key encapsulation mechanism
     if (Status != PASSED) {
         printf("\n\n   Error detected: KEM_ERROR_SHARED_KEY \n\n");
         return FAILED;
@@ -146,7 +146,7 @@ int main(int argc, char **argv)
     
     if ((argc > 1) && (strcmp("nobench", argv[1]) == 0)) {}
     else {
-        Status = cryptorun_kem();                      // Benchmark key encapsulation mechanism
+        Status = cryptorun_kem();         // Benchmark key encapsulation mechanism
         if (Status != PASSED) {
             printf("\n\n   Error detected: KEM_ERROR_SHARED_KEY \n\n");
             return FAILED;
