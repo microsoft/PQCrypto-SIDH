@@ -1,7 +1,5 @@
 ####  Makefile for compilation on Unix-like operative systems  ####
 
-OPT=-O3     # Optimization option by default
-
 CC=clang
 ifeq "$(CC)" "gcc"
     COMPILER=gcc
@@ -65,7 +63,18 @@ ifeq "$(ARCHITECTURE)" "_S390X_"
 	ADDITIONAL_SETTINGS=-march=z10
 endif
 
-CFLAGS=$(OPT) -std=gnu11 $(ADDITIONAL_SETTINGS) -D $(ARCHITECTURE) -D __NIX__ -D $(USE_OPT_LEVEL) $(MULX) $(ADX)
+VALGRIND_CFLAGS=
+ifeq "$(DO_VALGRIND_CHECK)" "TRUE"
+VALGRIND_CFLAGS= -g -O0 -DDO_VALGRIND_CHECK
+endif
+
+ifeq "$(EXTRA_CFLAGS)" ""
+CFLAGS= -O3     # Optimization option by default
+else
+CFLAGS= $(EXTRA_CFLAGS)
+endif
+CFLAGS+= $(VALGRIND_CFLAGS)
+CFLAGS+= -std=gnu11 $(ADDITIONAL_SETTINGS) -D $(ARCHITECTURE) -D __NIX__ -D $(USE_OPT_LEVEL) $(MULX) $(ADX)
 LDFLAGS=-lm
 ifeq "$(USE_OPT_LEVEL)" "_GENERIC_"
     EXTRA_OBJECTS_434=objs434/fp_generic.o
@@ -319,6 +328,34 @@ KATS: lib434_for_KATs lib503_for_KATs lib610_for_KATs lib751_for_KATs lib434comp
 	$(CC) $(CFLAGS) -L./lib751comp tests/PQCtestKAT_kem751_compressed.c tests/rng/rng.c -lsidh_for_testing $(LDFLAGS) -o sike751_compressed/PQCtestKAT_kem $(ARM_SETTING)
 
 check: tests
+
+test434:
+ifeq "$(DO_VALGRIND_CHECK)" "TRUE"
+	valgrind --tool=memcheck --error-exitcode=1 --max-stackframe=20480000 sike434/test_KEM
+else
+	sike434/test_KEM
+endif
+
+test503:
+ifeq "$(DO_VALGRIND_CHECK)" "TRUE"
+	valgrind --tool=memcheck --error-exitcode=1 --max-stackframe=20480000 sike503/test_KEM
+else
+	sike503/test_KEM
+endif
+
+test610:
+ifeq "$(DO_VALGRIND_CHECK)" "TRUE"
+	valgrind --tool=memcheck --error-exitcode=1 --max-stackframe=20480000 sike610/test_KEM
+else
+	sike610/test_KEM
+endif
+
+test751:
+ifeq "$(DO_VALGRIND_CHECK)" "TRUE"
+	valgrind --tool=memcheck --error-exitcode=1 --max-stackframe=20480000 sike751/test_KEM
+else
+	sike751/test_KEM
+endif
 
 .PHONY: clean
 

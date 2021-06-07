@@ -7,6 +7,10 @@
 #include <string.h>
 #include "sha3/fips202.h"
 
+#ifdef DO_VALGRIND_CHECK
+#include <valgrind/memcheck.h>
+#endif
+
 
 int crypto_kem_keypair(unsigned char *pk, unsigned char *sk)
 { // SIKE's key generation
@@ -16,6 +20,9 @@ int crypto_kem_keypair(unsigned char *pk, unsigned char *sk)
     // Generate lower portion of secret key sk <- s||SK
     randombytes(sk, MSG_BYTES);
     random_mod_order_B(sk + MSG_BYTES);
+#ifdef DO_VALGRIND_CHECK
+    VALGRIND_MAKE_MEM_UNDEFINED(sk, MSG_BYTES + SECRETKEY_B_BYTES);
+#endif
 
     // Generate public key pk
     EphemeralKeyGeneration_B(sk + MSG_BYTES, pk);
@@ -23,6 +30,9 @@ int crypto_kem_keypair(unsigned char *pk, unsigned char *sk)
     // Append public key pk to secret key sk
     memcpy(&sk[MSG_BYTES + SECRETKEY_B_BYTES], pk, CRYPTO_PUBLICKEYBYTES);
 
+#ifdef DO_VALGRIND_CHECK
+    VALGRIND_MAKE_MEM_DEFINED(sk, MSG_BYTES + SECRETKEY_B_BYTES);
+#endif
     return 0;
 }
 
@@ -39,6 +49,9 @@ int crypto_kem_enc(unsigned char *ct, unsigned char *ss, const unsigned char *pk
 
     // Generate ephemeralsk <- G(m||pk) mod oA 
     randombytes(temp, MSG_BYTES);
+#ifdef DO_VALGRIND_CHECK
+    VALGRIND_MAKE_MEM_UNDEFINED(temp, MSG_BYTES);
+#endif
     memcpy(&temp[MSG_BYTES], pk, CRYPTO_PUBLICKEYBYTES);
     shake256(ephemeralsk, SECRETKEY_A_BYTES, temp, CRYPTO_PUBLICKEYBYTES+MSG_BYTES);
     ephemeralsk[SECRETKEY_A_BYTES - 1] &= MASK_ALICE;
@@ -55,6 +68,9 @@ int crypto_kem_enc(unsigned char *ct, unsigned char *ss, const unsigned char *pk
     memcpy(&temp[MSG_BYTES], ct, CRYPTO_CIPHERTEXTBYTES);
     shake256(ss, CRYPTO_BYTES, temp, CRYPTO_CIPHERTEXTBYTES+MSG_BYTES);
 
+#ifdef DO_VALGRIND_CHECK
+    VALGRIND_MAKE_MEM_DEFINED(temp, MSG_BYTES);
+#endif
     return 0;
 }
 
@@ -69,6 +85,9 @@ int crypto_kem_dec(unsigned char *ss, const unsigned char *ct, const unsigned ch
     unsigned char h_[MSG_BYTES];
     unsigned char c0_[CRYPTO_PUBLICKEYBYTES];
     unsigned char temp[CRYPTO_CIPHERTEXTBYTES+MSG_BYTES];
+#ifdef DO_VALGRIND_CHECK
+    VALGRIND_MAKE_MEM_UNDEFINED(sk, CRYPTO_SECRETKEYBYTES);
+#endif
 
     // Decrypt
     EphemeralSecretAgreement_B(sk + MSG_BYTES, ct, jinvariant_);
@@ -89,6 +108,9 @@ int crypto_kem_dec(unsigned char *ss, const unsigned char *ct, const unsigned ch
     ct_cmov(temp, sk, MSG_BYTES, selector);
     memcpy(&temp[MSG_BYTES], ct, CRYPTO_CIPHERTEXTBYTES);
     shake256(ss, CRYPTO_BYTES, temp, CRYPTO_CIPHERTEXTBYTES+MSG_BYTES);
-
+    
+#ifdef DO_VALGRIND_CHECK
+    VALGRIND_MAKE_MEM_DEFINED(sk, CRYPTO_SECRETKEYBYTES);
+#endif
     return 0;
 }

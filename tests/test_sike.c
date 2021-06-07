@@ -6,14 +6,24 @@
 
 #include "../src/random/random.h"
 
+#ifdef DO_VALGRIND_CHECK
+#include <valgrind/memcheck.h>
+#endif
 
-// Benchmark and test parameters  
+#ifdef DO_VALGRIND_CHECK
+    #define TEST_LOOPS   1
+#else 
 #if defined(GENERIC_IMPLEMENTATION) || (TARGET == TARGET_ARM) 
-    #define BENCH_LOOPS        5      // Number of iterations per bench 
     #define TEST_LOOPS         5      // Number of iterations per test
 #else
-    #define BENCH_LOOPS       100
     #define TEST_LOOPS        10      
+#endif     
+#endif
+
+#if defined(GENERIC_IMPLEMENTATION) || (TARGET == TARGET_ARM) 
+    #define BENCH_LOOPS        5      // Number of iterations per bench 
+#else
+    #define BENCH_LOOPS      100    
 #endif
 
 
@@ -29,6 +39,14 @@ int cryptotest_kem()
     uint32_t* pos = (uint32_t*)bytes;
     bool passed = true;
 
+    #ifdef DO_VALGRIND_CHECK
+        if (!RUNNING_ON_VALGRIND) {
+            fprintf(stderr, "This test can only usefully be run inside valgrind.\n");
+            fprintf(stderr, "valgrind sikexxx/test_KEM\n");
+            exit(1);
+        }
+    #endif
+
     printf("\n\nTESTING ISOGENY-BASED KEY ENCAPSULATION MECHANISM %s\n", SCHEME_NAME);
     printf("--------------------------------------------------------------------------------------------------------\n\n");
 
@@ -37,6 +55,10 @@ int cryptotest_kem()
         crypto_kem_keypair(pk, sk);
         crypto_kem_enc(ct, ss, pk);
         crypto_kem_dec(ss_, ct, sk);
+#ifdef DO_VALGRIND_CHECK
+        VALGRIND_MAKE_MEM_DEFINED(ss, CRYPTO_BYTES);
+        VALGRIND_MAKE_MEM_DEFINED(ss_, CRYPTO_BYTES);
+#endif
         
         if (memcmp(ss, ss_, CRYPTO_BYTES) != 0) {
             passed = false;
@@ -48,6 +70,10 @@ int cryptotest_kem()
         *pos %= CRYPTO_CIPHERTEXTBYTES;
         ct[*pos] ^= 1;
         crypto_kem_dec(ss_, ct, sk);
+#ifdef DO_VALGRIND_CHECK
+        VALGRIND_MAKE_MEM_DEFINED(ss, CRYPTO_BYTES);
+        VALGRIND_MAKE_MEM_DEFINED(ss_, CRYPTO_BYTES);
+#endif
         
         if (memcmp(ss, ss_, CRYPTO_BYTES) == 0) {
             passed = false;
@@ -108,20 +134,23 @@ int cryptorun_kem()
 }
 
 
-int main()
+int main(int argc, char **argv)
 {
     int Status = PASSED;
     
-    Status = cryptotest_kem();             // Test key encapsulation mechanism
+    Status = cryptotest_kem(SYSTEM_NAME, TEST_LOOPS);  // Test key encapsulation mechanism
     if (Status != PASSED) {
         printf("\n\n   Error detected: KEM_ERROR_SHARED_KEY \n\n");
         return FAILED;
     }
-
-    Status = cryptorun_kem();              // Benchmark key encapsulation mechanism
-    if (Status != PASSED) {
-        printf("\n\n   Error detected: KEM_ERROR_SHARED_KEY \n\n");
-        return FAILED;
+    
+    if ((argc > 1) && (strcmp("nobench", argv[1]) == 0)) {}
+    else {
+        Status = cryptorun_kem();                      // Benchmark key encapsulation mechanism
+        if (Status != PASSED) {
+            printf("\n\n   Error detected: KEM_ERROR_SHARED_KEY \n\n");
+            return FAILED;
+        }
     }
 
     return Status;
