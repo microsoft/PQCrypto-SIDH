@@ -22,14 +22,20 @@ jobs:
     strategy:
       matrix:
         opt_level: ['GENERIC', 'FAST']
+        targetPlatform: [x86, x64]
     steps:
     - uses: actions/checkout@v2
     - name: Build
       env: 
         OPT_LEVEL: ${{ matrix.opt_level }}
+        TargetPlatform: ${{ matrix.targetplatform }}
       run: make
-    - name: SIKEp434
-      run: make test434
+    - name: SIKEp434 x64
+      if: ${{ matrix.targetplatform == 'x64' }}
+      run: make test434 ARCH=x64
+    - name: SIKEp434 x86
+      if: ${{ matrix.targetplatform == 'x86' }}
+      run: make test434 ARCH=x86
     - name: SIKEp503
       run: make test503
     - name: SIKEp610
