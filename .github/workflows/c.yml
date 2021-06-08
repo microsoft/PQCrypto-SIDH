@@ -35,18 +35,25 @@ jobs:
       if: ${{ !(matrix.opt_level == 'FAST' && matrix.targetplatform == 'x86') }}
       run: make test434
     - name: SIKEp503
+      if: ${{ !(matrix.opt_level == 'FAST' && matrix.targetplatform == 'x86') }}
       run: make test503
     - name: SIKEp610
+      if: ${{ !(matrix.opt_level == 'FAST' && matrix.targetplatform == 'x86') }}
       run: make test610
     - name: SIKEp751
+      if: ${{ !(matrix.opt_level == 'FAST' && matrix.targetplatform == 'x86') }}
       run: make test751
     - name: SIKEp434 KATs
+      if: ${{ !(matrix.opt_level == 'FAST' && matrix.targetplatform == 'x86') }}
       run: sike434/PQCtestKAT_kem
     - name: SIKEp503 KATs
+      if: ${{ !(matrix.opt_level == 'FAST' && matrix.targetplatform == 'x86') }}
       run: sike503/PQCtestKAT_kem
     - name: SIKEp610 KATs
+      if: ${{ !(matrix.opt_level == 'FAST' && matrix.targetplatform == 'x86') }}
       run: sike610/PQCtestKAT_kem
     - name: SIKEp751 KATs
+      if: ${{ !(matrix.opt_level == 'FAST' && matrix.targetplatform == 'x86') }}
       run: sike751/PQCtestKAT_kem
   test-sanitize:
     runs-on: ubuntu-latest
