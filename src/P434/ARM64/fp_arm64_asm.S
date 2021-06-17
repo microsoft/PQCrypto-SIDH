@@ -4,6 +4,13 @@
 // Abstract: field arithmetic in 64-bit ARMv8 assembly for P434 on Linux
 //*******************************************************************************************
 
+// Format function and variable names for Mac OS X
+#if defined(__APPLE__)
+    #define fmt(f)    _##f
+#else
+    #define fmt(f)    f
+#endif
+
 .text
 
 // p434
@@ -43,8 +50,8 @@ p434p1_nz:
 //  Field addition
 //  Operation: c [x2] = a [x0] + b [x1]
 //*********************************************************************** 
-.global fpadd434_asm
-fpadd434_asm:
+.global fmt(fpadd434_asm)
+fmt(fpadd434_asm):
 
     // Add a + b
     ldp     x3, x4,   [x0,#0]
@@ -105,8 +112,8 @@ fpadd434_asm:
 //  Field subtraction
 //  Operation: c [x2] = a [x0] - b [x1]
 //*********************************************************************** 
-.global fpsub434_asm
-fpsub434_asm:
+.global fmt(fpsub434_asm)
+fmt(fpsub434_asm):
 
     // Subtract a - b
     ldp     x3, x4,   [x0,#0]
@@ -198,8 +205,8 @@ fpsub434_asm:
 //  Multiprecision subtraction with correction with 2*p434
 //  Operation: c [reg_p3] = a [reg_p1] - b [reg_p2] + 2*p434
 //*********************************************************************** 
-.global mp_sub434_p2_asm
-mp_sub434_p2_asm:
+.global fmt(mp_sub434_p2_asm)
+fmt(mp_sub434_p2_asm):
 
   SUB434_PX  p434x2
   ret
@@ -209,8 +216,8 @@ mp_sub434_p2_asm:
 //  Multiprecision subtraction with correction with 4*p434
 //  Operation: c [reg_p3] = a [reg_p1] - b [reg_p2] + 4*p434
 //*********************************************************************** 
-.global mp_sub434_p4_asm
-mp_sub434_p4_asm:
+.global fmt(mp_sub434_p4_asm)
+fmt(mp_sub434_p4_asm):
 
   SUB434_PX  p434x4
   ret
@@ -361,8 +368,8 @@ mp_sub434_p4_asm:
 //  448-bit integer multiplication using Karatsuba (two levels), Comba (lower level)
 //  Operation: c [x2] = a [x0] * b [x1]
 //*********************************************************************************** 
-.global mul434_asm
-mul434_asm:
+.global fmt(mul434_asm)
+fmt(mul434_asm):
     sub     sp, sp, #96
     ldp     x3, x4, [x0]
     ldp     x7, x8, [x0,#32]
@@ -552,8 +559,8 @@ mul434_asm:
 //  Operation: mc [x1] = ma [x0]
 //  NOTE: ma=mc is not allowed
 //************************************************************************************** 
-.global rdc434_asm
-rdc434_asm:
+.global fmt(rdc434_asm)
+fmt(rdc434_asm):
     sub     sp, sp, #80
     stp     x21, x24, [sp,#16]
     stp     x25, x26, [sp,#32]
@@ -653,8 +660,8 @@ rdc434_asm:
 //  434-bit multiprecision addition
 //  Operation: c [x2] = a [x0] + b [x1]
 //*********************************************************************** 
-.global mp_add434_asm
-mp_add434_asm:
+.global fmt(mp_add434_asm)
+fmt(mp_add434_asm):
     ldp     x3, x4,   [x0,#0]
     ldp     x11, x12, [x1,#0]
     ldp     x5, x6,   [x0,#16]
@@ -682,8 +689,8 @@ mp_add434_asm:
 //  2x434-bit multiprecision addition
 //  Operation: c [x2] = a [x0] + b [x1]
 //*********************************************************************** 
-.global mp_add434x2_asm
-mp_add434x2_asm:
+.global fmt(mp_add434x2_asm)
+fmt(mp_add434x2_asm):
     ldp     x3, x4,   [x0,#0]
     ldp     x11, x12, [x1,#0]
     ldp     x5, x6,   [x0,#16]
@@ -729,8 +736,8 @@ mp_add434x2_asm:
 //  2x434-bit multiprecision subtraction/addition
 //  Operation: c [x2] = a [x0] - b [x1]. If c < 0, add p434*2^448
 //*********************************************************************** 
-.global mp_subadd434x2_asm
-mp_subadd434x2_asm:
+.global fmt(mp_subadd434x2_asm)
+fmt(mp_subadd434x2_asm):
     ldp     x3, x4,   [x0,#0]
     ldp     x11, x12, [x1,#0]
     ldp     x5, x6,   [x0,#16]
@@ -797,8 +804,8 @@ mp_subadd434x2_asm:
 //  Double 2x434-bit multiprecision subtraction
 //  Operation: c [x2] = c [x2] - a [x0] - b [x1]
 //*********************************************************************** 
-.global mp_dblsub434x2_asm
-mp_dblsub434x2_asm:
+.global fmt(mp_dblsub434x2_asm)
+fmt(mp_dblsub434x2_asm):
     sub     sp, sp, #32
     stp     x27, x28, [sp, #0]
     stp     x29, x30, [sp, #16]
