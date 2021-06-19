@@ -1482,7 +1482,7 @@ void recover_os(const f2elm_t X1, const f2elm_t Z1, const f2elm_t X2, const f2el
 
 int mod(int a, unsigned int b)
 {
-    unsigned int r; 
+    int r; 
     if (b == 0) return 0; // avoid invalid operation
     r = a % b;
     while (r < 0) r += b;
