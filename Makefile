@@ -1,6 +1,6 @@
 ####  Makefile for compilation on Unix-like operative systems  ####
 
-CC=clang
+CC=gcc-11
 ifeq "$(CC)" "gcc"
     COMPILER=gcc
 else ifeq "$(CC)" "clang"
@@ -74,7 +74,7 @@ else
 CFLAGS= $(EXTRA_CFLAGS)
 endif
 CFLAGS+= $(VALGRIND_CFLAGS)
-CFLAGS+= -std=gnu11 $(ADDITIONAL_SETTINGS) -D $(ARCHITECTURE) -D __NIX__ -D $(USE_OPT_LEVEL) $(MULX) $(ADX)
+CFLAGS+= -std=gnu11 -Wall $(ADDITIONAL_SETTINGS) -D $(ARCHITECTURE) -D __NIX__ -D $(USE_OPT_LEVEL) $(MULX) $(ADX)
 LDFLAGS=-lm
 ifeq "$(USE_OPT_LEVEL)" "_GENERIC_"
     EXTRA_OBJECTS_434=objs434/fp_generic.o
