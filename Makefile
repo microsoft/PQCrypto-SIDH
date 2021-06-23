@@ -1,6 +1,6 @@
 ####  Makefile for compilation on Unix-like operative systems  ####
 
-CC=gcc-11
+CC=clang
 ifeq "$(CC)" "gcc"
     COMPILER=gcc
 else ifeq "$(CC)" "clang"
