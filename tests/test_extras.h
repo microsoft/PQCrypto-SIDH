@@ -13,7 +13,7 @@
 #define FAILED    1
 
 
-#if (TARGET == TARGET_ARM || TARGET == TARGET_ARM64)
+#if (TARGET == TARGET_ARM || TARGET == TARGET_ARM64 || TARGET == TARGET_PPC64LE)
     #define print_unit printf("nsec");
 #else
     #define print_unit printf("cycles");
