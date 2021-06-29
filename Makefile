@@ -26,6 +26,9 @@ else ifeq "$(ARCH)" "ARM64"
     ARCHITECTURE=_ARM64_
     USE_OPT_LEVEL=_FAST_
     ARM_TARGET=YES
+else ifeq "$(ARCH)" "PPC64LE"
+    ARCHITECTURE=_PPC64LE_
+    USE_OPT_LEVEL=_GENERIC_
 endif
 
 ifeq "$(OPT_LEVEL)" "GENERIC"
@@ -61,6 +64,9 @@ endif
 endif
 ifeq "$(ARCHITECTURE)" "_S390X_"
 	ADDITIONAL_SETTINGS=-march=z10
+endif
+ifeq "$(ARCHITECTURE)" "_PPC64LE_"
+	ADDITIONAL_SETTINGS=
 endif
 
 VALGRIND_CFLAGS=

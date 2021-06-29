@@ -8,7 +8,7 @@
 #if (OS_TARGET == OS_WIN)
     #include <intrin.h>
 #endif
-#if (OS_TARGET == OS_NIX) && (TARGET == TARGET_ARM || TARGET == TARGET_ARM64)
+#if (OS_TARGET == OS_NIX) && (TARGET == TARGET_ARM || TARGET == TARGET_ARM64 || TARGET == TARGET_PPC64LE)
     #include <time.h>
 #endif
 #include <stdlib.h>
@@ -40,7 +40,7 @@ int64_t cpucycles(void)
     uint64_t tod;
     __asm__ volatile("stckf %0\n" : "=Q" (tod) : : "cc");
     return (tod);
-#elif (OS_TARGET == OS_NIX) && (TARGET == TARGET_ARM || TARGET == TARGET_ARM64)
+#elif (OS_TARGET == OS_NIX) && (TARGET == TARGET_ARM || TARGET == TARGET_ARM64 || TARGET == TARGET_PPC64LE)
     struct timespec time;
 
     clock_gettime(CLOCK_REALTIME, &time);
