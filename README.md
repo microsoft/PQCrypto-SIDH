@@ -102,11 +102,11 @@ See instructions below to choose an implementation option and compile on one of 
  The following implementation options are available:
 - Portable implementations enabled by setting `OPT_LEVEL=GENERIC`. 
 - Optimized x64 assembly implementations for Linux\Mac OS X enabled by setting `ARCH=x64` and `OPT_LEVEL=FAST`.
-- Optimized ARMv8 assembly implementation for Linux enabled by setting `ARCH=ARM64` and `OPT_LEVEL=FAST`.
+- Optimized ARMv8 assembly implementation for Linux\Mac OS X enabled by setting `ARCH=ARM64` (or `ARCH=M1` for Apple M1 SoC) and `OPT_LEVEL=FAST`.
 
 Follow the instructions in the sections "_Instructions for Linux_" or "_Instructions for Windows_" below to configure these different implementation options.
 
-## Instructions for Linux
+## Instructions for Linux\Mac OS X
 
 By simply executing:
 
@@ -130,16 +130,16 @@ is supported on Haswell, and both MULX and ADX are supported on Broadwell, Skyla
 Note that USE_ADX can only be set to `TRUE` if `USE_MULX=TRUE`.
 The option `USE_MULX=FALSE` with `USE_ADX=FALSE` is only supported on p503 and p751.
 
-Options for x86/ARM/s390x:
+Options for x86/ARM/M1/s390x:
 
 ```sh
-$ make ARCH=[x86/ARM/s390x] CC=[gcc/clang]
+$ make ARCH=[x86/ARM/M1/s390x] CC=[gcc/clang]
 ```
 
-Options for ARM64:
+Options for ARM64 or Apple M1:
 
 ```sh
-$ make ARCH=[ARM64] CC=[gcc/clang] OPT_LEVEL=[FAST/GENERIC]
+$ make ARCH=[ARM64/M1] CC=[gcc/clang] OPT_LEVEL=[FAST/GENERIC]
 ```
 
 As in the x64 case, `OPT_LEVEL=FAST` enables the use of assembly optimizations on ARMv8 platforms.

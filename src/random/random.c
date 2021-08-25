@@ -19,7 +19,7 @@
 #define failed 1
 
 
-static __inline void delay(unsigned int count)
+static inline void delay(unsigned int count)
 {
     while (count--) {}
 }
