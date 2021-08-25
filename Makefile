@@ -26,6 +26,9 @@ else ifeq "$(ARCH)" "ARM64"
     ARCHITECTURE=_ARM64_
     USE_OPT_LEVEL=_FAST_
     ARM_TARGET=YES
+else ifeq "$(ARCH)" "M1"
+    ARCHITECTURE=_ARM64_
+    USE_OPT_LEVEL=_FAST_
 endif
 
 ifeq "$(OPT_LEVEL)" "GENERIC"
