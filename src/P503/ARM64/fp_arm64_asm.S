@@ -4,7 +4,15 @@
 // Abstract: field arithmetic in 64-bit ARMv8 assembly for P503 on Linux
 //*******************************************************************************************
 
+// Format function and variable names for Mac OS X
+#if defined(__APPLE__)
+    #define fmt(f)    _##f
+#else
+    #define fmt(f)    f
+#endif
+	
 .text
+.align 2
 
 // p503
 p503:
@@ -46,8 +54,8 @@ p503p1_nz_s8:
 //  Field addition
 //  Operation: c [x2] = a [x0] + b [x1]
 //*********************************************************************** 
-.global fpadd503_asm
-fpadd503_asm:
+.global fmt(fpadd503_asm)
+fmt(fpadd503_asm):
     ldp     x3, x4,   [x0,#0]
     ldp     x11, x12, [x1,#0]
     ldp     x5, x6,   [x0,#16]
@@ -113,8 +121,8 @@ fpadd503_asm:
 //  Field subtraction
 //  Operation: c [x2] = a [x0] - b [x1]
 //*********************************************************************** 
-.global fpsub503_asm
-fpsub503_asm:
+.global fmt(fpsub503_asm)
+fmt(fpsub503_asm):
     ldp     x3, x4,   [x0,#0]
     ldp     x11, x12, [x1,#0]
     ldp     x5, x6,   [x0,#16]
@@ -213,8 +221,8 @@ fpsub503_asm:
 //  Multiprecision subtraction with correction with 2*p503
 //  Operation: c [reg_p3] = a [reg_p1] - b [reg_p2] + 2*p503
 //*********************************************************************** 
-.global mp_sub503_p2_asm
-mp_sub503_p2_asm:
+.global fmt(mp_sub503_p2_asm)
+fmt(mp_sub503_p2_asm):
 
   SUB503_PX  p503x2
   ret
@@ -224,8 +232,8 @@ mp_sub503_p2_asm:
 //  Multiprecision subtraction with correction with 4*p503
 //  Operation: c [reg_p3] = a [reg_p1] - b [reg_p2] + 4*p503
 //*********************************************************************** 
-.global mp_sub503_p4_asm
-mp_sub503_p4_asm:
+.global fmt(mp_sub503_p4_asm)
+fmt(mp_sub503_p4_asm):
 
   SUB503_PX  p503x4
   ret
@@ -332,8 +340,8 @@ mp_sub503_p4_asm:
 //  512-bit integer multiplication using Karatsuba (two levels), Comba (lower level)
 //  Operation: c [x2] = a [x0] * b [x1]
 //*********************************************************************************** 
-.global mul503_asm
-mul503_asm:
+.global fmt(mul503_asm)
+fmt(mul503_asm):
     sub     sp, sp, #96
     ldp     x3, x4, [x0]
     ldp     x5, x6, [x0,#16]
@@ -508,8 +516,8 @@ mul503_asm:
 //  Operation: mc [x1] = ma [x0]
 //  NOTE: ma=mc is not allowed
 //************************************************************************************** 
-.global rdc503_asm
-rdc503_asm:
+.global fmt(rdc503_asm)
+fmt(rdc503_asm):
     sub     sp, sp, #96
     stp     x23, x24, [sp, #32]
     stp     x25, x26, [sp, #48]
@@ -673,8 +681,8 @@ rdc503_asm:
 //  503-bit multiprecision addition
 //  Operation: c [x2] = a [x0] + b [x1]
 //*********************************************************************** 
-.global mp_add503_asm
-mp_add503_asm:
+.global fmt(mp_add503_asm)
+fmt(mp_add503_asm):
     ldp     x3, x4,   [x0,#0]
     ldp     x11, x12, [x1,#0]
     ldp     x5, x6,   [x0,#16]
@@ -703,8 +711,8 @@ mp_add503_asm:
 //  2x503-bit multiprecision addition
 //  Operation: c [x2] = a [x0] + b [x1]
 //*********************************************************************** 
-.global mp_add503x2_asm
-mp_add503x2_asm:
+.global fmt(mp_add503x2_asm)
+fmt(mp_add503x2_asm):
     ldp     x3, x4,   [x0,#0]
     ldp     x11, x12, [x1,#0]
     ldp     x5, x6,   [x0,#16]
@@ -755,8 +763,8 @@ mp_add503x2_asm:
 //  2x503-bit multiprecision subtraction/addition
 //  Operation: c [x2] = a [x0] - b [x1]. If c < 0, add p503*2^512
 //*********************************************************************** 
-.global mp_subadd503x2_asm
-mp_subadd503x2_asm:
+.global fmt(mp_subadd503x2_asm)
+fmt(mp_subadd503x2_asm):
     ldp     x3, x4,   [x0,#0]
     ldp     x11, x12, [x1,#0]
     ldp     x5, x6,   [x0,#16]
@@ -828,8 +836,8 @@ mp_subadd503x2_asm:
 //  Double 2x503-bit multiprecision subtraction
 //  Operation: c [x2] = c [x2] - a [x0] - b [x1]
 //*********************************************************************** 
-.global mp_dblsub503x2_asm
-mp_dblsub503x2_asm:
+.global fmt(mp_dblsub503x2_asm)
+fmt(mp_dblsub503x2_asm):
     sub     sp, sp, #32
     stp     x27, x28, [sp, #0]
     stp     x29, x30, [sp, #16]
