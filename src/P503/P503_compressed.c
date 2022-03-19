@@ -1,5 +1,9 @@
 /********************************************************************************************
 * Supersingular Isogeny Key Encapsulation Library
+* Copyright (c) Microsoft Corporation
+*
+* Website: https://github.com/microsoft/PQCrypto-SIDH
+* Released under MIT license
 *
 * Abstract: supersingular isogeny parameters and generation of functions for P503_compressed
 *********************************************************************************************/ 
@@ -28,13 +32,10 @@ const uint64_t p503x2[NWORDS64_FIELD]            = { 0xFFFFFFFFFFFFFFFE, 0xFFFFF
                                                      0x2610B7B44423CF41, 0x3737ED90F6FCFB5E, 0xC08B8D7BB4EF49A0, 0x0080CDEA83023C3C }; 
 const uint64_t p503x4[NWORDS64_FIELD]            = { 0xFFFFFFFFFFFFFFFC, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xAFFFFFFFFFFFFFFF, 
                                                      0x4C216F6888479E82, 0x6E6FDB21EDF9F6BC, 0x81171AF769DE9340, 0x01019BD506047879 };
+const uint64_t p503x8[NWORDS64_FIELD]            = { 0xFFFFFFFFFFFFFFF8, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0x5FFFFFFFFFFFFFFF, 
+                                                     0x9842DED1108F3D05, 0xDCDFB643DBF3ED78, 0x022E35EED3BD2680, 0x020337AA0C08F0F3 };
 const uint64_t p503p1[NWORDS64_FIELD]            = { 0x0000000000000000, 0x0000000000000000, 0x0000000000000000, 0xAC00000000000000,
                                                      0x13085BDA2211E7A0, 0x1B9BF6C87B7E7DAF, 0x6045C6BDDA77A4D0, 0x004066F541811E1E };
-const uint64_t p503p1x64[NWORDS64_FIELD/2]       = { 0xC216F6888479E82B, 0xE6FDB21EDF9F6BC4, 0x1171AF769DE93406, 0x1019BD5060478798 };  
-const uint64_t p503x16p[2*NWORDS64_FIELD]        = { 0x0000000000000010, 0x0000000000000000, 0x0000000000000000, 0x8000000000000000, 
-                                                     0x9EF484BBBDC30BEA, 0x8C8126F090304A1D, 0xF7472844B10B65FC, 0x30F32157CFDC3C33, 
-                                                     0x1463AB4329A333F7, 0xDFC933977C47D3A4, 0x338A3767F6F2520B, 0x4F8CB7565CCC13FA, 
-                                                     0xDE43B73AACD2189B, 0xBCF845CAC5405FBD, 0x516D02A09E684B7A, 0x0001033A4091BB86 };
 // Order of Alice's subgroup
 const uint64_t Alice_order[NWORDS64_ORDER]       = { 0x0000000000000000, 0x0000000000000000, 0x0000000000000000, 0x0400000000000000 }; 
 // Order of Bob's subgroup
@@ -353,6 +354,7 @@ const uint64_t v_3_torsion[TABLE_V3_LEN][2 * NWORDS64_FIELD] =
 #define fpneg                         fpneg503
 #define fpdiv2                        fpdiv2_503
 #define fpcorrection                  fpcorrection503
+#define fpmul                         fpmul503
 #define fpmul_mont                    fpmul503_mont
 #define fpsqr_mont                    fpsqr503_mont
 #define fpinv_mont                    fpinv503_mont
@@ -370,6 +372,10 @@ const uint64_t v_3_torsion[TABLE_V3_LEN][2 * NWORDS64_FIELD] =
 #define fp2correction                 fp2correction503
 #define fp2mul_mont                   fp2mul503_mont
 #define fp2sqr_mont                   fp2sqr503_mont
+#define fp2mul_c0_mont                fp2mul503_c0_mont
+#define fp2mul_c1_mont                fp2mul503_c1_mont
+#define fp2sqr_c0_mont                fp2sqr503_c0_mont
+#define fp2sqr_c1_mont                fp2sqr503_c1_mont
 #define fp2inv_mont                   fp2inv503_mont
 #define fp2inv_mont_bingcd            fp2inv503_mont_bingcd
 #define fpequal_non_constant_time     fpequal503_non_constant_time

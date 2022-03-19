@@ -1,5 +1,9 @@
 /********************************************************************************************
 * SIDH: an efficient supersingular isogeny cryptography library
+* Copyright (c) Microsoft Corporation
+*
+* Website: https://github.com/microsoft/PQCrypto-SIDH
+* Released under MIT license
 *
 * Abstract: testing code for field arithmetic, elliptic curve and isogeny functions
 *********************************************************************************************/
@@ -12,12 +16,12 @@
 
 
 // Benchmark and test parameters  
-#if defined(GENERIC_IMPLEMENTATION) || (TARGET == TARGET_ARM)
+#if defined(GENERIC_IMPLEMENTATION) || (OS_TARGET == OS_WIN) || (TARGET == TARGET_ARM)
     #define BENCH_LOOPS           100       // Number of iterations per bench
     #define SMALL_BENCH_LOOPS     100       // Number of iterations per bench
     #define TEST_LOOPS             10       // Number of iterations per test
 #else
-    #define BENCH_LOOPS        100000 
+    #define BENCH_LOOPS       1000000 
     #define SMALL_BENCH_LOOPS   10000       
     #define TEST_LOOPS            100  
 #endif

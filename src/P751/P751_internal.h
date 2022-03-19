@@ -1,5 +1,9 @@
 /********************************************************************************************
 * SIDH: an efficient supersingular isogeny cryptography library
+* Copyright (c) Microsoft Corporation
+*
+* Website: https://github.com/microsoft/PQCrypto-SIDH
+* Released under MIT license
 *
 * Abstract: internal header file for P751
 *********************************************************************************************/  
@@ -208,9 +212,17 @@ void fp2correction751(f2elm_t a);
             
 // GF(p751^2) squaring using Montgomery arithmetic, c = a^2 in GF(p751^2)
 void fp2sqr751_mont(const f2elm_t a, f2elm_t c);
+void fp2sqr751_c0_mont(const digit_t* a, digit_t* c);
+void fp2sqr751_c0_asm(const digit_t* a, digit_t* c);
+void fp2sqr751_c1_mont(const digit_t* a, digit_t* c);
+void fp2sqr751_c1_asm(const digit_t* a, digit_t* c);
  
 // GF(p751^2) multiplication using Montgomery arithmetic, c = a*b in GF(p751^2)
 void fp2mul751_mont(const f2elm_t a, const f2elm_t b, f2elm_t c);
+void fp2mul751_c0_mont(const digit_t* a, const digit_t* b, digit_t* c);
+void fp2mul751_c0_asm(const digit_t* a, const digit_t* b, digit_t* c);
+void fp2mul751_c1_mont(const digit_t* a, const digit_t* b, digit_t* c);
+void fp2mul751_c1_asm(const digit_t* a, const digit_t* b, digit_t* c);
 
 // GF(p751^2) inversion using Montgomery arithmetic, a = (a0-i*a1)/(a0^2+a1^2)
 void fp2inv751_mont(f2elm_t a);

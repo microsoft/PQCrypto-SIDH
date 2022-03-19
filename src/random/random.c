@@ -21,7 +21,7 @@
 
 static inline void delay(unsigned int count)
 {
-    while (count--) {}
+    while (count>0) { count--; }
 }
 
 

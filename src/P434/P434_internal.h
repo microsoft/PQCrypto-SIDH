@@ -1,5 +1,9 @@
 /********************************************************************************************
 * SIDH: an efficient supersingular isogeny cryptography library
+* Copyright (c) Microsoft Corporation
+*
+* Website: https://github.com/microsoft/PQCrypto-SIDH
+* Released under MIT license
 *
 * Abstract: internal header file for P434
 *********************************************************************************************/  
@@ -168,6 +172,8 @@ void rdc434_asm(digit_t* ma, digit_t* mc);
             
 // Field multiplication using Montgomery arithmetic, c = a*b*R^-1 mod p434, where R=2^768
 void fpmul434_mont(const digit_t* a, const digit_t* b, digit_t* c);
+void fpmul434(const digit_t* a, const digit_t* b, digit_t* c);
+void fpmul434_asm(const digit_t* a, const digit_t* b, digit_t* c);
 void mul434_asm(const digit_t* a, const digit_t* b, digit_t* c);
    
 // Field squaring using Montgomery arithmetic, c = a*b*R^-1 mod p434, where R=2^768
@@ -207,9 +213,17 @@ void fp2correction434(f2elm_t a);
             
 // GF(p434^2) squaring using Montgomery arithmetic, c = a^2 in GF(p434^2)
 void fp2sqr434_mont(const f2elm_t a, f2elm_t c);
+void fp2sqr434_c0_mont(const digit_t* a, digit_t* c);
+void fp2sqr434_c0_asm(const digit_t* a, digit_t* c);
+void fp2sqr434_c1_mont(const digit_t* a, digit_t* c);
+void fp2sqr434_c1_asm(const digit_t* a, digit_t* c);
  
 // GF(p434^2) multiplication using Montgomery arithmetic, c = a*b in GF(p434^2)
 void fp2mul434_mont(const f2elm_t a, const f2elm_t b, f2elm_t c);
+void fp2mul434_c0_mont(const digit_t* a, const digit_t* b, digit_t* c);
+void fp2mul434_c0_asm(const digit_t* a, const digit_t* b, digit_t* c);
+void fp2mul434_c1_mont(const digit_t* a, const digit_t* b, digit_t* c);
+void fp2mul434_c1_asm(const digit_t* a, const digit_t* b, digit_t* c);
 
 // GF(p434^2) inversion using Montgomery arithmetic, a = (a0-i*a1)/(a0^2+a1^2)
 void fp2inv434_mont(f2elm_t a);

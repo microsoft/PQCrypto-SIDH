@@ -77,7 +77,7 @@ else
 CFLAGS= $(EXTRA_CFLAGS)
 endif
 CFLAGS+= $(VALGRIND_CFLAGS)
-CFLAGS+= -std=gnu11 -Wall $(ADDITIONAL_SETTINGS) -D $(ARCHITECTURE) -D __NIX__ -D $(USE_OPT_LEVEL) $(MULX) $(ADX)
+CFLAGS+= -std=gnu11 -Wall $(ADDITIONAL_SETTINGS) -D $(ARCHITECTURE) -D __NIX__ -D $(USE_OPT_LEVEL) $(MULX) $(ADX) -Wno-missing-braces
 LDFLAGS=-lm
 ifeq "$(USE_OPT_LEVEL)" "_GENERIC_"
     EXTRA_OBJECTS_434=objs434/fp_generic.o
@@ -106,7 +106,7 @@ OBJECTS_503_COMP=objs503comp/P503_compressed.o $(EXTRA_OBJECTS_503) objs/random.
 OBJECTS_610_COMP=objs610comp/P610_compressed.o $(EXTRA_OBJECTS_610) objs/random.o objs/fips202.o
 OBJECTS_751_COMP=objs751comp/P751_compressed.o $(EXTRA_OBJECTS_751) objs/random.o objs/fips202.o
 
-all: lib434 lib503 lib610 lib751 lib434comp lib503comp lib610comp lib751comp tests KATS
+all: lib434 lib503 lib610 lib751 lib434comp lib503comp lib610comp lib751comp tests_p434 tests_p503 tests_p610 tests_p751
 
 objs434/%.o: src/P434/%.c
 	@mkdir -p $(@D)
@@ -259,28 +259,6 @@ lib751comp: $(OBJECTS_751_COMP)
 	$(AR) lib751comp/libsidh.a $^
 	$(RANLIB) lib751comp/libsidh.a
 
-tests: lib434 lib434comp lib503 lib503comp lib610 lib610comp lib751 lib751comp
-	$(CC) $(CFLAGS) -L./lib434 tests/arith_tests-p434.c tests/test_extras.c -lsidh $(LDFLAGS) -o arith_tests-p434 $(ARM_SETTING)
-	$(CC) $(CFLAGS) -L./lib503 tests/arith_tests-p503.c tests/test_extras.c -lsidh $(LDFLAGS) -o arith_tests-p503 $(ARM_SETTING)
-	$(CC) $(CFLAGS) -L./lib610 tests/arith_tests-p610.c tests/test_extras.c -lsidh $(LDFLAGS) -o arith_tests-p610 $(ARM_SETTING)
-	$(CC) $(CFLAGS) -L./lib751 tests/arith_tests-p751.c tests/test_extras.c -lsidh $(LDFLAGS) -o arith_tests-p751 $(ARM_SETTING)
-	$(CC) $(CFLAGS) -L./lib434 tests/test_SIDHp434.c tests/test_extras.c -lsidh $(LDFLAGS) -o sidh434/test_SIDH $(ARM_SETTING)
-	$(CC) $(CFLAGS) -L./lib503 tests/test_SIDHp503.c tests/test_extras.c -lsidh $(LDFLAGS) -o sidh503/test_SIDH $(ARM_SETTING)
-	$(CC) $(CFLAGS) -L./lib610 tests/test_SIDHp610.c tests/test_extras.c -lsidh $(LDFLAGS) -o sidh610/test_SIDH $(ARM_SETTING)
-	$(CC) $(CFLAGS) -L./lib751 tests/test_SIDHp751.c tests/test_extras.c -lsidh $(LDFLAGS) -o sidh751/test_SIDH $(ARM_SETTING)
-	$(CC) $(CFLAGS) -L./lib434 tests/test_SIKEp434.c tests/test_extras.c -lsidh $(LDFLAGS) -o sike434/test_SIKE $(ARM_SETTING)
-	$(CC) $(CFLAGS) -L./lib503 tests/test_SIKEp503.c tests/test_extras.c -lsidh $(LDFLAGS) -o sike503/test_SIKE $(ARM_SETTING)
-	$(CC) $(CFLAGS) -L./lib610 tests/test_SIKEp610.c tests/test_extras.c -lsidh $(LDFLAGS) -o sike610/test_SIKE $(ARM_SETTING)
-	$(CC) $(CFLAGS) -L./lib751 tests/test_SIKEp751.c tests/test_extras.c -lsidh $(LDFLAGS) -o sike751/test_SIKE $(ARM_SETTING)
-	$(CC) $(CFLAGS) -L./lib434comp tests/test_SIDHp434_compressed.c tests/test_extras.c -lsidh $(LDFLAGS) -o sidh434_compressed/test_SIDH $(ARM_SETTING)
-	$(CC) $(CFLAGS) -L./lib503comp tests/test_SIDHp503_compressed.c tests/test_extras.c -lsidh $(LDFLAGS) -o sidh503_compressed/test_SIDH $(ARM_SETTING)
-	$(CC) $(CFLAGS) -L./lib610comp tests/test_SIDHp610_compressed.c tests/test_extras.c -lsidh $(LDFLAGS) -o sidh610_compressed/test_SIDH $(ARM_SETTING)
-	$(CC) $(CFLAGS) -L./lib751comp tests/test_SIDHp751_compressed.c tests/test_extras.c -lsidh $(LDFLAGS) -o sidh751_compressed/test_SIDH $(ARM_SETTING)
-	$(CC) $(CFLAGS) -L./lib434comp tests/test_SIKEp434_compressed.c tests/test_extras.c -lsidh $(LDFLAGS) -o sike434_compressed/test_SIKE $(ARM_SETTING)
-	$(CC) $(CFLAGS) -L./lib503comp tests/test_SIKEp503_compressed.c tests/test_extras.c -lsidh $(LDFLAGS) -o sike503_compressed/test_SIKE $(ARM_SETTING)
-	$(CC) $(CFLAGS) -L./lib610comp tests/test_SIKEp610_compressed.c tests/test_extras.c -lsidh $(LDFLAGS) -o sike610_compressed/test_SIKE $(ARM_SETTING)
-	$(CC) $(CFLAGS) -L./lib751comp tests/test_SIKEp751_compressed.c tests/test_extras.c -lsidh $(LDFLAGS) -o sike751_compressed/test_SIKE $(ARM_SETTING)
-
 # AES
 AES_OBJS=objs/aes.o objs/aes_c.o
 
@@ -320,17 +298,40 @@ lib751comp_for_KATs: $(OBJECTS_751_COMP) $(AES_OBJS)
 	$(AR) lib751comp/libsidh_for_testing.a $^
 	$(RANLIB) lib751comp/libsidh_for_testing.a
 
-KATS: lib434_for_KATs lib503_for_KATs lib610_for_KATs lib751_for_KATs lib434comp_for_KATs lib503comp_for_KATs lib610comp_for_KATs lib751comp_for_KATs
+tests_p434: lib434 lib434comp lib434_for_KATs lib434comp_for_KATs
+	$(CC) $(CFLAGS) -L./lib434 tests/arith_tests-p434.c tests/test_extras.c -lsidh $(LDFLAGS) -o arith_tests-p434 $(ARM_SETTING)
+	$(CC) $(CFLAGS) -L./lib434 tests/test_SIDHp434.c tests/test_extras.c -lsidh $(LDFLAGS) -o sidh434/test_SIDH $(ARM_SETTING)
+	$(CC) $(CFLAGS) -L./lib434 tests/test_SIKEp434.c tests/test_extras.c -lsidh $(LDFLAGS) -o sike434/test_SIKE $(ARM_SETTING)
+	$(CC) $(CFLAGS) -L./lib434comp tests/test_SIDHp434_compressed.c tests/test_extras.c -lsidh $(LDFLAGS) -o sidh434_compressed/test_SIDH $(ARM_SETTING)
+	$(CC) $(CFLAGS) -L./lib434comp tests/test_SIKEp434_compressed.c tests/test_extras.c -lsidh $(LDFLAGS) -o sike434_compressed/test_SIKE $(ARM_SETTING)
 	$(CC) $(CFLAGS) -L./lib434 tests/PQCtestKAT_kem434.c tests/rng/rng.c -lsidh_for_testing $(LDFLAGS) -o sike434/PQCtestKAT_kem $(ARM_SETTING)
-	$(CC) $(CFLAGS) -L./lib503 tests/PQCtestKAT_kem503.c tests/rng/rng.c -lsidh_for_testing $(LDFLAGS) -o sike503/PQCtestKAT_kem $(ARM_SETTING)
-	$(CC) $(CFLAGS) -L./lib610 tests/PQCtestKAT_kem610.c tests/rng/rng.c -lsidh_for_testing $(LDFLAGS) -o sike610/PQCtestKAT_kem $(ARM_SETTING)
-	$(CC) $(CFLAGS) -L./lib751 tests/PQCtestKAT_kem751.c tests/rng/rng.c -lsidh_for_testing $(LDFLAGS) -o sike751/PQCtestKAT_kem $(ARM_SETTING)
 	$(CC) $(CFLAGS) -L./lib434comp tests/PQCtestKAT_kem434_compressed.c tests/rng/rng.c -lsidh_for_testing $(LDFLAGS) -o sike434_compressed/PQCtestKAT_kem $(ARM_SETTING)
+tests_p503: lib503 lib503comp lib503_for_KATs lib503comp_for_KATs
+	$(CC) $(CFLAGS) -L./lib503 tests/arith_tests-p503.c tests/test_extras.c -lsidh $(LDFLAGS) -o arith_tests-p503 $(ARM_SETTING)
+	$(CC) $(CFLAGS) -L./lib503 tests/test_SIDHp503.c tests/test_extras.c -lsidh $(LDFLAGS) -o sidh503/test_SIDH $(ARM_SETTING)
+	$(CC) $(CFLAGS) -L./lib503 tests/test_SIKEp503.c tests/test_extras.c -lsidh $(LDFLAGS) -o sike503/test_SIKE $(ARM_SETTING)
+	$(CC) $(CFLAGS) -L./lib503comp tests/test_SIDHp503_compressed.c tests/test_extras.c -lsidh $(LDFLAGS) -o sidh503_compressed/test_SIDH $(ARM_SETTING)
+	$(CC) $(CFLAGS) -L./lib503comp tests/test_SIKEp503_compressed.c tests/test_extras.c -lsidh $(LDFLAGS) -o sike503_compressed/test_SIKE $(ARM_SETTING)
+	$(CC) $(CFLAGS) -L./lib503 tests/PQCtestKAT_kem503.c tests/rng/rng.c -lsidh_for_testing $(LDFLAGS) -o sike503/PQCtestKAT_kem $(ARM_SETTING)
 	$(CC) $(CFLAGS) -L./lib503comp tests/PQCtestKAT_kem503_compressed.c tests/rng/rng.c -lsidh_for_testing $(LDFLAGS) -o sike503_compressed/PQCtestKAT_kem $(ARM_SETTING)
+tests_p610: lib610 lib610comp lib610_for_KATs lib610comp_for_KATs
+	$(CC) $(CFLAGS) -L./lib610 tests/arith_tests-p610.c tests/test_extras.c -lsidh $(LDFLAGS) -o arith_tests-p610 $(ARM_SETTING)
+	$(CC) $(CFLAGS) -L./lib610 tests/test_SIDHp610.c tests/test_extras.c -lsidh $(LDFLAGS) -o sidh610/test_SIDH $(ARM_SETTING)
+	$(CC) $(CFLAGS) -L./lib610 tests/test_SIKEp610.c tests/test_extras.c -lsidh $(LDFLAGS) -o sike610/test_SIKE $(ARM_SETTING)
+	$(CC) $(CFLAGS) -L./lib610comp tests/test_SIDHp610_compressed.c tests/test_extras.c -lsidh $(LDFLAGS) -o sidh610_compressed/test_SIDH $(ARM_SETTING)
+	$(CC) $(CFLAGS) -L./lib610comp tests/test_SIKEp610_compressed.c tests/test_extras.c -lsidh $(LDFLAGS) -o sike610_compressed/test_SIKE $(ARM_SETTING)
+	$(CC) $(CFLAGS) -L./lib610 tests/PQCtestKAT_kem610.c tests/rng/rng.c -lsidh_for_testing $(LDFLAGS) -o sike610/PQCtestKAT_kem $(ARM_SETTING)
 	$(CC) $(CFLAGS) -L./lib610comp tests/PQCtestKAT_kem610_compressed.c tests/rng/rng.c -lsidh_for_testing $(LDFLAGS) -o sike610_compressed/PQCtestKAT_kem $(ARM_SETTING)
-	$(CC) $(CFLAGS) -L./lib751comp tests/PQCtestKAT_kem751_compressed.c tests/rng/rng.c -lsidh_for_testing $(LDFLAGS) -o sike751_compressed/PQCtestKAT_kem $(ARM_SETTING)
+tests_p751: lib751 lib751comp lib751_for_KATs lib751comp_for_KATs
+	$(CC) $(CFLAGS) -L./lib751 tests/arith_tests-p751.c tests/test_extras.c -lsidh $(LDFLAGS) -o arith_tests-p751 $(ARM_SETTING)
+	$(CC) $(CFLAGS) -L./lib751 tests/test_SIDHp751.c tests/test_extras.c -lsidh $(LDFLAGS) -o sidh751/test_SIDH $(ARM_SETTING)
+	$(CC) $(CFLAGS) -L./lib751 tests/test_SIKEp751.c tests/test_extras.c -lsidh $(LDFLAGS) -o sike751/test_SIKE $(ARM_SETTING)
+	$(CC) $(CFLAGS) -L./lib751comp tests/test_SIDHp751_compressed.c tests/test_extras.c -lsidh $(LDFLAGS) -o sidh751_compressed/test_SIDH $(ARM_SETTING)
+	$(CC) $(CFLAGS) -L./lib751comp tests/test_SIKEp751_compressed.c tests/test_extras.c -lsidh $(LDFLAGS) -o sike751_compressed/test_SIKE $(ARM_SETTING)
+	$(CC) $(CFLAGS) -L./lib751 tests/PQCtestKAT_kem751.c tests/rng/rng.c -lsidh_for_testing $(LDFLAGS) -o sike751/PQCtestKAT_kem $(ARM_SETTING)
+	$(CC) $(CFLAGS) -L./lib751comp tests/PQCtestKAT_kem751_compressed.c tests/rng/rng.c -lsidh_for_testing $(LDFLAGS) -o sike751_compressed/PQCtestKAT_kem $(ARM_SETTING)    
 
-check: tests
+check: tests_p434 tests_p503 tests_p610 tests_p751
 
 test434:
 ifeq "$(DO_VALGRIND_CHECK)" "TRUE"

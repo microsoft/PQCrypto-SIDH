@@ -1,7 +1,7 @@
-# SIDH v3.4 (C Edition)
+# SIDH v3.5 (C Edition)
 
 The **SIDH** library is an efficient supersingular isogeny-based cryptography library written in C language.
-**Version v3.4** of the library includes the ephemeral Diffie-Hellman key exchange scheme "SIDH" [1,2], and the CCA-secure
+**Version v3.5** of the library includes the ephemeral Diffie-Hellman key exchange scheme "SIDH" [1,2], and the CCA-secure
 key encapsulation mechanism "SIKE" [3]. These schemes are conjectured to be secure against quantum computer attacks.
 
 Concretely, the SIDH library includes the following KEM schemes:
@@ -91,9 +91,13 @@ The library was developed by [Microsoft Research](http://research.microsoft.com/
  
 - Memory optimizations for compressed SIDH and compressed SIKE.
 
+## New in Version 3.5
+ 
+- New implementations of the quadratic extension field arithmetic for x64 processors on Linux [13].
+
 ## Supported Platforms
 
-**SIDH v3.4** is supported on a wide range of platforms including x64, x86, ARM and s390x processors running Windows,
+**SIDH v3.5** is supported on a wide range of platforms including x64, x86, ARM and s390x processors running Windows,
 Linux or Mac OS X. We have tested the library with Microsoft Visual Studio 2015, GNU GCC v5.4, and clang v3.8.
 See instructions below to choose an implementation option and compile on one of the supported platforms.
 
@@ -121,7 +125,7 @@ optimizations using MULX/ADX.
 Other options for x64:
 
 ```sh
-$ make ARCH=x64 CC=[gcc/clang] OPT_LEVEL=[FAST/GENERIC] USE_MULX=[TRUE/FALSE] USE_ADX=[TRUE/FALSE]
+$ make tests_pXXX ARCH=x64 CC=[gcc/clang] OPT_LEVEL=[FAST/GENERIC] USE_MULX=[TRUE/FALSE] USE_ADX=[TRUE/FALSE]
 ```
 
 When `OPT_LEVEL=FAST` (i.e., assembly use enabled), the user is responsible for setting the flags MULX and ADX 
@@ -129,17 +133,18 @@ according to the targeted platform (for example, MULX/ADX are not supported on S
 is supported on Haswell, and both MULX and ADX are supported on Broadwell, Skylake and Kaby Lake architectures). 
 Note that USE_ADX can only be set to `TRUE` if `USE_MULX=TRUE`.
 The option `USE_MULX=FALSE` with `USE_ADX=FALSE` is only supported on p503 and p751.
+The use of `tests_pXXX`, for any value XXX in [434,503,610,751], allows to compile only one parameter set at a time.
 
 Options for x86/ARM/M1/s390x:
 
 ```sh
-$ make ARCH=[x86/ARM/M1/s390x] CC=[gcc/clang]
+$ make tests_pXXX ARCH=[x86/ARM/M1/s390x] CC=[gcc/clang]
 ```
 
 Options for ARM64 or Apple M1:
 
 ```sh
-$ make ARCH=[ARM64/M1] CC=[gcc/clang] OPT_LEVEL=[FAST/GENERIC]
+$ make tests_pXXX ARCH=[ARM64/M1] CC=[gcc/clang] OPT_LEVEL=[FAST/GENERIC]
 ```
 
 As in the x64 case, `OPT_LEVEL=FAST` enables the use of assembly optimizations on ARMv8 platforms.
@@ -209,7 +214,7 @@ The library includes some third party modules that are licensed differently. In 
 - `tests/PQCtestKAT_kem<#>.c`: copyrighted by Lawrence E. Bassham 
 - `src/sha3/fips202.c`: public domain
 
-## Contributors
+## Other contributors
 
 - Basil Hess.
 - Geovandro Pereira.
@@ -223,8 +228,8 @@ The extended version is available [`here`](http://eprint.iacr.org/2016/413).
 [2]  David Jao and Luca DeFeo, "Towards quantum-resistant cryptosystems from supersingular elliptic curve isogenies". PQCrypto 2011, LNCS 7071, pp. 19-34, 2011. 
 The extended version is available [`here`](https://eprint.iacr.org/2011/506).
 
-[3]  Reza Azarderakhsh, Matthew Campagna, Craig Costello, Luca De Feo, Basil Hess, Amir Jalali, David Jao, Brian Koziel, Brian LaMacchia, Patrick Longa, Michael Naehrig, Joost Renes, Vladimir Soukharev, and David Urbanik, "Supersingular Isogeny Key Encapsulation". Submission to the NIST Post-Quantum Standardization project, 2017.  
-The round 2 submission package is available [`here`](https://csrc.nist.gov/CSRC/media/Projects/Post-Quantum-Cryptography/documents/round-2/submissions/SIKE-Round2.zip).
+[3]  Reza Azarderakhsh, Matthew Campagna, Craig Costello, Luca De Feo, Basil Hess, Aaron Hutchinson, Amir Jalali, Koray Karabina, David Jao, Brian Koziel, Brian LaMacchia, Patrick Longa, Michael Naehrig, Geovandro Pereira, Joost Renes, Vladimir Soukharev, and David Urbanik, "Supersingular Isogeny Key Encapsulation (SIKE)", 2017.  
+The specifications document is available [`here`](https://sike.org).
 
 [4]  Craig Costello, and Huseyin Hisil, "A simple and compact algorithm for SIDH with arbitrary degree isogenies". Advances in Cryptology - ASIACRYPT 2017, LNCS 10625, pp. 303-329, 2017. 
 The preprint version is available [`here`](https://eprint.iacr.org/2017/504). 
@@ -235,10 +240,10 @@ The preprint version is available [`here`](https://eprint.iacr.org/2017/1015).
 [6]  Gora Adj, Daniel Cervantes-Vázquez, Jesús-Javier Chi-Domínguez, Alfred Menezes and Francisco Rodríguez-Henríquez, "On the cost of computing isogenies between supersingular elliptic curves". SAC 2018, LCNS 11349, pp. 322-343, 2018. 
 The preprint version is available [`here`](https://eprint.iacr.org/2018/313). 
 
-[7]  Samuel Jaques and John M. Schanck, "Quantum cryptanalysis in the RAM model: Claw-finding attacks on SIKE". Advances in Cryptology - CRYPTO 2019 (to appear), 2019. 
+[7]  Samuel Jaques and John M. Schanck, "Quantum cryptanalysis in the RAM model: Claw-finding attacks on SIKE". Advances in Cryptology - CRYPTO 2019, 2019. 
 The preprint version is available [`here`](https://eprint.iacr.org/2019/103).   
 
-[8]  Craig Costello, Patrick Longa, Michael Naehrig, Joost Renes and Fernando Virdia, "Improved Classical Cryptanalysis of the Computational Supersingular Isogeny Problem", 2019. 
+[8]  Craig Costello, Patrick Longa, Michael Naehrig, Joost Renes and Fernando Virdia, "Improved classical cryptanalysis of the computational supersingular isogeny problem". PKC 2020, LCNS 12111, pp. 505-534, 2020. 
 The preprint version is available [`here`](https://eprint.iacr.org/2019/298). 
 
 [9]  Craig Costello, David Jao, Patrick Longa, Michael Naehrig, Joost Renes and David Urbanik, "Efficient compression of SIDH public keys". Advances in Cryptology - EUROCRYPT 2017, LNCS 10210, pp. 679-706, 2017. 
@@ -247,11 +252,13 @@ The preprint version is available [`here`](https://eprint.iacr.org/2016/963).
 [10]  Gustavo H.M. Zanon, Marcos A. Simplicio Jr, Geovandro C.C.F. Pereira, Javad Doliskani and Paulo S.L.M. Barreto, "Faster key compression for isogeny-based cryptosystems". IEEE Transactions on Computers, Vol. 68(5), 2019. 
 The preprint version is available [`here`](https://eprint.iacr.org/2017/1143).  
 
-[11]  Michael Naehrig and Joost Renes, "Dual Isogenies and Their Application to Public-key Compression for Isogeny-based Cryptography". Advances in Cryptology - ASIACRYPT 2019, LNCS 11922, pp. 243-272, 2019.
+[11]  Michael Naehrig and Joost Renes, "Dual isogenies and their application to public-key compression for isogeny-based cryptography". Advances in Cryptology - ASIACRYPT 2019, LNCS 11922, pp. 243-272, 2019.
 The preprint version is available [`here`](https://eprint.iacr.org/2019/499).
 
-[12]  Geovandro C.C.F. Pereira, Javad Doliskani and David Jao, "x-only point addition formula and faster torsion basis generation in compressed SIKE".
+[12]  Geovandro C.C.F. Pereira, Javad Doliskani and David Jao, "x-only point addition formula and faster torsion basis generation in compressed SIKE". JCEN, Vol. 11, pp. 57-69, 2021. 
 The preprint version is available [`here`](https://eprint.iacr.org/2020/431).
+
+[13]  Patrick Longa, "Efficient algorithms for large prime characteristic fields and their application to bilinear pairings and supersingular isogeny-based protocols", 2022.
 
 # Contributing
 

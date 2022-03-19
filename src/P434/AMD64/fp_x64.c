@@ -1,5 +1,9 @@
 /********************************************************************************************
 * SIDH: an efficient supersingular isogeny cryptography library
+* Copyright (c) Microsoft Corporation
+*
+* Website: https://github.com/microsoft/PQCrypto-SIDH
+* Released under MIT license 
 *
 * Abstract: modular arithmetic optimized for x64 platforms for P434
 *********************************************************************************************/
@@ -17,7 +21,7 @@ extern const uint64_t p434x4[NWORDS_FIELD];
 
 inline void mp_sub434_p2(const digit_t* a, const digit_t* b, digit_t* c)
 { // Multiprecision subtraction with correction with 2*p, c = a-b+2p.    
-#if (OS_TARGET == OS_WIN) || defined(GENERIC_IMPLEMENTATION) || (TARGET == TARGET_ARM) || (TARGET == TARGET_ARM64 && NBITS_FIELD == 610)
+#if (OS_TARGET == OS_WIN)
     unsigned int i, borrow = 0;
 
     for (i = 0; i < NWORDS_FIELD; i++) {
@@ -39,7 +43,7 @@ inline void mp_sub434_p2(const digit_t* a, const digit_t* b, digit_t* c)
 
 inline void mp_sub434_p4(const digit_t* a, const digit_t* b, digit_t* c)
 { // Multiprecision subtraction with correction with 4*p, c = a-b+4p.    
-#if (OS_TARGET == OS_WIN) || defined(GENERIC_IMPLEMENTATION) || (TARGET == TARGET_ARM) || (TARGET == TARGET_ARM64 && NBITS_FIELD == 610)
+#if (OS_TARGET == OS_WIN)
     unsigned int i, borrow = 0;
 
     for (i = 0; i < NWORDS_FIELD; i++) {
@@ -50,11 +54,6 @@ inline void mp_sub434_p4(const digit_t* a, const digit_t* b, digit_t* c)
     for (i = 0; i < NWORDS_FIELD; i++) {
         ADDC(borrow, c[i], ((digit_t*)p434x4)[i], borrow, c[i]); 
     }
-    
-#elif (OS_TARGET == OS_NIX)                 
-    
-    mp_sub434_p4_asm(a, b, c);    
-
 #endif
 }
 
@@ -161,13 +160,42 @@ void fpcorrection434(digit_t* a)
     }
 }
 
+#if (OS_TARGET == OS_NIX)
+
+void fp2mul434_c0_mont(const digit_t* a, const digit_t* b, digit_t* c)
+{
+    fp2mul434_c0_asm(a, b, c);
+}
+
+
+void fp2mul434_c1_mont(const digit_t* a, const digit_t* b, digit_t* c)
+{
+    fp2mul434_c1_asm(a, b, c);
+}
+
+
+void fp2sqr434_c0_mont(const digit_t* a, digit_t* c)
+{
+    fp2sqr434_c0_asm(a, c);
+}
+
+
+void fp2sqr434_c1_mont(const digit_t* a, digit_t* c)
+{
+    fp2sqr434_c1_asm(a, c);
+}
+
+void fpmul434(const digit_t* a, const digit_t* b, digit_t* c)
+{
+    fpmul434_asm(a, b, c);
+}
+
+#else
 
 void mp_mul(const digit_t* a, const digit_t* b, digit_t* c, const unsigned int nwords)
 { // Multiprecision multiply, c = a*b, where lng(a) = lng(b) = nwords.
         
     UNREFERENCED_PARAMETER(nwords);
-
-#if (OS_TARGET == OS_WIN)
     digit_t t = 0;
     uint128_t uv = {0};
     unsigned int carry = 0;
@@ -330,12 +358,6 @@ void mp_mul(const digit_t* a, const digit_t* b, digit_t* c, const unsigned int n
     MULADD128(a[6], b[6], uv, carry, uv);
     c[12] = uv[0];
     c[13] = uv[1];
-
-#elif (OS_TARGET == OS_NIX)
-    
-    mul434_asm(a, b, c);
-
-#endif
 }
 
 
@@ -343,9 +365,7 @@ void rdc_mont(digit_t* ma, digit_t* mc)
 { // Montgomery reduction exploiting special form of the prime.
   // mc = ma*R^-1 mod p434x2, where R = 2^448.
   // If ma < 2^448*p434, the output mc is in the range [0, 2*p434-1].
-  // ma is assumed to be in Montgomery representation.
-        
-#if (OS_TARGET == OS_WIN)
+  // ma is assumed to be in Montgomery representation.        
     unsigned int carry;
     digit_t t = 0;
     uint128_t uv = {0};
@@ -478,11 +498,7 @@ void rdc_mont(digit_t* ma, digit_t* mc)
     MULADD128(mc[6], ((digit_t*)p434p1)[6], uv, carry, uv);
     t += carry;
     ADDC(0, uv[0], ma[12], carry, mc[5]); 
-    ADDC(carry, uv[1], ma[13], carry, mc[6]); 
-    
-#elif (OS_TARGET == OS_NIX)                 
-    
-    rdc434_asm(ma, mc);    
+    ADDC(carry, uv[1], ma[13], carry, mc[6]);
+}
 
 #endif
-}

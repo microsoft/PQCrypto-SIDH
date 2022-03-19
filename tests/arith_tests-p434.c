@@ -1,5 +1,9 @@
 /********************************************************************************************
 * SIDH: an efficient supersingular isogeny cryptography library
+* Copyright (c) Microsoft Corporation
+*
+* Website: https://github.com/microsoft/PQCrypto-SIDH
+* Released under MIT license
 *
 * Abstract: testing code for field arithmetic, elliptic curve and isogeny functions
 *********************************************************************************************/
@@ -12,12 +16,12 @@
 
 
 // Benchmark and test parameters  
-#if defined(GENERIC_IMPLEMENTATION) || (TARGET == TARGET_ARM) 
+#if defined(GENERIC_IMPLEMENTATION) || (OS_TARGET == OS_WIN) || (TARGET == TARGET_ARM) 
     #define BENCH_LOOPS           100       // Number of iterations per bench
     #define SMALL_BENCH_LOOPS     100       // Number of iterations per bench
     #define TEST_LOOPS             10       // Number of iterations per test
 #else
-    #define BENCH_LOOPS        100000 
+    #define BENCH_LOOPS       1000000 
     #define SMALL_BENCH_LOOPS   10000       
     #define TEST_LOOPS            100   
 #endif
@@ -350,7 +354,6 @@ bool fp_run()
     int n;
     unsigned long long cycles, cycles1, cycles2;
     felm_t a, b, c;
-    dfelm_t aa;
         
     printf("\n--------------------------------------------------------------------------------------------------------\n\n"); 
     printf("Benchmarking field arithmetic over GF(p434): \n\n"); 
@@ -391,20 +394,6 @@ bool fp_run()
         cycles = cycles+(cycles2-cycles1);
     }
     printf("  GF(p) multiplication runs in .................................... %7lld ", cycles/BENCH_LOOPS); print_unit;
-    printf("\n");
-
-    // GF(p) reduction using p434
-    cycles = 0;
-    for (n=0; n<BENCH_LOOPS; n++)
-    {
-        mp_mul(a, b, aa, NWORDS_FIELD);
-
-        cycles1 = cpucycles(); 
-        rdc_mont(aa, c);
-        cycles2 = cpucycles();
-        cycles = cycles+(cycles2-cycles1);
-    }
-    printf("  GF(p) reduction runs in ......................................... %7lld ", cycles/BENCH_LOOPS); print_unit;
     printf("\n");
 
     // GF(p) inversion

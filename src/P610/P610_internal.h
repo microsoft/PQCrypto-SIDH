@@ -1,5 +1,9 @@
 /********************************************************************************************
 * SIDH: an efficient supersingular isogeny cryptography library
+* Copyright (c) Microsoft Corporation
+*
+* Website: https://github.com/microsoft/PQCrypto-SIDH
+* Released under MIT license
 *
 * Abstract: internal header file for P610
 *********************************************************************************************/  
@@ -170,6 +174,8 @@ void rdc610_asm(digit_t* ma, digit_t* mc);
             
 // Field multiplication using Montgomery arithmetic, c = a*b*R^-1 mod p610, where R=2^640
 void fpmul610_mont(const digit_t* a, const digit_t* b, digit_t* c);
+void fpmul610(const digit_t* a, const digit_t* b, digit_t* c);
+void fpmul610_asm(const digit_t* a, const digit_t* b, digit_t* c);
 void mul610_asm(const digit_t* a, const digit_t* b, digit_t* c);
    
 // Field squaring using Montgomery arithmetic, c = a*b*R^-1 mod p610, where R=2^640
@@ -209,9 +215,17 @@ void fp2correction610(f2elm_t a);
             
 // GF(p610^2) squaring using Montgomery arithmetic, c = a^2 in GF(p610^2)
 void fp2sqr610_mont(const f2elm_t a, f2elm_t c);
+void fp2sqr610_c0_mont(const digit_t* a, digit_t* c);
+void fp2sqr610_c0_asm(const digit_t* a, digit_t* c);
+void fp2sqr610_c1_mont(const digit_t* a, digit_t* c);
+void fp2sqr610_c1_asm(const digit_t* a, digit_t* c);
  
 // GF(p610^2) multiplication using Montgomery arithmetic, c = a*b in GF(p610^2)
 void fp2mul610_mont(const f2elm_t a, const f2elm_t b, f2elm_t c);
+void fp2mul610_c0_mont(const digit_t* a, const digit_t* b, digit_t* c);
+void fp2mul610_c0_asm(const digit_t* a, const digit_t* b, digit_t* c);
+void fp2mul610_c1_mont(const digit_t* a, const digit_t* b, digit_t* c);
+void fp2mul610_c1_asm(const digit_t* a, const digit_t* b, digit_t* c);
 
 // GF(p610^2) inversion using Montgomery arithmetic, a = (a0-i*a1)/(a0^2+a1^2)
 void fp2inv610_mont(f2elm_t a);

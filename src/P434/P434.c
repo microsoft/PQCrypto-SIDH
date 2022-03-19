@@ -1,5 +1,9 @@
 /********************************************************************************************
 * SIDH: an efficient supersingular isogeny cryptography library
+* Copyright (c) Microsoft Corporation
+*
+* Website: https://github.com/microsoft/PQCrypto-SIDH
+* Released under MIT license
 *
 * Abstract: supersingular isogeny parameters and generation of functions for P434
 *********************************************************************************************/  
@@ -27,12 +31,10 @@ const uint64_t p434x2[NWORDS64_FIELD]            = { 0xFFFFFFFFFFFFFFFE, 0xFFFFF
                                                      0xF78CB8F062B15D47, 0xD9F8BFAD038A40AC, 0x0004683E4E2EE688 }; 
 const uint64_t p434x4[NWORDS64_FIELD]            = { 0xFFFFFFFFFFFFFFFC, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xF705D9EB8BFFFFFF, 
                                                      0xEF1971E0C562BA8F, 0xB3F17F5A07148159, 0x0008D07C9C5DCD11 }; 
+const uint64_t p434x8[NWORDS64_FIELD]            = { 0xFFFFFFFFFFFFFFF8, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xEE0BB3D717FFFFFF, 
+                                                     0xDE32E3C18AC5751F, 0x67E2FEB40E2902B3, 0x0011A0F938BB9A23 }; 
 const uint64_t p434p1[NWORDS64_FIELD]            = { 0x0000000000000000, 0x0000000000000000, 0x0000000000000000, 0xFDC1767AE3000000,
-                                                     0x7BC65C783158AEA3, 0x6CFC5FD681C52056, 0x0002341F27177344 };  
-const uint64_t p434x16p[2*NWORDS64_FIELD]        = { 0x0000000000000010, 0x0000000000000000, 0x0000000000000000, 0x47D130A3A0000000, 
-                                                     0x873470F9D4EA2B80, 0x6074052FC75BF530, 0x54497C1B1D119772, 0xC55F373D2CDCA412, 
-                                                     0x732CA2221C664B96, 0x6445AB96AF6359A5, 0x221708AB42ABE1B4, 0xAE3D3D0063244F01, 
-                                                     0x18B920F2ECF68816, 0x0000004DB194809D }; 
+                                                     0x7BC65C783158AEA3, 0x6CFC5FD681C52056, 0x0002341F27177344 }; 
 // Order of Alice's subgroup
 const uint64_t Alice_order[NWORDS64_ORDER]       = { 0x0000000000000000, 0x0000000000000000, 0x0000000000000000, 0x0000000001000000 }; 
 // Order of Bob's subgroup
@@ -90,6 +92,7 @@ const unsigned int strat_Bob[MAX_Bob-1] = {
 #define fpneg                         fpneg434
 #define fpdiv2                        fpdiv2_434
 #define fpcorrection                  fpcorrection434
+#define fpmul                         fpmul434
 #define fpmul_mont                    fpmul434_mont
 #define fpsqr_mont                    fpsqr434_mont
 #define fpinv_mont                    fpinv434_mont
@@ -107,6 +110,10 @@ const unsigned int strat_Bob[MAX_Bob-1] = {
 #define fp2correction                 fp2correction434
 #define fp2mul_mont                   fp2mul434_mont
 #define fp2sqr_mont                   fp2sqr434_mont
+#define fp2mul_c0_mont                fp2mul434_c0_mont
+#define fp2mul_c1_mont                fp2mul434_c1_mont
+#define fp2sqr_c0_mont                fp2sqr434_c0_mont
+#define fp2sqr_c1_mont                fp2sqr434_c1_mont
 #define fp2inv_mont                   fp2inv434_mont
 #define fp2inv_mont_bingcd            fp2inv434_mont_bingcd
 #define fpequal_non_constant_time     fpequal434_non_constant_time

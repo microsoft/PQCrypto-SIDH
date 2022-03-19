@@ -1,5 +1,9 @@
 /********************************************************************************************
 * SIDH: an efficient supersingular isogeny cryptography library
+* Copyright (c) Microsoft Corporation
+*
+* Website: https://github.com/microsoft/PQCrypto-SIDH
+* Released under MIT license
 *
 * Abstract: benchmarking/testing isogeny-based key encapsulation mechanism
 *********************************************************************************************/ 
@@ -13,17 +17,17 @@
 #ifdef DO_VALGRIND_CHECK
     #define TEST_LOOPS   1
 #else 
-#if defined(GENERIC_IMPLEMENTATION) || (TARGET == TARGET_ARM) 
+#if defined(GENERIC_IMPLEMENTATION) || (OS_TARGET == OS_WIN) || (TARGET == TARGET_ARM) 
     #define TEST_LOOPS         5      // Number of iterations per test
 #else
     #define TEST_LOOPS        10      
 #endif     
 #endif
 
-#if defined(GENERIC_IMPLEMENTATION) || (TARGET == TARGET_ARM) 
+#if defined(GENERIC_IMPLEMENTATION) || (OS_TARGET == OS_WIN) || (TARGET == TARGET_ARM) 
     #define BENCH_LOOPS        5      // Number of iterations per bench 
 #else
-    #define BENCH_LOOPS      100    
+    #define BENCH_LOOPS     1000    
 #endif
 
 

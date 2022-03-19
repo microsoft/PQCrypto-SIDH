@@ -1,5 +1,9 @@
 /**************************************************************************************************
 * SIDH: an efficient supersingular isogeny cryptography library
+* Copyright (c) Microsoft Corporation
+*
+* Website: https://github.com/microsoft/PQCrypto-SIDH
+* Released under MIT license
 *
 * Abstract: precomputed tables for pairing computation on E0: y^2 = x^3 + x when using compression
 ***************************************************************************************************/  
