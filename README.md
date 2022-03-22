@@ -259,6 +259,7 @@ The preprint version is available [`here`](https://eprint.iacr.org/2019/499).
 The preprint version is available [`here`](https://eprint.iacr.org/2020/431).
 
 [13]  Patrick Longa, "Efficient algorithms for large prime characteristic fields and their application to bilinear pairings and supersingular isogeny-based protocols", 2022.
+The preprint version is available [`here`](https://eprint.iacr.org/2020/367).
 
 # Contributing
 
