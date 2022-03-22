@@ -376,22 +376,22 @@ fmt(mp_sub434_p2_asm):
     // [Z7, Z0:Z5] <- z = (z0 x p434p1 + z)/2^64
     mov    rdx, \Z6                // rdx <- z0
     //MULADD64x256 [rip+fmt(p434p1)+24], \Z1, \Z2, \Z3, \Z4, \Z5, \T0, \T1 
-    mulx   \Z6, \Z7, [rip+p434p1+24]
+    mulx   \Z6, \Z7, [rip+fmt(p434p1)+24]
     pop    \T0
     adox   \Z1, \Z7
     adox   \Z2, \Z6  
     mov    [rcx+8], \Z0  
-    mulx   \Z6, \Z7, [rip+p434p1+32]
+    mulx   \Z6, \Z7, [rip+fmt(p434p1)+32]
     mov    [rcx+16], \Z1 
     adcx   \Z2, \Z7
     adox   \Z3, \Z6   
     mov    [rcx+24], \Z2  
-    mulx   \Z2, \Z1, [rip+p434p1+40]
+    mulx   \Z2, \Z1, [rip+fmt(p434p1)+40]
     pop    \Z7
     adcx   \Z3, \Z1
     adox   \Z4, \Z2   
     mov    [rcx+32], \Z3   
-    mulx   \Z2, \Z1, [rip+p434p1+48] 
+    mulx   \Z2, \Z1, [rip+fmt(p434p1)+48] 
     pop    \Z6        
     adcx   \Z4, \Z1
     adox   \Z5, \Z2
