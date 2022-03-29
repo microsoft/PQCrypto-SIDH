@@ -170,13 +170,13 @@ void fpcorrection503(digit_t* a);
 // 503-bit Montgomery reduction, c = a mod p
 void rdc503_asm(digit_t* ma, digit_t* mc);
             
-// Field multiplication using Montgomery arithmetic, c = a*b*R^-1 mod p503, where R=2^768
+// Field multiplication using Montgomery arithmetic, c = a*b*R^-1 mod p503, where R=2^512
 void fpmul503_mont(const digit_t* a, const digit_t* b, digit_t* c);
 void fpmul503(const digit_t* a, const digit_t* b, digit_t* c);
 void fpmul503_asm(const digit_t* a, const digit_t* b, digit_t* c);
 void mul503_asm(const digit_t* a, const digit_t* b, digit_t* c);
    
-// Field squaring using Montgomery arithmetic, c = a*b*R^-1 mod p503, where R=2^768
+// Field squaring using Montgomery arithmetic, c = a*b*R^-1 mod p503, where R=2^512
 void fpsqr503_mont(const digit_t* ma, digit_t* mc);
 
 // Field inversion, a = a^-1 in GF(p503)
