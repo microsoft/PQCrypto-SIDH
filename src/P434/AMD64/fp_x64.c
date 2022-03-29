@@ -185,6 +185,7 @@ void fp2sqr434_c1_mont(const digit_t* a, digit_t* c)
     fp2sqr434_c1_asm(a, c);
 }
 
+
 void fpmul434(const digit_t* a, const digit_t* b, digit_t* c)
 {
     fpmul434_asm(a, b, c);
