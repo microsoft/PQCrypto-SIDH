@@ -170,13 +170,13 @@ void fpcorrection434(digit_t* a);
 // 434-bit Montgomery reduction, c = a mod p
 void rdc434_asm(digit_t* ma, digit_t* mc);
             
-// Field multiplication using Montgomery arithmetic, c = a*b*R^-1 mod p434, where R=2^768
+// Field multiplication using Montgomery arithmetic, c = a*b*R^-1 mod p434, where R=2^448
 void fpmul434_mont(const digit_t* a, const digit_t* b, digit_t* c);
 void fpmul434(const digit_t* a, const digit_t* b, digit_t* c);
 void fpmul434_asm(const digit_t* a, const digit_t* b, digit_t* c);
 void mul434_asm(const digit_t* a, const digit_t* b, digit_t* c);
    
-// Field squaring using Montgomery arithmetic, c = a*b*R^-1 mod p434, where R=2^768
+// Field squaring using Montgomery arithmetic, c = a*b*R^-1 mod p434, where R=2^448
 void fpsqr434_mont(const digit_t* ma, digit_t* mc);
 
 // Field inversion, a = a^-1 in GF(p434)
