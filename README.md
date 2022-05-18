@@ -57,7 +57,7 @@ The library was developed by [Microsoft Research](http://research.microsoft.com/
 * [`random folder`](src/random/): randombytes function using the system random number generator.
 * [`sha3 folder`](src/sha3/): SHAKE256 implementation.  
 * [`Test folder`](tests/): test files.   
-* [`Visual Studio folder`](Visual%20Studio/): Visual Studio 2015 files for compilation in Windows.
+* [`Visual Studio folder`](Visual%20Studio/): Visual Studio 2022 files for compilation in Windows.
 * [`Makefile`](Makefile): Makefile for compilation using the GNU GCC or clang compilers on Linux. 
 * [`License`](LICENSE): MIT license file.
 * [`Readme`](README.md): this readme file.
@@ -98,7 +98,7 @@ The library was developed by [Microsoft Research](http://research.microsoft.com/
 ## Supported Platforms
 
 **SIDH v3.5** is supported on a wide range of platforms including x64, x86, ARM and s390x processors running Windows,
-Linux or Mac OS X. We have tested the library with Microsoft Visual Studio 2015, GNU GCC v5.4, and clang v3.8.
+Linux or Mac OS X. We have tested the library with Microsoft Visual Studio 2022, GNU GCC v5.4, and clang v3.8.
 See instructions below to choose an implementation option and compile on one of the supported platforms.
 
 ## Implementation Options

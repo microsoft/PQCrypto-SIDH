@@ -43,14 +43,14 @@ void xDBLe(const point_proj_t P, point_proj_t Q, const f2elm_t A24plus, const f2
 
 #if (OALICE_BITS % 2 == 1)
 
-void get_2_isog(const point_proj_t P, f2elm_t A, f2elm_t C)
+void get_2_isog(const point_proj_t P, f2elm_t A24plus, f2elm_t C24)
 { // Computes the corresponding 2-isogeny of a projective Montgomery point (X2:Z2) of order 2.
   // Input:  projective point of order two P = (X2:Z2).
-  // Output: the 2-isogenous Montgomery curve with projective coefficients A/C.
+  // Output: the 2-isogenous Montgomery curve with projective coefficients A/C, where A+2C = A24plus and 4C = C24.
     
-    fp2sqr_mont(P->X, A);                           // A = X2^2
-    fp2sqr_mont(P->Z, C);                           // C = Z2^2
-    mp2_sub_p2(C, A, A);                            // A = Z2^2 - X2^2
+    fp2sqr_mont(P->X, A24plus);                     // A24plus = X2^2
+    fp2sqr_mont(P->Z, C24);                         // C24 = Z2^2
+    mp2_sub_p2(C24, A24plus, A24plus);              // A24plus = Z2^2 - X2^2
 }
 
 
@@ -77,8 +77,8 @@ void eval_2_isog(point_proj_t P, point_proj_t Q)
 void get_4_isog(const point_proj_t P, f2elm_t A24plus, f2elm_t C24, f2elm_t* coeff)
 { // Computes the corresponding 4-isogeny of a projective Montgomery point (X4:Z4) of order 4.
   // Input:  projective point of order four P = (X4:Z4).
-  // Output: the 4-isogenous Montgomery curve with projective coefficients A+2C/4C and the 3 coefficients 
-  //         that are used to evaluate the isogeny at a point in eval_4_isog().
+  // Output: the 4-isogenous Montgomery curve with projective coefficients A/C, where A+2C = A24plus and 4C = C24, 
+  //         and the 3 coefficients that are used to evaluate the isogeny at a point in eval_4_isog().
     
     mp2_sub_p2(P->X, P->Z, coeff[1]);               // coeff[1] = X4-Z4
     mp2_add(P->X, P->Z, coeff[2]);                  // coeff[2] = X4+Z4
@@ -164,7 +164,7 @@ void xTPLe(const point_proj_t P, point_proj_t Q, const f2elm_t A24minus, const f
 void get_3_isog(const point_proj_t P, f2elm_t A24minus, f2elm_t A24plus, f2elm_t* coeff)
 { // Computes the corresponding 3-isogeny of a projective Montgomery point (X3:Z3) of order 3.
   // Input:  projective point of order three P = (X3:Z3).
-  // Output: the 3-isogenous Montgomery curve with projective coefficient A/C. 
+  // Output: the 3-isogenous Montgomery curve with projective coefficient A/C, where A+2C = A24plus and A-2C = A24minus. 
     f2elm_t t0, t1, t2, t3, t4;
     
     mp2_sub_p2(P->X, P->Z, coeff[0]);               // coeff0 = X-Z
@@ -650,16 +650,13 @@ void Ladder(const point_proj_t P, const digit_t* m, const f2elm_t A, const unsig
     point_proj_t R0, R1;
     f2elm_t A24 = {0};
     digit_t mask;
-    unsigned int bit = 0, prevbit = 0, j, swap;
+    unsigned int bit = 0, prevbit = 0, swap;
         
     fpcopy((digit_t*)&Montgomery_one, A24[0]);
     fpadd(A24[0], A24[0], A24[0]);
     fp2add(A, A24, A24);
     fp2div2(A24, A24);  
-    fp2div2(A24, A24);  // A24 = (A+2)/4          
-
-    j = order_bits - 1;
-    bit = (m[j >> LOG2RADIX] >> (j & (RADIX-1))) & 1;
+    fp2div2(A24, A24);  // A24 = (A+2)/4
 
     // R0 <- P, R1 <- 2P
     fp2copy(P->X, R0->X);
@@ -667,7 +664,7 @@ void Ladder(const point_proj_t P, const digit_t* m, const f2elm_t A, const unsig
     xDBL_e(P, R1, A24, 1);    
     
     // Main loop
-    for (int i = j;  i >= 0; i--) {
+    for (int i = order_bits-1;  i >= 0; i--) {
         bit = (m[i >> LOG2RADIX] >> (i & (RADIX-1))) & 1;
         swap = bit ^ prevbit;
         prevbit = bit;
