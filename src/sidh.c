@@ -23,21 +23,27 @@ static void init_basis(digit_t *gen, f2elm_t XP, f2elm_t XQ, f2elm_t XR)
 }
 
 
-void random_mod_order_A(unsigned char* random_digits)
+int random_mod_order_A(unsigned char* random_digits)
 {  // Generation of Alice's secret key  
-   // Outputs random value in [0, 2^eA - 1]
+   // Outputs random value in [0, 2^eA - 1]. Returns 1 on error
 
-    randombytes(random_digits, SECRETKEY_A_BYTES);
-    random_digits[SECRETKEY_A_BYTES-1] &= MASK_ALICE;    // Masking last byte 
+    if (randombytes(random_digits, SECRETKEY_A_BYTES) != 0)
+        return 1;
+    random_digits[SECRETKEY_A_BYTES-1] &= MASK_ALICE;    // Masking last byte  
+
+    return 0;
 }
 
 
-void random_mod_order_B(unsigned char* random_digits)
+int random_mod_order_B(unsigned char* random_digits)
 {  // Generation of Bob's secret key  
-   // Outputs random value in [0, 2^Floor(Log(2, oB)) - 1]
+   // Outputs random value in [0, 2^Floor(Log(2, oB)) - 1]. Returns 1 on error
 
-    randombytes(random_digits, SECRETKEY_B_BYTES);
-    random_digits[SECRETKEY_B_BYTES-1] &= MASK_BOB;     // Masking last byte 
+    if (randombytes(random_digits, SECRETKEY_B_BYTES) != 0)
+        return 1;
+    random_digits[SECRETKEY_B_BYTES-1] &= MASK_BOB;     // Masking last byte  
+
+    return 0;
 }
 
 

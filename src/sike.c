@@ -22,8 +22,8 @@ int crypto_kem_keypair(unsigned char *pk, unsigned char *sk)
   //          public key pk (CRYPTO_PUBLICKEYBYTES bytes) 
 
     // Generate lower portion of secret key sk <- s||SK
-    randombytes(sk, MSG_BYTES);
-    random_mod_order_B(sk + MSG_BYTES);
+    if (randombytes(sk, MSG_BYTES) != 0 || random_mod_order_B(sk + MSG_BYTES) != 0)
+        return 1;
 #ifdef DO_VALGRIND_CHECK
     VALGRIND_MAKE_MEM_UNDEFINED(sk, MSG_BYTES + SECRETKEY_B_BYTES);
 #endif
@@ -52,7 +52,8 @@ int crypto_kem_enc(unsigned char *ct, unsigned char *ss, const unsigned char *pk
     unsigned char temp[CRYPTO_CIPHERTEXTBYTES+MSG_BYTES];
 
     // Generate ephemeralsk <- G(m||pk) mod oA 
-    randombytes(temp, MSG_BYTES);
+    if (randombytes(temp, MSG_BYTES) != 0)
+        return 1;
 #ifdef DO_VALGRIND_CHECK
     VALGRIND_MAKE_MEM_UNDEFINED(temp, MSG_BYTES);
 #endif

@@ -18,8 +18,8 @@ int crypto_kem_keypair(unsigned char *pk, unsigned char *sk)
   //          public key pk_comp (CRYPTO_PUBLICKEYBYTES bytes) 
     
     // Generate lower portion of secret key sk <- s||SK
-    randombytes(sk, MSG_BYTES);   
-    random_mod_order_A(sk + MSG_BYTES);    // Even random number
+    if (randombytes(sk, MSG_BYTES) != 0 || random_mod_order_A(sk + MSG_BYTES) != 0)
+        return 1;
 
     // Generate public key pk
     EphemeralKeyGeneration_A_extended(sk + MSG_BYTES, pk);
@@ -42,7 +42,8 @@ int crypto_kem_enc(unsigned char *ct, unsigned char *ss, const unsigned char *pk
     unsigned char temp[CRYPTO_CIPHERTEXTBYTES + MSG_BYTES] = {0};
 
     // Generate ephemeralsk <- G(m||pk) mod oB 
-    randombytes(temp, MSG_BYTES);    
+    if (randombytes(temp, MSG_BYTES) != 0)
+        return 1;
     memcpy(&temp[MSG_BYTES], pk, CRYPTO_PUBLICKEYBYTES);        
     shake256(ephemeralsk, SECRETKEY_B_BYTES, temp, MSG_BYTES + CRYPTO_PUBLICKEYBYTES);
     FormatPrivKey_B(ephemeralsk);

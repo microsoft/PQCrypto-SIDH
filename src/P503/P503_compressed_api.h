@@ -67,11 +67,11 @@ int crypto_kem_dec_SIKEp503_compressed(unsigned char *ss, const unsigned char *c
 
 // Generation of Alice's secret key 
 // Outputs random value in [0, 2^250 - 1] to be used as Alice's private key
-void random_mod_order_A_SIDHp503(unsigned char* random_digits);
+int random_mod_order_A_SIDHp503(unsigned char* random_digits);
 
 // Generation of Bob's secret key 
 // Outputs random value in [0, 2^Floor(Log(2,3^159)) - 1] to be used as Bob's private key
-void random_mod_order_B_SIDHp503(unsigned char* random_digits);
+int random_mod_order_B_SIDHp503(unsigned char* random_digits);
 
 // Alice's ephemeral public key generation
 // Input:  a private key PrivateKeyA in the range [0, 2^250 - 1], stored in 32 bytes. 

@@ -67,11 +67,11 @@ int crypto_kem_dec_SIKEp751_compressed(unsigned char *ss, const unsigned char *c
 
 // Generation of Alice's secret key 
 // Outputs random even value in [0, 2^372 - 1] to be used as Alice's private key
-void random_mod_order_A_SIDHp751(unsigned char* random_digits);
+int random_mod_order_A_SIDHp751(unsigned char* random_digits);
 
 // Generation of Bob's secret key 
 // Outputs random value multiple of 3 in [0, 2^Floor(Log(2,3^239)) - 1] to be used as Bob's private key
-void random_mod_order_B_SIDHp751(unsigned char* random_digits);
+int random_mod_order_B_SIDHp751(unsigned char* random_digits);
 
 // Alice's ephemeral public key generation
 // Input:  a private key PrivateKeyA in the range [0, 2^372 - 1], stored in 47 bytes. 

@@ -34,23 +34,29 @@ void FormatPrivKey_B(unsigned char *skB)
 }
 
 
-void random_mod_order_A(unsigned char* random_digits)
+int random_mod_order_A(unsigned char* random_digits)
 {  // Generation of Alice's secret key  
-   // Outputs random value in [0, 2^eA - 1]
+   // Outputs random value in [0, 2^eA - 1]. Returns 1 on error
 
     memset(random_digits, 0, SECRETKEY_A_BYTES);
-    randombytes(random_digits, SECRETKEY_A_BYTES);
+    if (randombytes(random_digits, SECRETKEY_A_BYTES) != 0)
+        return 1;
     random_digits[0] &= 0xFE;                            // Make private scalar even    
-    random_digits[SECRETKEY_A_BYTES-1] &= MASK_ALICE;    // Masking last byte     
+    random_digits[SECRETKEY_A_BYTES-1] &= MASK_ALICE;    // Masking last byte  
+
+    return 0;
 }
 
 
-void random_mod_order_B(unsigned char* random_digits)
+int random_mod_order_B(unsigned char* random_digits)
 {  // Generation of Bob's secret key  
-   // Outputs random value in [0, 2^Floor(Log(2, oB)) - 1]
+   // Outputs random value in [0, 2^Floor(Log(2, oB)) - 1]. Returns 1 on error
     
-    randombytes(random_digits, SECRETKEY_B_BYTES);
+    if (randombytes(random_digits, SECRETKEY_B_BYTES) != 0)
+        return 1;
     FormatPrivKey_B(random_digits);
+
+    return 0;
 }
 
 
