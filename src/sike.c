@@ -92,7 +92,7 @@ int crypto_kem_dec(unsigned char *ss, const unsigned char *ct, const unsigned ch
     unsigned char temp[CRYPTO_CIPHERTEXTBYTES+MSG_BYTES];
     int8_t selector = -1;
 #ifdef DO_VALGRIND_CHECK
-    VALGRIND_MAKE_MEM_UNDEFINED(sk, CRYPTO_SECRETKEYBYTES);
+    VALGRIND_MAKE_MEM_UNDEFINED(sk, CRYPTO_SECRETKEYBYTES - CRYPTO_PUBLICKEYBYTES);
 #endif
 
     // Decrypt
