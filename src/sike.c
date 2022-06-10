@@ -92,7 +92,7 @@ int crypto_kem_dec(unsigned char *ss, const unsigned char *ct, const unsigned ch
     unsigned char temp[CRYPTO_CIPHERTEXTBYTES+MSG_BYTES];
     int8_t selector = -1;
 #ifdef DO_VALGRIND_CHECK
-    VALGRIND_MAKE_MEM_UNDEFINED(sk, CRYPTO_SECRETKEYBYTES - CRYPTO_PUBLICKEYBYTES);
+    VALGRIND_MAKE_MEM_UNDEFINED(sk, MSG_BYTES + SECRETKEY_B_BYTES);
 #endif
 
     // Decrypt
@@ -119,7 +119,7 @@ Hashing:
     shake256(ss, CRYPTO_BYTES, temp, CRYPTO_CIPHERTEXTBYTES+MSG_BYTES);
     
 #ifdef DO_VALGRIND_CHECK
-    VALGRIND_MAKE_MEM_DEFINED(sk, CRYPTO_SECRETKEYBYTES);
+    VALGRIND_MAKE_MEM_DEFINED(sk, MSG_BYTES + SECRETKEY_B_BYTES);
 #endif
     return 0;
 }
