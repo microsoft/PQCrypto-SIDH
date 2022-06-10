@@ -73,9 +73,12 @@ int crypto_kem_dec(unsigned char *ss, const unsigned char *ct, const unsigned ch
     unsigned char jinvariant_[FP2_ENCODED_BYTES + 2*FP2_ENCODED_BYTES + SECRETKEY_A_BYTES] = {0}, h_[MSG_BYTES];
     unsigned char temp[CRYPTO_CIPHERTEXTBYTES + MSG_BYTES] = {0};   
     unsigned char* tphiBKA_t = &jinvariant_[FP2_ENCODED_BYTES];
+    int8_t selector = -1;
     
     // Decrypt 
-    EphemeralSecretAgreement_A_extended(sk + MSG_BYTES, ct, jinvariant_, 1);  
+    if (!EphemeralSecretAgreement_A_extended(sk + MSG_BYTES, ct, jinvariant_, 1) == 0) {
+        goto Hashing;
+    }
     shake256(h_, MSG_BYTES, jinvariant_, FP2_ENCODED_BYTES);   
     
     for (int i = 0; i < MSG_BYTES; i++) {
@@ -89,7 +92,8 @@ int crypto_kem_dec(unsigned char *ss, const unsigned char *ct, const unsigned ch
     
     // Generate shared secret ss <- H(m||ct), or output ss <- H(s||ct) in case of ct verification failure
     // No need to recompress, just check if x(phi(P) + t*phi(Q)) == x((a0 + t*a1)*R1 + (b0 + t*b1)*R2)    
-    int8_t selector = validate_ciphertext(ephemeralsk_, ct, &sk[MSG_BYTES + SECRETKEY_A_BYTES + CRYPTO_PUBLICKEYBYTES], tphiBKA_t);
+    selector = validate_ciphertext(ephemeralsk_, ct, &sk[MSG_BYTES + SECRETKEY_A_BYTES + CRYPTO_PUBLICKEYBYTES], tphiBKA_t);
+Hashing:
     // If ct validation passes (selector = 0) then do ss = H(m||ct), otherwise (selector = -1) load s to do ss = H(s||ct)
     ct_cmov(temp, sk, MSG_BYTES, selector);
     memcpy(&temp[MSG_BYTES], ct, CRYPTO_CIPHERTEXTBYTES);  
