@@ -100,6 +100,9 @@ int crypto_kem_dec(unsigned char *ss, const unsigned char *ct, const unsigned ch
     if (!EphemeralSecretAgreement_B_extended(sk + MSG_BYTES, ct, jinvariant_, 1) == 0) {
         goto Hashing;
     }
+#ifdef DO_VALGRIND_CHECK
+    VALGRIND_MAKE_MEM_UNDEFINED(ct, CRYPTO_CIPHERTEXTBYTES);
+#endif
     shake256(h_, MSG_BYTES, jinvariant_, FP2_ENCODED_BYTES);
     for (int i = 0; i < MSG_BYTES; i++) {
         temp[i] = ct[i + CRYPTO_PUBLICKEYBYTES] ^ h_[i];
@@ -121,6 +124,7 @@ Hashing:
     
 #ifdef DO_VALGRIND_CHECK
     VALGRIND_MAKE_MEM_DEFINED(sk, MSG_BYTES + SECRETKEY_B_BYTES);
+    VALGRIND_MAKE_MEM_DEFINED(ct, CRYPTO_CIPHERTEXTBYTES);
 #endif
     return 0;
 }
