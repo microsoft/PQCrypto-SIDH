@@ -322,7 +322,7 @@ int EphemeralSecretAgreement_B_extended(const unsigned char* PrivateKeyB, const 
   //         Alice's PublicKeyA consists of 3 elements in GF(p^2) encoded by removing leading 0 bytes.
   // Output: a shared secret SharedSecretB that consists of one element in GF(p^2) encoded by removing leading 0 bytes.  
     point_proj_t R, pts[MAX_INT_POINTS_BOB];
-    f2elm_t coeff[3], PKB[3] = {0}, jinv;
+    f2elm_t coeff[3], PKB[3], jinv;
     f2elm_t A24plus = {0}, A24minus = {0}, A = {0};
     unsigned int i, row, m, index = 0, pts_index[MAX_INT_POINTS_BOB], npts = 0, ii = 0;
     digit_t SecretKeyB[NWORDS_ORDER] = {0};
