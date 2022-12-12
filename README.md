@@ -1,3 +1,10 @@
+# Warning
+
+The SIDH and SIKE protocols were proven insecure after a series of attacks starting with [14]. 
+Therefore, these protocols MUST NOT be used in production.
+
+The SIDH library is only presented here for historical reasons, and because some functionality may be reusable in other cryptographic applications.
+
 # SIDH v3.5.1 (C Edition)
 
 The **SIDH** library is an efficient supersingular isogeny-based cryptography library written in C language.
@@ -262,6 +269,9 @@ The preprint version is available [`here`](https://eprint.iacr.org/2020/431).
 
 [13]  Patrick Longa, "Efficient algorithms for large prime characteristic fields and their application to bilinear pairings and supersingular isogeny-based protocols", 2022.
 The preprint version is available [`here`](https://eprint.iacr.org/2022/367).
+
+[14]  Wouter Castryck and Thomas Decru, "An efficient key recovery attack on SIDH", 2022. 
+The preprint version is available [`here`](https://eprint.iacr.org/2022/975).
 
 # Contributing
 
