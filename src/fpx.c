@@ -849,18 +849,46 @@ void mp_shiftl1(digit_t* x, const unsigned int nwords)
     x[0] <<= 1;
 }
 
-#ifdef COMPRESS
 
 static inline unsigned int is_felm_zero(const felm_t x)
 { // Is x = 0? return 1 (TRUE) if condition is true, 0 (FALSE) otherwise.
   // SECURITY NOTE: This function does not run in constant-time.
-    unsigned int i;
 
-    for (i = 0; i < NWORDS_FIELD; i++) {
+    for (unsigned int i = 0; i < NWORDS_FIELD; i++) {
         if (x[i] != 0) return 0;
     }
     return 1;
 }
+
+
+unsigned char is_sqr_fp2(const f2elm_t a, felm_t s)
+{ // Test if a is a square in GF(p^2) and return 1 if true, 0 otherwise
+  // If a is a quadratic residue, s will be assigned with a partially computed square root of a
+    int i;
+    felm_t a0, a1, z, temp;
+
+    fpsqr_mont(a[0], a0);
+    fpsqr_mont(a[1], a1);
+    fpadd(a0, a1, z);
+
+    fpcopy(z, s);
+    for (i = 0; i < OALICE_BITS - 2; i++) {
+        fpsqr_mont(s, s);
+    }
+    for (i = 0; i < OBOB_EXPON; i++) {
+        fpsqr_mont(s, temp);
+        fpmul_mont(s, temp, s);
+    }
+    fpsqr_mont(s, temp);          // s = z^((p+1)/4)
+    fpcorrection(temp);
+    fpcorrection(z);
+    if (memcmp(temp, z, NBITS_TO_NBYTES(NBITS_FIELD)) != 0)  // s^2 != z?
+        return 0;
+
+    return 1;
+}
+
+#ifdef COMPRESS
 
 static inline unsigned int is_felm_one(const felm_t x)
 { // Is x = 0? return 1 (TRUE) if condition is true, 0 (FALSE) otherwise.
@@ -872,6 +900,7 @@ static inline unsigned int is_felm_one(const felm_t x)
     }
     return 1;
 }
+
 
 void mul3(unsigned char *a) 
 { // Computes a = 3*a
@@ -950,10 +979,6 @@ void cube_Fp2_cycl(f2elm_t a, const felm_t one)
 }
 
 
-
-
-
-
 static bool is_zero(digit_t* a, unsigned int nwords)
 { // Check if multiprecision element is zero.
   // SECURITY NOTE: This function does not run in constant time.
@@ -965,34 +990,6 @@ static bool is_zero(digit_t* a, unsigned int nwords)
     }
 
     return true;
-}
-
-
-unsigned char is_sqr_fp2(const f2elm_t a, felm_t s) 
-{ // Test if a is a square in GF(p^2) and return 1 if true, 0 otherwise
-  // If a is a quadratic residue, s will be assigned with a partially computed square root of a
-    int i;
-    felm_t a0,a1,z,temp;
-    
-    fpsqr_mont(a[0],a0);
-    fpsqr_mont(a[1],a1);
-    fpadd(a0,a1,z);
-    
-    fpcopy(z,s);
-    for (i = 0; i < OALICE_BITS - 2; i++) {             
-        fpsqr_mont(s, s);
-    }
-    for (i = 0; i < OBOB_EXPON; i++) {
-        fpsqr_mont(s, temp);
-        fpmul_mont(s, temp, s);
-    }  
-    fpsqr_mont(s,temp);          // s = z^((p+1)/4)
-    fpcorrection(temp);
-    fpcorrection(z);
-    if (memcmp(temp, z, NBITS_TO_NBYTES(NBITS_FIELD)) != 0)  // s^2 !=? z
-        return 0;
-    
-    return 1;
 }
 
 

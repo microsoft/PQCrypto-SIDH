@@ -19,12 +19,6 @@
 #define failed 1
 
 
-static inline void delay(unsigned int count)
-{
-    while (count>0) { count--; }
-}
-
-
 int randombytes(unsigned char* random_array, unsigned long long nbytes)
 { // Generation of "nbytes" of random values
     
@@ -40,7 +34,7 @@ int randombytes(unsigned char* random_array, unsigned long long nbytes)
         do {
             lock = open("/dev/urandom", O_RDONLY);
             if (lock == -1) {
-                delay(0xFFFFF);
+                sleep(1);
             }
         } while (lock == -1);
     }
@@ -49,7 +43,7 @@ int randombytes(unsigned char* random_array, unsigned long long nbytes)
         do {
             r = read(lock, random_array+count, n);
             if (r == -1) {
-                delay(0xFFFF);
+                sleep(1);
             }
         } while (r == -1);
         count += r;

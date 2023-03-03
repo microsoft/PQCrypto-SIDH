@@ -77,7 +77,7 @@ else
 CFLAGS= $(EXTRA_CFLAGS)
 endif
 CFLAGS+= $(VALGRIND_CFLAGS)
-CFLAGS+= -std=gnu11 -Wall $(ADDITIONAL_SETTINGS) -D $(ARCHITECTURE) -D __NIX__ -D $(USE_OPT_LEVEL) $(MULX) $(ADX) -Wno-missing-braces
+CFLAGS+= -std=gnu11 -Wall $(ADDITIONAL_SETTINGS) -D $(ARCHITECTURE) -D __NIX__ -D $(USE_OPT_LEVEL) $(MULX) $(ADX) -Wno-missing-braces -Wno-logical-not-parentheses
 LDFLAGS=-lm
 ifeq "$(USE_OPT_LEVEL)" "_GENERIC_"
     EXTRA_OBJECTS_434=objs434/fp_generic.o

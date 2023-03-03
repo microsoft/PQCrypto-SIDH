@@ -92,6 +92,10 @@
 #define RADIX64             64
 
 
+// Switch for enabling SIKE's public key validation during decapsulation
+#define PK_VALIDATION
+
+
 // Selection of generic, portable implementation
 
 #if defined(_GENERIC_)                      
