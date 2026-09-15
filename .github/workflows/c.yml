@@ -24,7 +24,7 @@ jobs:
         opt_level: ['GENERIC', 'FAST']
         targetPlatform: [x86, x64]
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@0717577d45739eb3c851188b29f50ed6c0b2194e # v2.8.0
     - name: Build
       env: 
         OPT_LEVEL: ${{ matrix.opt_level }}
@@ -62,7 +62,7 @@ jobs:
         opt_level: ['GENERIC', 'FAST']
         sanitizer: ['address', 'undefined']
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@0717577d45739eb3c851188b29f50ed6c0b2194e # v2.8.0
     - name: Build
       env:
         OPT_LEVEL: ${{ matrix.opt_level }}
@@ -82,7 +82,7 @@ jobs:
       matrix:
         opt_level: ['GENERIC', 'FAST']
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@0717577d45739eb3c851188b29f50ed6c0b2194e # v2.8.0
     - name: Install valgrind
       run: sudo apt-get install -y valgrind
     - name: Build
