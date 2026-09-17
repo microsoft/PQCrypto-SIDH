@@ -65,6 +65,9 @@ endif
 ifeq "$(ARCHITECTURE)" "_S390X_"
 	ADDITIONAL_SETTINGS=-march=z10
 endif
+ifeq "$(ARCH)" "M1"
+	ADDITIONAL_SETTINGS=-mcpu=apple-a14
+endif
 
 VALGRIND_CFLAGS=
 ifeq "$(DO_VALGRIND_CHECK)" "TRUE"
