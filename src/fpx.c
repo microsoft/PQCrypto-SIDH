@@ -996,8 +996,38 @@ static bool is_zero(digit_t* a, unsigned int nwords)
 void sqrt_Fp2(const f2elm_t u, f2elm_t y)
 { // Computes square roots of elements in (Fp2)^2 using Hamburg's trick. 
     felm_t t0, t1, t2, t3;
-    digit_t *a  = (digit_t*)u[0], *b  = (digit_t*)u[1];
+    const digit_t *a = u[0], *b = u[1];
     unsigned int i;
+
+    // non-square elements of Fp require special treatment
+    fpcopy(b, t3);
+    fpcorrection(t3);
+    if (is_zero(t3, NWORDS_FIELD)) {
+
+        fpcopy(a, t1);
+        for (i = 0; i < OALICE_BITS - 2; i++) {
+            fpsqr_mont(t1, t1);
+        }
+        for (i = 0; i < OBOB_EXPON; i++) {
+            fpsqr_mont(t1, t0);
+            fpmul_mont(t1, t0, t1);
+        }
+        // t1 = a^((p+1)/4)
+
+        fpsqr_mont(t1, t0);
+
+        fpsub(t0, a, t3);
+        fpcorrection(t3);
+        if (is_zero(t3, NWORDS_FIELD)) {  // t1^2 = a
+            fpcopy(t1, y[0]);
+            fpzero(y[1]);
+        }
+        else {  // t1^2 = -a
+            fpzero(y[0]);
+            fpcopy(t1, y[1]);
+        }
+        return;
+    }
 
     fpsqr_mont(a, t0);                   // t0 = a^2
     fpsqr_mont(b, t1);                   // t1 = b^2
